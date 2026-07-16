@@ -62,7 +62,7 @@ void FakeAppIds::setAppIdForCurrentPipe(uint32_t& appId)
 	//fakeAppIdMap[*g_pClientUtils->getPipeIndex()] = appId;
 	fakeAppIdMap[*g_pClientUtils->getPipeIndex()] = lastAppLaunched;
 
-	g_pLog->debug("fakeAppIdMap[%p] = %u\n", *g_pClientUtils->getPipeIndex(), appId);
+	g_pLog->debug("fakeAppIdMap[%p] = %u\n", *g_pClientUtils->getPipeIndex(), lastAppLaunched);
 
 	//Do not change Steam Client itself (AppId 0)
 	if (!appId)
