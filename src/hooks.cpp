@@ -879,12 +879,17 @@ static bool hkClientUser_RequiresLegacyCDKey(void* pClientUser, uint32_t appId, 
 
 static void hkClientUser_RunIPCFrame(void* pClientUser, void* a1, void* a2, void* a3)
 {
-	g_pClientUser = reinterpret_cast<IClientUser*>(pClientUser);
+	static bool hooked = false;
+	if (!hooked)
+	{
+		g_pClientUser = reinterpret_cast<IClientUser*>(pClientUser);
 
-	//std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
-	//LM_VmtNew(*reinterpret_cast<lm_address_t**>(pClientUser), vft.get());
+		//std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
+		//LM_VmtNew(*reinterpret_cast<lm_address_t**>(pClientUser), vft.get());
 
-	//g_pLog->debug("IClientUser->vft at %p\n", vft->vtable);
+		//g_pLog->debug("IClientUser->vft at %p\n", vft->vtable);
+		hooked = true;
+	}
 
 	//Hooks::IClientUser_RunIPCFrame.remove();
 	//Hooks::IClientUser_RunIPCFrame.originalFn.fn(pClientUser, a1, a2, a3);
