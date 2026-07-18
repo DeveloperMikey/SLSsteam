@@ -93,7 +93,10 @@ void FakeAppIds::runIPCFrame(bool post)
 		appId = fakeAppId;
 	}
 
-	g_pLog->debug("Setting AppId to %u in pipe %p\n", appId, *g_pClientUtils->getPipeIndex());
+	if (g_config.extendedLogging.get())
+	{
+		g_pLog->debug("Setting AppId to %u in pipe %p\n", appId, *g_pClientUtils->getPipeIndex());
+	}
 	g_pSteamEngine->setAppIdForCurrentPipe(appId);
 }
 
