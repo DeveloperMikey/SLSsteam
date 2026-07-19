@@ -21,6 +21,7 @@
 
 
 bool Apps::applistRequested;
+uint32_t Apps::lastAppLaunched;
 
 bool Apps::unlockApp(uint32_t appId, AppOwnershipInfo_t* info, uint32_t ownerId)
 {
@@ -291,6 +292,44 @@ bool Apps::shouldDisableUpdates(uint32_t appId)
 	return g_config.isAddedAppId(appId) || !g_pSteamEngine->getUser(0)->isSubscribed(appId);
 }
 
+void Apps::recvPersonaState(CNetPacket* pkt)
+{
+	auto msg = pkt->deserializeBody<CMsgClientPersonaState>();
+
+	for(int i = 0; i < msg.friends_size(); i++)
+	{
+		auto frnd = msg.mutable_friends(i);
+		if (!frnd->has_player_name())
+		{
+			continue;
+		}
+
+		g_pLog->debug("PersonaState for %s\n", frnd->player_name().c_str());
+		for(const auto& kv : frnd->rich_presence())
+		{
+			g_pLog->debug("%s : %s\n", kv.key().c_str(), kv.value().c_str());
+			if (kv.key() == "sls_app_id")
+			{
+				const uint64_t appId = std::stoull(kv.value());
+				frnd->set_gameid(appId);
+				frnd->set_game_played_app_id(appId);
+			}
+		}
+	}
+
+	pkt->serialize(msg);
+}
+
+void Apps::recvMsg(CNetPacket* pkt)
+{
+	switch(pkt->getProtoBufType())
+	{
+		case EMSG_PERSONA_STATE:
+			recvPersonaState(pkt);
+			break;
+	}
+}
+
 void Apps::sendAndRecvLastPlayedTimes(const char* name, CPlayer_GetLastPlayedTimes_Response* recv)
 {
 	if (strcmp(name, "Player.ClientGetLastPlayedTimes#1") != 0)
@@ -403,7 +442,39 @@ void Apps::sendPICSInfoRequest(CNetPacket* pkt)
 		}
 	}
 
-	pkt->serializeBody(msg);
+	pkt->serialize(msg);
+}
+
+void Apps::sendRichPresenceUpload(CNetPacket* pkt)
+{
+	auto msg = pkt->deserializeBody<CMsgClientRichPresenceUpload>();
+	//if (msg.rich_presence_kv().size() <= 6)
+	//{
+	//	//Empty rich presence, no game played
+	//	//00 52 50 00 08 08
+	//	return;
+	//}
+
+
+	constexpr static const char* key = "sls_app_id";
+	auto appIdStr = std::to_string(lastAppLaunched);
+
+	//This way is fucky, but I didn't find a better way to insert 0 and 1 bytes into a formated string
+	//since any way I tried seemed to drop a part of it
+	std::vector<char> bytes;
+	bytes.emplace_back(1);
+	bytes.insert(bytes.end(), key, key + strlen(key));
+	bytes.emplace_back(0);
+	bytes.insert(bytes.end(), appIdStr.data(), appIdStr.data() + appIdStr.size());
+	bytes.emplace_back(0);
+
+	msg.mutable_rich_presence_kv()->insert(4, bytes.data(), bytes.size());
+
+	auto header = pkt->deserializeHeader();
+	g_pLog->debug("Routing appId %u\n", header.routing_appid());
+	header.set_routing_appid(FakeAppIds::getFakeAppId(header.routing_appid()));
+
+	pkt->serialize(msg, &header);
 }
 
 void Apps::sendMsg(CNetPacket *pkt)
@@ -418,6 +489,10 @@ void Apps::sendMsg(CNetPacket *pkt)
 		case EMSG_GAMESPLAYED_NO_DATABLOB:
 		case EMSG_GAMESPLAYED_WITH_DATABLOB:
 			sendGamesPlayed(pkt);
+			break;
+		
+		case EMSG_RICH_PRESENCE_UPLOAD:
+			sendRichPresenceUpload(pkt);
 			break;
 	}
 }

@@ -274,6 +274,7 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 			g_pLog->debug("Chocked FamilyGroupsClient.NotifyRunningApps#1\n");
 		}
 
+		Apps::recvMsg(pNetPacket);
 		Misc::recvMsg(pNetPacket);
 		Ticket::recvMsg(pNetPacket);
 	}
@@ -476,6 +477,8 @@ static void* hkClientAppManager_LaunchApp(void* pClientAppManager, uint32_t* pAp
 			a3,
 			a4
 		);
+
+		Apps::lastAppLaunched = *pAppId;
 
 		FakeAppIds::launchApp(*pAppId);
 		Ticket::launchApp(*pAppId);
