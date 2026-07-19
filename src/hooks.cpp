@@ -253,7 +253,24 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 
 	if (pNetPacket->isValid() && pNetPacket->isProtoBuf())
 	{
+		const uint32_t type = pNetPacket->getProtoBufType();
 		const auto header = pNetPacket->deserializeHeader();
+
+		const bool disableFamilyShareLock = g_config.disableFamilyLock.get();
+
+		if (disableFamilyShareLock && type == EMSG_SHARED_LIBRARY_STOP_PLAYING)
+		{
+			free(pNetPacket->body);
+			g_pLog->debug("Chocked EMSG_SHARED_LIBRARY_STOP_PLAYING\n");
+			return;
+		}
+
+		if (disableFamilyShareLock && type == EMSG_SERVICE_METHOD && header.target_job_name() == "FamilyGroupsClient.NotifyRunningApps#1")
+		{
+			free(pNetPacket->body);
+			g_pLog->debug("Chocked FamilyGroupsClient.NotifyRunningApps#1\n");
+			return;
+		}
 
 		Misc::recvMsg(pNetPacket);
 		Ticket::recvMsg(pNetPacket);
@@ -1151,12 +1168,6 @@ bool Hooks::setup()
 
 void Hooks::place()
 {
-	if (g_config.disableFamilyLock.get())
-	{
-		patchRetn(Patterns::FamilyGroupRunningApp.address);
-		patchRetn(Patterns::StopPlayingBorrowedApp.address);
-	}
-
 	//Detours
 	TraceIPC.place();
 
