@@ -24,10 +24,11 @@ public:
 constexpr static unsigned int MAX_PACKET_SIZE = 8192;
 constexpr static unsigned int MAX_PACKETS = 64;
 
-static uint8_t PACKETS_ARRAY[MAX_PACKET_SIZE * MAX_PACKETS] { };
-static uint32_t PACKETS_ARRAY_INDEX = 0;
+//TODO: Move into anonymous namespace or something, so these don't clutter the global namespace
+extern uint8_t g_packetsArray[MAX_PACKET_SIZE * MAX_PACKETS];
+extern uint32_t g_packetsArrayIndex;
 
-static std::mutex serializeMutex;
+extern std::mutex g_packetSerializeMutex;
 
 class CNetPacket
 {
@@ -72,12 +73,12 @@ public:
 	template<typename T>
 	constexpr void serializeBody(const T& msg)
 	{
-		const std::lock_guard lock(serializeMutex);
+		const std::lock_guard lock(g_packetSerializeMutex);
 
 		const uintptr_t msgOffset = body->headerSize + sizeof(CNetPacketBody);
 		const uintptr_t newSize = msg.ByteSizeLong() + msgOffset;
 		//uint8_t* mem = reinterpret_cast<uint8_t*>(malloc(newSize));
-		uint8_t* mem = &PACKETS_ARRAY[PACKETS_ARRAY_INDEX * MAX_PACKET_SIZE];
+		uint8_t* mem = &g_packetsArray[g_packetsArrayIndex * MAX_PACKET_SIZE];
 
 		if (newSize >= MAX_PACKET_SIZE)
 		{
@@ -97,12 +98,12 @@ public:
 		//If I understand correctly Steam cleans up for us, that's why we crash when we free the oldBody ourself
 		//However the body we allocate doesn't get freed, so we just reuse a buffer for it
 
-		g_pLog->debug("Serialized %p into PACKETS_ARRAY at %u with size %u\n", getType(), PACKETS_ARRAY_INDEX, newSize);
+		g_pLog->debug("Serialized %p into PACKETS_ARRAY at %u with size %u\n", getType(), g_packetsArrayIndex, newSize);
 
-		PACKETS_ARRAY_INDEX++;
-		if (PACKETS_ARRAY_INDEX >= MAX_PACKETS)
+		g_packetsArrayIndex++;
+		if (g_packetsArrayIndex >= MAX_PACKETS)
 		{
-			PACKETS_ARRAY_INDEX = 0;
+			g_packetsArrayIndex = 0;
 		}
 	}
 	

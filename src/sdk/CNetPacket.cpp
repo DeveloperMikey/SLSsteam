@@ -1,5 +1,9 @@
 #include "CNetPacket.hpp"
 
+uint8_t g_packetsArray[MAX_PACKET_SIZE * MAX_PACKETS] { };
+uint32_t g_packetsArrayIndex = 0;
+
+std::mutex g_packetSerializeMutex;
 
 CMsgProtoBufHeader CNetPacket::deserializeHeader() const
 {
