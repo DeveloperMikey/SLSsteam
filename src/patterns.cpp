@@ -51,6 +51,14 @@ using SigFollowMode = MemHlp::SigFollowMode;
 
 namespace Patterns
 {
+	Pattern_t GetMessageFlags
+	{
+		//Found in CNetPacket::ReallyRelease()
+		"GetMessageFlags",
+		"E8 ? ? ? ? 8D 4D ? 83 C4 ? 89 C3 8B 47 ? 8B 10 50 51 FF 52 ? 58 FF 75 98 53 8B 5D A4 FF 75 B4 8D 83 ? ? ? ? 50 8D 83 ? ? ? ? 68 ? ? ? ? 50 E8 ? ? ? ? 8B 55 B4",
+		SigFollowMode::Relative
+	};
+
 	Pattern_t TraceIPC
 	{
 		"TraceIPC",

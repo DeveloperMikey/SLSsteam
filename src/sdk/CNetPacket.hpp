@@ -33,7 +33,6 @@ extern std::mutex g_packetSerializeMutex;
 class CNetPacket
 {
 public:
-
 	constexpr static unsigned int INVALID_MESSAGE_TYPE = 0xFFFFFFFF;
 	constexpr static unsigned int PROTOBUF_TYPE_MASK = 0x80000000;
 
@@ -57,6 +56,8 @@ public:
 
 		return body->type;
 	}
+
+	const char* getProtoBufTypeName();
 
 	constexpr bool isProtoBuf() const
 	{

@@ -249,7 +249,7 @@ static uint32_t hkClientUnifiedServiceTransport_SendAndRecvMsg(CClientUnifiedSer
 
 static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 {
-	g_pLog->debug("RecvPkt %p\n", pNetPacket->getType());
+	g_pLog->debug("RecvPkt %s -> %p\n", pNetPacket->getProtoBufTypeName(), pNetPacket->getType());
 
 	if (pNetPacket->isValid() && pNetPacket->isProtoBuf())
 	{
@@ -317,7 +317,7 @@ static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(void* pWebSocketConnec
 		packet.body = reinterpret_cast<CNetPacketBody*>(pData);
 		packet.size = dataSize;
 
-		g_pLog->debug("SendPkt %p\n", packet.getType());
+		g_pLog->debug("SendPkt %s -> %p\n", packet.getProtoBufTypeName(), packet.getType());
 
 		if (packet.isValid() && packet.isProtoBuf())
 		{
