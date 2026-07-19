@@ -455,7 +455,6 @@ void Apps::sendRichPresenceUpload(CNetPacket* pkt)
 	//	return;
 	//}
 
-
 	constexpr static const char* key = "sls_app_id";
 	auto appIdStr = std::to_string(lastAppLaunched);
 
@@ -472,7 +471,12 @@ void Apps::sendRichPresenceUpload(CNetPacket* pkt)
 
 	auto header = pkt->deserializeHeader();
 	g_pLog->debug("Routing appId %u\n", header.routing_appid());
-	header.set_routing_appid(FakeAppIds::getFakeAppId(header.routing_appid()));
+
+	const auto appId = FakeAppIds::getFakeAppId(header.routing_appid());
+	if (appId)
+	{
+		header.set_routing_appid(appId);
+	}
 
 	pkt->serialize(msg, &header);
 }
