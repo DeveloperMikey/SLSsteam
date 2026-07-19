@@ -5,6 +5,7 @@
 #include "../config.hpp"
 #include "../globals.hpp"
 
+#include "../sdk/CNetPacket.hpp"
 #include "../sdk/CProtoBufMsgBase.hpp"
 #include "../sdk/CSteamEngine.hpp"
 #include "../sdk/CUser.hpp"
@@ -78,7 +79,7 @@ Ticket::SavedTicket Ticket::getCachedTicket(uint32_t appId)
 	return ticket;
 }
 
-bool Ticket::saveTicketToCache(CMsgClientGetAppOwnershipTicketResponse* resp)
+bool Ticket::saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse* resp)
 {
 	const uint32_t appId = resp->app_id();
 
@@ -221,45 +222,50 @@ bool Ticket::saveEncryptedTicketToCache(CMsgClientRequestEncryptedAppTicketRespo
 	return true;
 }
 
-void Ticket::recvEncryptedAppTicket(CMsgClientRequestEncryptedAppTicketResponse* msg)
+void Ticket::recvEncryptedAppTicket(CNetPacket* pkt)
 {
-	if (msg->eresult() == ERESULT_OK)
+	auto msg = pkt->deserializeBody<CMsgClientRequestEncryptedAppTicketResponse>();
+
+	if (msg.eresult() == ERESULT_OK)
 	{
-		saveEncryptedTicketToCache(msg);
+		saveEncryptedTicketToCache(&msg);
 		return;
 	}
 
-	SavedTicket ticket = getCachedEncryptedTicket(msg->app_id());
+	SavedTicket ticket = getCachedEncryptedTicket(msg.app_id());
 	if(!ticket.steamId)
 	{
 		return;
 	}
 
-	msg->ParseFromString(ticket.ticket);
-	g_pLog->debug("Using encryptedTicket_%u from disk\n", msg->app_id());
+	msg.ParseFromString(ticket.ticket);
+	pkt->serializeBody(msg);
+
+	g_pLog->debug("Using encryptedTicket_%u from disk\n", msg.app_id());
 }
 
-void Ticket::recvAppTicket(CMsgClientGetAppOwnershipTicketResponse* msg)
+void Ticket::recvAppTicket(const CNetPacket* pkt)
 {
-	if(msg->eresult() == ERESULT_OK)
+	const auto msg = pkt->deserializeBody<CMsgClientGetAppOwnershipTicketResponse>();
+	if(msg.eresult() == ERESULT_OK)
 	{
-		saveTicketToCache(msg);
+		saveTicketToCache(&msg);
 		return;
 	}
 
 	//We do not load tickets from disk in the network layer, otherwise they won't be loaded in offline mode
 }
 
-void Ticket::recvMsg(CProtoBufMsgBase* msg)
+void Ticket::recvMsg(CNetPacket* pkt)
 {
-	switch(msg->type)
+	switch(pkt->getProtoBufType())
 	{
 		case EMSG_APPOWNERSHIPTICKET_RESPONSE:
-			recvAppTicket(msg->getBody<CMsgClientGetAppOwnershipTicketResponse>());
+			recvAppTicket(pkt);
 			break;
 
 		case EMSG_ENCRYPTED_APPTICKET_RESPONSE:
-			recvEncryptedAppTicket(msg->getBody<CMsgClientRequestEncryptedAppTicketResponse>());
+			recvEncryptedAppTicket(pkt);
 			break;
 	}
 }

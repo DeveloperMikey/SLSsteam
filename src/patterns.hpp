@@ -45,7 +45,6 @@ namespace Patterns
 
 	namespace CProtoBufMsgBase
 	{
-		extern Pattern_t InitFromPacket;
 		extern Pattern_t Send;
 	};
 
@@ -66,6 +65,11 @@ namespace Patterns
 	namespace CClientUnifiedServiceTransport
 	{
 		extern Pattern_t SendAndRecvMsg;
+	}
+
+	namespace CCMInterface
+	{
+		extern Pattern_t RecvPkt;
 	}
 
 	namespace CUser

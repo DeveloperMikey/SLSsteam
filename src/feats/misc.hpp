@@ -1,9 +1,9 @@
 #pragma once
 
-class CProtoBufMsgBase;
+class CNetPacket;
 
 namespace Misc
 {
 	bool shouldFakeOffline();
-	void recvMsg(CProtoBufMsgBase* msg);
+	void recvMsg(CNetPacket* msg);
 }

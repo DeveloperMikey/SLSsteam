@@ -8,6 +8,7 @@
 
 class CAPIJob;
 class CClientUnifiedServiceTransport;
+class CNetPacket;
 class CProtoBufMsgBase;
 
 template<typename T>
@@ -92,7 +93,8 @@ namespace Hooks
 
 	typedef uint32_t(*CClientUnifiedServiceMethod_SendAndRecvMsg_t)(CClientUnifiedServiceTransport*, const char*, void*, void*, void*);
 
-	typedef void(*CProtoBufMsgBase_InitFromPacket_t)(CProtoBufMsgBase*, void*);
+	typedef void(*CCMInterface_RecvPkt_t)(void*, CNetPacket*);
+
 	typedef uint32_t(*CProtoBufMsgBase_Send_t)(CProtoBufMsgBase*);
 
 	typedef void(*CSteamEngine_Init_t)(void*);
@@ -132,7 +134,8 @@ namespace Hooks
 
 	extern DetourHook<CClientUnifiedServiceMethod_SendAndRecvMsg_t> CClientUnifiedServiceMethod_SendAndRecvMsg;
 
-	extern DetourHook<CProtoBufMsgBase_InitFromPacket_t> CProtoBufMsgBase_InitFromPacket;
+	extern DetourHook<CCMInterface_RecvPkt_t> CCMInterface_RecvPkt;
+
 	extern DetourHook<CProtoBufMsgBase_Send_t> CProtoBufMsgBase_Send;
 
 	extern DetourHook<CSteamMatchmakingServers_GetServerDetails_t> CSteamMatchmakingServers_GetServerDetails;

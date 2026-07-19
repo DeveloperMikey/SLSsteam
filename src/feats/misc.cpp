@@ -1,5 +1,6 @@
 #include "misc.hpp"
 
+#include "../sdk/CNetPacket.hpp"
 #include "../sdk/CProtoBufMsgBase.hpp"
 #include "../sdk/IClientUtils.hpp"
 
@@ -25,9 +26,9 @@ bool Misc::shouldFakeOffline()
 }
 
 
-void Misc::recvMsg(CProtoBufMsgBase *msg)
+void Misc::recvMsg(CNetPacket *msg)
 {
-	switch(msg->type)
+	switch(msg->getProtoBufType())
 	{
 		case EMSG_WALLET_INFO_UPDATE:
 		{
@@ -37,11 +38,12 @@ void Misc::recvMsg(CProtoBufMsgBase *msg)
 				return;
 			}
 
-			const auto body = msg->getBody<CMsgClientWalletInfoUpdate>();
-			body->set_has_wallet(true);
-			body->set_balance(amount);
-			body->set_balance64(amount);
+			auto body = msg->deserializeBody<CMsgClientWalletInfoUpdate>();
+			body.set_has_wallet(true);
+			body.set_balance(amount);
+			body.set_balance64(amount);
 
+			msg->serializeBody(body);
 			break;
 		}
 
@@ -53,10 +55,11 @@ void Misc::recvMsg(CProtoBufMsgBase *msg)
 				return;
 			}
 
-			const auto body = msg->getBody<CMsgClientEmailAddrInfo>();
-			body->set_email_address(email);
-			body->set_email_is_validated(true);
+			auto body = msg->deserializeBody<CMsgClientEmailAddrInfo>();
+			body.set_email_address(email);
+			body.set_email_is_validated(true);
 
+			msg->serializeBody(body);
 			break;
 		}
 	}

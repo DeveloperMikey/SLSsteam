@@ -6,7 +6,7 @@
 
 class CMsgClientGetAppOwnershipTicketResponse;
 class CMsgClientRequestEncryptedAppTicketResponse;
-class CProtoBufMsgBase;
+class CNetPacket;
 
 namespace Ticket
 {
@@ -26,7 +26,7 @@ public:
 	//TODO: Fill with error checks
 	std::string getTicketPath(uint32_t appId);
 	SavedTicket getCachedTicket(uint32_t appId);
-	bool saveTicketToCache(CMsgClientGetAppOwnershipTicketResponse* resp);
+	bool saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse* resp);
 
 	void launchApp(uint32_t appId);
 	void getTicketOwnershipExtendedData(uint32_t appId);
@@ -35,7 +35,7 @@ public:
 	SavedTicket getCachedEncryptedTicket(uint32_t appId);
 	bool saveEncryptedTicketToCache(CMsgClientRequestEncryptedAppTicketResponse* resp);
 
-	void recvEncryptedAppTicket(CMsgClientRequestEncryptedAppTicketResponse* msg);
-	void recvAppTicket(CMsgClientGetAppOwnershipTicketResponse* msg);
-	void recvMsg(CProtoBufMsgBase* msg);
+	void recvEncryptedAppTicket(CNetPacket* pkt);
+	void recvAppTicket(const CNetPacket* pkt);
+	void recvMsg(CNetPacket* pkt);
 }

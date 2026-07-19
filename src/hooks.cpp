@@ -10,6 +10,7 @@
 
 #include "sdk/CAPIJob.hpp"
 #include "sdk/CClientUnifiedServiceTransport.hpp"
+#include "sdk/CNetPacket.hpp"
 #include "sdk/CProtoBufMsgBase.hpp"
 #include "sdk/CSteamEngine.hpp"
 #include "sdk/CSteamMatchmakingServers.hpp"
@@ -246,20 +247,19 @@ static uint32_t hkClientUnifiedServiceTransport_SendAndRecvMsg(CClientUnifiedSer
 	return ret;
 }
 
-static void hkProtoBufMsgBase_InitFromPacket(CProtoBufMsgBase* pMsg, void* pSrc)
+static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 {
-	Hooks::CProtoBufMsgBase_InitFromPacket.tramp.fn(pMsg, pSrc);
+	g_pLog->debug("RecvPkt %p\n", pNetPacket->getType());
 
-	//Safety first
-	if (!pSrc)
+	if (pNetPacket->isValid() && pNetPacket->isProtoBuf())
 	{
-		return;
+		const auto header = pNetPacket->deserializeHeader();
+
+		Misc::recvMsg(pNetPacket);
+		Ticket::recvMsg(pNetPacket);
 	}
 
-	g_pLog->debug("Received ProtoBufMsg of type %u with type %s\n", pMsg->type, MemHlp::getTypeName(pMsg));
-
-	Misc::recvMsg(pMsg);
-	Ticket::recvMsg(pMsg);
+	Hooks::CCMInterface_RecvPkt.tramp.fn(pCMInterface, pNetPacket);
 }
 
 static uint32_t hkProtoBufMsgBase_Send(CProtoBufMsgBase* pMsg)
@@ -1051,7 +1051,8 @@ namespace Hooks
 
 	DetourHook<CClientUnifiedServiceMethod_SendAndRecvMsg_t> CClientUnifiedServiceMethod_SendAndRecvMsg;
 
-	DetourHook<CProtoBufMsgBase_InitFromPacket_t> CProtoBufMsgBase_InitFromPacket;
+	DetourHook<CCMInterface_RecvPkt_t> CCMInterface_RecvPkt;
+
 	DetourHook<CProtoBufMsgBase_Send_t> CProtoBufMsgBase_Send;
 
 	DetourHook<CSteamMatchmakingServers_GetServerDetails_t> CSteamMatchmakingServers_GetServerDetails;
@@ -1118,7 +1119,8 @@ bool Hooks::setup()
 
 		&& CClientUnifiedServiceMethod_SendAndRecvMsg.setup(Patterns::CClientUnifiedServiceTransport::SendAndRecvMsg, &hkClientUnifiedServiceTransport_SendAndRecvMsg)
 
-		&& CProtoBufMsgBase_InitFromPacket.setup(Patterns::CProtoBufMsgBase::InitFromPacket, &hkProtoBufMsgBase_InitFromPacket)
+		&& CCMInterface_RecvPkt.setup(Patterns::CCMInterface::RecvPkt, &hkCMInterface_RecvPkt)
+
 		&& CProtoBufMsgBase_Send.setup(Patterns::CProtoBufMsgBase::Send, &hkProtoBufMsgBase_Send)
 
 		&& CSteamMatchmakingServers_GetServerDetails.setup(Patterns::CSteamMatchmakingServers::GetServerDetails, &hkSteamMatchmakingServers_GetServerDetails)
@@ -1172,7 +1174,8 @@ void Hooks::place()
 
 	CClientUnifiedServiceMethod_SendAndRecvMsg.place();
 
-	CProtoBufMsgBase_InitFromPacket.place();
+	CCMInterface_RecvPkt.place();
+
 	CProtoBufMsgBase_Send.place();
 
 	CSteamEngine_Init.place();
@@ -1218,7 +1221,8 @@ void Hooks::remove()
 
 	CClientUnifiedServiceMethod_SendAndRecvMsg.remove();
 
-	CProtoBufMsgBase_InitFromPacket.remove();
+	CCMInterface_RecvPkt.remove();
+
 	CProtoBufMsgBase_Send.remove();
 
 	CSteamEngine_Init.remove();
