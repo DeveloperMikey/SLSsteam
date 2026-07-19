@@ -43,7 +43,7 @@ void Misc::recvMsg(CNetPacket *pkt)
 			msg.set_balance(amount);
 			msg.set_balance64(amount);
 
-			pkt->serializeBody(msg);
+			pkt->serialize(msg);
 			break;
 		}
 
@@ -59,7 +59,7 @@ void Misc::recvMsg(CNetPacket *pkt)
 			msg.set_email_address(email);
 			msg.set_email_is_validated(true);
 
-			pkt->serializeBody(msg);
+			pkt->serialize(msg);
 			break;
 		}
 	}

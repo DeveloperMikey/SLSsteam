@@ -69,17 +69,17 @@ public:
 		return getType() & ~PROTOBUF_TYPE_MASK;
 	}
 
+	void serializeHeader(const CMsgProtoBufHeader& header);
 	CMsgProtoBufHeader deserializeHeader() const;
 
 	template<typename T>
-	constexpr void serializeBody(const T& msg)
+	constexpr void serialize(const T& msg, const CMsgProtoBufHeader* header)
 	{
-		const std::lock_guard lock(g_packetSerializeMutex);
+		constexpr uintptr_t headerOffset = sizeof(CNetPacketBody);
+		const uintptr_t headerSize = header ? header->ByteSizeLong() : body->headerSize;
 
-		const uintptr_t msgOffset = body->headerSize + sizeof(CNetPacketBody);
+		const uintptr_t msgOffset = headerSize + headerOffset;
 		const uintptr_t newSize = msg.ByteSizeLong() + msgOffset;
-		//uint8_t* mem = reinterpret_cast<uint8_t*>(malloc(newSize));
-		uint8_t* mem = &g_packetsArray[g_packetsArrayIndex * MAX_PACKET_SIZE];
 
 		if (newSize >= MAX_PACKET_SIZE)
 		{
@@ -87,7 +87,25 @@ public:
 			return;
 		}
 
-		memcpy(mem, body, msgOffset);
+		const std::lock_guard lock(g_packetSerializeMutex);
+		uint8_t* mem = &g_packetsArray[g_packetsArrayIndex * MAX_PACKET_SIZE];
+
+		if (header)
+		{
+			if (!header->SerializeToArray(mem + headerOffset, headerSize))
+			{
+				g_pLog->debug("Failed to serialize header!\n");
+				return;
+			}
+
+			*reinterpret_cast<uint32_t*>(mem) = body->type;
+			*reinterpret_cast<uint32_t*>(mem + sizeof(body->type)) = headerSize;
+		}
+		else
+		{
+			memcpy(mem, body, msgOffset);
+		}
+
 		if (!msg.SerializeToArray(mem + msgOffset, msg.ByteSizeLong()))
 		{
 			g_pLog->debug("Failed to serialize %p!\n", getType());
@@ -106,6 +124,12 @@ public:
 		{
 			g_packetsArrayIndex = 0;
 		}
+	}
+
+	template<typename T>
+	constexpr void serialize(const T& msg)
+	{
+		serialize(msg, nullptr);
 	}
 	
 	template<typename T>

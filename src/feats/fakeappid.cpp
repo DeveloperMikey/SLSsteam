@@ -178,5 +178,5 @@ void FakeAppIds::sendMsg(CNetPacket* pkt)
 		game->set_game_id(fakeAppId);
 	}
 
-	pkt->serializeBody(msg);
+	pkt->serialize(msg);
 }

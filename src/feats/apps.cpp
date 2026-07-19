@@ -385,7 +385,7 @@ void Apps::sendGamesPlayed(CNetPacket* pkt)
 		}
 	}
 
-	pkt->serializeBody(msg);
+	pkt->serialize(msg);
 }
 
 void Apps::sendPICSInfoRequest(CNetPacket* pkt)

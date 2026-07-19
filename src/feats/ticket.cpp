@@ -239,7 +239,7 @@ void Ticket::recvEncryptedAppTicket(CNetPacket* pkt)
 	}
 
 	msg.ParseFromString(ticket.ticket);
-	pkt->serializeBody(msg);
+	pkt->serialize(msg);
 
 	g_pLog->debug("Using encryptedTicket_%u from disk\n", msg.app_id());
 }
