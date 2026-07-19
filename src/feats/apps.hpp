@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <unordered_set>
 
-class CProtoBufMsgBase;
+class CNetPacket;
 class CMsgClientGamesPlayed;
 class CMsgClientPICSProductInfoRequest;
 class CMsgClientPICSProductInfoResponse;
@@ -34,7 +34,7 @@ namespace Apps
 	bool shouldDisableUpdates(uint32_t appId);
 
 	void sendAndRecvLastPlayedTimes(const char* name, CPlayer_GetLastPlayedTimes_Response* recv);
-	void sendGamesPlayed(CMsgClientGamesPlayed* msg);
-	void sendPICSInfoRequest(CMsgClientPICSProductInfoRequest* msg);
-	void sendMsg(CProtoBufMsgBase* msg);
+	void sendGamesPlayed(CNetPacket* pkg);
+	void sendPICSInfoRequest(CNetPacket* pkg);
+	void sendMsg(CNetPacket* packet);
 };

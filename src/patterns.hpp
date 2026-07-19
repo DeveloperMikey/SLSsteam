@@ -69,6 +69,11 @@ namespace Patterns
 		extern Pattern_t RecvPkt;
 	}
 
+	namespace CWebSocketConnection
+	{
+		extern Pattern_t BBuildAndAsyncSendFrame;
+	}
+
 	namespace CUser
 	{
 		//TODO: Order & Convert old patterns

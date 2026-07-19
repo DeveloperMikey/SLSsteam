@@ -78,6 +78,16 @@ namespace Patterns
 		};
 	}
 
+	namespace CWebSocketConnection
+	{
+		Pattern_t BBuildAndAsyncSendFrame
+		{
+			"CWebSocketConnection::BBuildAndAsyncSendFrame",
+			"E8 ? ? ? ? C6 86 ? ? ? ? ? 8D 86 ? ? ? ? 83 C4 ? 80 BE ? ? ? ? ? 75 ? 80 7D B0 ?",
+			SigFollowMode::Relative
+		};
+	}
+
 	namespace CCMInterface
 	{
 		Pattern_t RecvPkt

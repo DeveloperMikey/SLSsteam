@@ -5,5 +5,5 @@ class CNetPacket;
 namespace Misc
 {
 	bool shouldFakeOffline();
-	void recvMsg(CNetPacket* msg);
+	void recvMsg(CNetPacket* pkt);
 }

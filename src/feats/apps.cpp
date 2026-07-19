@@ -1,5 +1,6 @@
 #include "apps.hpp"
 
+#include "../sdk/CNetPacket.hpp"
 #include "../sdk/CProtoBufMsgBase.hpp"
 #include "../sdk/CSteamEngine.hpp"
 #include "../sdk/CUser.hpp"
@@ -311,20 +312,22 @@ void Apps::sendAndRecvLastPlayedTimes(const char* name, CPlayer_GetLastPlayedTim
 	}
 }
 
-void Apps::sendGamesPlayed(CMsgClientGamesPlayed* msg)
+void Apps::sendGamesPlayed(CNetPacket* pkt)
 {
+	auto msg = pkt->deserializeBody<CMsgClientGamesPlayed>();
+
 	auto titles = g_config.gameTitles.get();
 	bool owned = false;
 
-	for(int i = 0; i < msg->games_played_size(); i++)
+	for(int i = 0; i < msg.games_played_size(); i++)
 	{
-		auto game = CMsgClientGamesPlayed_GamePlayed(msg->games_played(i));
-		if (!game.game_id())
+		auto game = msg.mutable_games_played(i);
+		if (!game->game_id())
 		{
 			continue;
 		}
 
-		const uint64_t gameId = game.game_id();
+		const uint64_t gameId = game->game_id();
 
 		// Native non-Steam shortcut IDs use 0x2000000 in their low 32 bits.
 		// Leave the original shortcut title and 64-bit ID untouched.
@@ -341,12 +344,12 @@ void Apps::sendGamesPlayed(CMsgClientGamesPlayed* msg)
 
 		if (g_config.disableFamilyLock.get())
 		{
-			game.set_owner_id(1);
+			game->set_owner_id(1);
 		}
 
 		if (titles.contains(gameId))
 		{
-			game.set_game_extra_info(titles[gameId]);
+			game->set_game_extra_info(titles[gameId]);
 		}
 		else if (!owned || FakeAppIds::getFakeAppId(gameId))
 		{
@@ -355,63 +358,66 @@ void Apps::sendGamesPlayed(CMsgClientGamesPlayed* msg)
 			if (len > 0)
 			{
 				g_pLog->debug("AppName %s (%i)\n", name, len);
-				game.set_game_extra_info(name);
+				game->set_game_extra_info(name);
 			}
 		}
 
-		msg->mutable_games_played(i)->ParseFromString(game.SerializeAsString());
+		//msg->mutable_games_played(i)->ParseFromString(game.SerializeAsString());
 
-		g_pLog->debug("Playing game %llu with flags %u & pid %u\n", gameId, game.game_flags(), game.process_id());
+		g_pLog->debug("Playing game %llu with flags %u & pid %u\n", gameId, game->game_flags(), game->process_id());
 	}
 
-	if (owned || msg->games_played_size() > 0)
+	if (msg.games_played_size() < 1)
 	{
-		return;
-	}
-
-	const auto statusApp = g_config.idleStatus.get();
-	if (statusApp.appId)
-	{
-		auto game = msg->add_games_played();
-		game->set_game_id(statusApp.appId);
-		game->set_game_extra_info(statusApp.title);
-		game->set_game_flags(0);
-
-		if (g_config.disableFamilyLock.get())
+		const auto statusApp = g_config.idleStatus.get();
+		if (statusApp.appId)
 		{
-			game->set_owner_id(1);
+			auto game = msg.add_games_played();
+			game->set_game_id(statusApp.appId);
+			game->set_game_extra_info(statusApp.title);
+			game->set_game_flags(0);
+
+			if (g_config.disableFamilyLock.get())
+			{
+				game->set_owner_id(1);
+			}
+			//game->set_game_flags(EGAMEFLAG_MULTIPLAYER);
 		}
-		//game->set_game_flags(EGAMEFLAG_MULTIPLAYER);
 	}
+
+	pkt->serializeBody(msg);
 }
 
-void Apps::sendPICSInfoRequest(CMsgClientPICSProductInfoRequest* msg)
+void Apps::sendPICSInfoRequest(CNetPacket* pkt)
 {
 	const auto tokens = g_config.appTokens.get();
+	auto msg = pkt->deserializeBody<CMsgClientPICSProductInfoRequest>();
 
-	for(int i = 0; i < msg->apps_size(); i++)
+	for(int i = 0; i < msg.apps_size(); i++)
 	{
-		auto app = msg->mutable_apps(i);
+		auto app = msg.mutable_apps(i);
 		if (tokens.contains(app->appid()))
 		{
 			app->set_access_token(tokens.at(app->appid()));
 			g_pLog->debug("Used access token from config for %u\n", app->appid());
 		}
 	}
+
+	pkt->serializeBody(msg);
 }
 
-void Apps::sendMsg(CProtoBufMsgBase *msg)
+void Apps::sendMsg(CNetPacket *pkt)
 {
-	switch(msg->type)
+	switch(pkt->getProtoBufType())
 	{
 		case EMSG_PICS_PRODUCTINFO_REQUEST:
-			sendPICSInfoRequest(msg->getBody<CMsgClientPICSProductInfoRequest>());
+			sendPICSInfoRequest(pkt);
 			break;
 
 		case EMSG_GAMESPLAYED:
 		case EMSG_GAMESPLAYED_NO_DATABLOB:
 		case EMSG_GAMESPLAYED_WITH_DATABLOB:
-			sendGamesPlayed(msg->getBody<CMsgClientGamesPlayed>());
+			sendGamesPlayed(pkt);
 			break;
 	}
 }

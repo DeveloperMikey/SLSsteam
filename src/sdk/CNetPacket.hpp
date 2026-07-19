@@ -27,6 +27,8 @@ constexpr static unsigned int MAX_PACKETS = 64;
 static uint8_t PACKETS_ARRAY[MAX_PACKET_SIZE * MAX_PACKETS] { };
 static uint32_t PACKETS_ARRAY_INDEX = 0;
 
+static std::mutex serializeMutex;
+
 class CNetPacket
 {
 public:
@@ -70,6 +72,8 @@ public:
 	template<typename T>
 	constexpr void serializeBody(const T& msg)
 	{
+		const std::lock_guard lock(serializeMutex);
+
 		const uintptr_t msgOffset = body->headerSize + sizeof(CNetPacketBody);
 		const uintptr_t newSize = msg.ByteSizeLong() + msgOffset;
 		//uint8_t* mem = reinterpret_cast<uint8_t*>(malloc(newSize));

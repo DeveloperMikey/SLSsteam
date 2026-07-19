@@ -95,8 +95,6 @@ namespace Hooks
 
 	typedef void(*CCMInterface_RecvPkt_t)(void*, CNetPacket*);
 
-	typedef uint32_t(*CProtoBufMsgBase_Send_t)(CProtoBufMsgBase*);
-
 	typedef void(*CSteamEngine_Init_t)(void*);
 	typedef uint32_t(*CSteamEngine_SetAppIdForCurrentPipe_t)(void*, uint32_t, bool);
 
@@ -107,6 +105,8 @@ namespace Hooks
 	typedef uint32_t(*CUser_GetSubscribedApps_t)(void*, uint32_t*, uint32_t, uint8_t);
 
 	typedef bool(*CUserAppManager_BuildDepotDependency_t)(void*, uint32_t, void*, CUtlVector<DepotInfo_t>*, CUtlVector<DepotInfo_t>*, void*, uint32_t*, bool*);
+
+	typedef bool(*CWebSocketConnection_BBuildAndAsyncSendFrame_t)(void*, uint32_t, void*, uint32_t);
 
 	typedef bool(*IClientAppManager_BCanRemotePlayTogether_t)(void*, uint32_t);
 
@@ -136,8 +136,6 @@ namespace Hooks
 
 	extern DetourHook<CCMInterface_RecvPkt_t> CCMInterface_RecvPkt;
 
-	extern DetourHook<CProtoBufMsgBase_Send_t> CProtoBufMsgBase_Send;
-
 	extern DetourHook<CSteamMatchmakingServers_GetServerDetails_t> CSteamMatchmakingServers_GetServerDetails;
 	extern DetourHook<CSteamMatchmakingServers_RequestInternetServerList_t> CSteamMatchmakingServers_RequestInternetServerList;
 
@@ -148,6 +146,8 @@ namespace Hooks
 	extern DetourHook<CUser_GetSubscribedApps_t> CUser_GetSubscribedApps;
 
 	extern DetourHook<CUserAppManager_BuildDepotDependency_t> CUserAppManager_BuildDepotDependency;
+
+	extern DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
 	extern DetourHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 

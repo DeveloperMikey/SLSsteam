@@ -2,6 +2,7 @@
 
 #include "../config.hpp"
 
+#include "../sdk/CNetPacket.hpp"
 #include "../sdk/CProtoBufMsgBase.hpp"
 #include "../sdk/CSteamEngine.hpp"
 #include "../sdk/CSteamMatchmakingServers.hpp"
@@ -142,10 +143,9 @@ void FakeAppIds::pingResponse(gameserverdetails_t *details)
 	details->appId = fakeAppIdMapPings[ip];
 }
 
-
-void FakeAppIds::sendMsg(CProtoBufMsgBase* msg)
+void FakeAppIds::sendMsg(CNetPacket* pkt)
 {
-	switch(msg->type)
+	switch(pkt->getProtoBufType())
 	{
 		case EMSG_GAMESPLAYED:
 		case EMSG_GAMESPLAYED_NO_DATABLOB:
@@ -156,10 +156,11 @@ void FakeAppIds::sendMsg(CProtoBufMsgBase* msg)
 			return;
 	}
 
-	const auto body = msg->getBody<CMsgClientGamesPlayed>();
-	for(int i = 0; i < body->games_played_size(); i++)
+	auto msg = pkt->deserializeBody<CMsgClientGamesPlayed>();
+
+	for(int i = 0; i < msg.games_played_size(); i++)
 	{
-		const auto game = body->mutable_games_played(i);
+		const auto game = msg.mutable_games_played(i);
 		const uint64_t gameId = game->game_id();
 
 		if (gameId & 0x2000000ULL)
@@ -176,4 +177,6 @@ void FakeAppIds::sendMsg(CProtoBufMsgBase* msg)
 		g_pLog->debug("Setting %llu to %u\n", gameId, fakeAppId);
 		game->set_game_id(fakeAppId);
 	}
+
+	pkt->serializeBody(msg);
 }

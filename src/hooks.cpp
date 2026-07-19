@@ -260,16 +260,18 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 
 		if (disableFamilyShareLock && type == EMSG_SHARED_LIBRARY_STOP_PLAYING)
 		{
-			free(pNetPacket->body);
+			//Hide body and call original function so steam uses it's own free
+			//We can also free the body ourself, but not the pNetPacket
+			pNetPacket->size = pNetPacket->body->headerSize + sizeof(CNetPacketBody);
 			g_pLog->debug("Chocked EMSG_SHARED_LIBRARY_STOP_PLAYING\n");
-			return;
 		}
 
 		if (disableFamilyShareLock && type == EMSG_SERVICE_METHOD && header.target_job_name() == "FamilyGroupsClient.NotifyRunningApps#1")
 		{
-			free(pNetPacket->body);
+			//Hide body and call original function so steam uses it's own free
+			//We can also free the body ourself, but not the pNetPacket
+			pNetPacket->size = pNetPacket->body->headerSize + sizeof(CNetPacketBody);
 			g_pLog->debug("Chocked FamilyGroupsClient.NotifyRunningApps#1\n");
-			return;
 		}
 
 		Misc::recvMsg(pNetPacket);
@@ -277,17 +279,6 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 	}
 
 	Hooks::CCMInterface_RecvPkt.tramp.fn(pCMInterface, pNetPacket);
-}
-
-static uint32_t hkProtoBufMsgBase_Send(CProtoBufMsgBase* pMsg)
-{
-	Apps::sendMsg(pMsg);
-	FakeAppIds::sendMsg(pMsg);
-
-	const uint32_t ret = Hooks::CProtoBufMsgBase_Send.tramp.fn(pMsg);
-	g_pLog->debug("Sending ProtoBufMsg of type %u with type %s\n", pMsg->type, MemHlp::getTypeName(pMsg));
-
-	return ret;
 }
 
 static void hkSteamEngine_Init(void* pSteamEngine)
@@ -316,6 +307,30 @@ static uint32_t hkSteamEngine_SetAppIdForCurrentPipe(void* pSteamEngine, uint32_
 	);
 
 	return ret;
+}
+
+static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(void* pWebSocketConnection, uint32_t type, void* pData, uint32_t dataSize)
+{
+	if (type == 2)
+	{
+		CNetPacket packet {};
+		packet.body = reinterpret_cast<CNetPacketBody*>(pData);
+		packet.size = dataSize;
+
+		g_pLog->debug("SendPkt %p\n", packet.getType());
+
+		if (packet.isValid() && packet.isProtoBuf())
+		{
+			Apps::sendMsg(&packet);
+			FakeAppIds::sendMsg(&packet);
+
+			//Do not free ourself since Steam does so. We reuse our CNetPacket buffer
+			pData = packet.body;
+			dataSize = packet.size;
+		}
+	}
+
+	return Hooks::CWebSocketConnection_BBuildAndAsyncSendFrame.tramp.fn(pWebSocketConnection, type, pData, dataSize);
 }
 
 static gameserverdetails_t* hkSteamMatchmakingServers_GetServerDetails(void* pSteamMatchmakingServers, uint32_t handle, uint32_t serverIdx)
@@ -1070,8 +1085,6 @@ namespace Hooks
 
 	DetourHook<CCMInterface_RecvPkt_t> CCMInterface_RecvPkt;
 
-	DetourHook<CProtoBufMsgBase_Send_t> CProtoBufMsgBase_Send;
-
 	DetourHook<CSteamMatchmakingServers_GetServerDetails_t> CSteamMatchmakingServers_GetServerDetails;
 	DetourHook<CSteamMatchmakingServers_RequestInternetServerList_t> CSteamMatchmakingServers_RequestInternetServerList;
 
@@ -1082,6 +1095,8 @@ namespace Hooks
 	DetourHook<CUser_GetSubscribedApps_t> CUser_GetSubscribedApps;
 
 	DetourHook<CUserAppManager_BuildDepotDependency_t> CUserAppManager_BuildDepotDependency;
+
+	DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
 	DetourHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 
@@ -1138,8 +1153,6 @@ bool Hooks::setup()
 
 		&& CCMInterface_RecvPkt.setup(Patterns::CCMInterface::RecvPkt, &hkCMInterface_RecvPkt)
 
-		&& CProtoBufMsgBase_Send.setup(Patterns::CProtoBufMsgBase::Send, &hkProtoBufMsgBase_Send)
-
 		&& CSteamMatchmakingServers_GetServerDetails.setup(Patterns::CSteamMatchmakingServers::GetServerDetails, &hkSteamMatchmakingServers_GetServerDetails)
 		&& CSteamMatchmakingServers_RequestInternetServerList.setup(Patterns::CSteamMatchmakingServers::RequestInternetServerList, &hkSteamMatchmakingServers_RequestInternetServerList)
 
@@ -1150,6 +1163,8 @@ bool Hooks::setup()
 
 		&& CSteamEngine_Init.setup(Patterns::CSteamEngine::Init, &hkSteamEngine_Init)
 		&& CSteamEngine_SetAppIdForCurrentPipe.setup(Patterns::CSteamEngine::SetAppIdForCurrentPipe, &hkSteamEngine_SetAppIdForCurrentPipe)
+
+		&& CWebSocketConnection_BBuildAndAsyncSendFrame.setup(Patterns::CWebSocketConnection::BBuildAndAsyncSendFrame, &hkWebSocketConnection_BBuildAndAsyncSendFrame)
 
 		&& IClientAppManager_BCanRemotePlayTogether.setup(Patterns::IClientAppManager::BCanRemotePlayTogether, hkClientAppManager_BCanRemotePlayTogether)
 
@@ -1187,8 +1202,6 @@ void Hooks::place()
 
 	CCMInterface_RecvPkt.place();
 
-	CProtoBufMsgBase_Send.place();
-
 	CSteamEngine_Init.place();
 	CSteamEngine_SetAppIdForCurrentPipe.place();
 
@@ -1199,6 +1212,8 @@ void Hooks::place()
 	CUser_GetSubscribedApps.place();
 
 	CUserAppManager_BuildDepotDependency.place();
+
+	CWebSocketConnection_BBuildAndAsyncSendFrame.place();
 
 	IClientAppManager_BCanRemotePlayTogether.place();
 
@@ -1234,8 +1249,6 @@ void Hooks::remove()
 
 	CCMInterface_RecvPkt.remove();
 
-	CProtoBufMsgBase_Send.remove();
-
 	CSteamEngine_Init.remove();
 	CSteamEngine_SetAppIdForCurrentPipe.remove();
 
@@ -1246,6 +1259,8 @@ void Hooks::remove()
 	CUser_GetSubscribedApps.remove();
 
 	CUserAppManager_BuildDepotDependency.remove();
+
+	CWebSocketConnection_BBuildAndAsyncSendFrame.remove();
 
 	IClientAppManager_BCanRemotePlayTogether.remove();
 
