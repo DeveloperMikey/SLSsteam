@@ -21,8 +21,8 @@ public:
 	//Body[CNetPacket->size - headerSize - sizeof(CNetPacketBody)]
 };
 
-constexpr static unsigned int MAX_PACKET_SIZE = 8192;
-constexpr static unsigned int MAX_PACKETS = 64;
+constexpr static unsigned int MAX_PACKET_SIZE = 1024 * 1024 * 1; //1MB
+constexpr static unsigned int MAX_PACKETS = 8;
 
 //TODO: Move into anonymous namespace or something, so these don't clutter the global namespace
 extern uint8_t g_packetsArray[MAX_PACKET_SIZE * MAX_PACKETS];
