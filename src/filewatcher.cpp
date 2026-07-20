@@ -63,7 +63,7 @@ void* watchLoop(void* args)
 	return nullptr;
 }
 
-CFileWatcher::CFileWatcher(FileModifyEvent_t onModify)
+CFileWatcher::CFileWatcher(const FileModifyEvent_t onModify)
 {
 	this->onModify = onModify;
 
@@ -98,7 +98,7 @@ int CFileWatcher::addFile(const char* path)
 {
 	//Watching seperate files does not seem to work very well, since the file descriptor becomes useless
 	//on some operations
-	std::filesystem::path p(path);
+	const std::filesystem::path p(path);
 	int fd = inotify_add_watch(notifyFd, p.parent_path().c_str(), IN_CLOSE_WRITE);
 	if (fd == -1)
 	{

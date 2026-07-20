@@ -15,7 +15,7 @@
 #include <string>
 
 
-std::string CConfig::getDir()
+std::string CConfig::getDir() const
 {
 	char pathBuf[255];
 	const char* configDir = getenv("XDG_CONFIG_HOME"); //Most users should have this set iirc
@@ -32,17 +32,17 @@ std::string CConfig::getDir()
 	return std::string(pathBuf);
 }
 
-std::string CConfig::getPath()
+std::string CConfig::getPath() const
 {
 	return getDir().append("/config.yaml");
 }
 
-bool CConfig::createFile()
+bool CConfig::createFile() const
 {
-	std::string path = getPath();
+	const std::string path = getPath();
 	if (!std::filesystem::exists(path))
 	{
-		std::string dir = getDir();
+		const std::string dir = getDir();
 		if (!std::filesystem::exists(dir))
 		{
 			if (!std::filesystem::create_directory(dir))
@@ -158,9 +158,9 @@ bool CConfig::loadSettings(bool firstLoad)
 	g_pLog->info("ExtendedLogging: %i\n", extendedLogging.get());
 	g_pLog->info("LogLevel: %i\n", logLevel.get());
 
-	std::lock_guard appsChanged(appsChangedMutex);
-	auto prevAppIds = addedAppIds.get();
-	auto _addedAppIds = getList<AppId_t>(node, "AdditionalApps");
+	const std::lock_guard appsChanged(appsChangedMutex);
+	const auto prevAppIds = addedAppIds.get();
+	const auto _addedAppIds = getList<AppId_t>(node, "AdditionalApps");
 
 	if (!firstLoad)
 	{
@@ -204,8 +204,8 @@ bool CConfig::loadSettings(bool firstLoad)
 	{
 		try
 		{
-			auto appId = idleStatusNode["AppId"].as<AppId_t>();
-			auto title = idleStatusNode["Title"].as<std::string>();
+			const auto appId = idleStatusNode["AppId"].as<AppId_t>();
+			const auto title = idleStatusNode["Title"].as<std::string>();
 
 			idleStatus = FakeGame_t
 			{
@@ -317,12 +317,12 @@ bool CConfig::loadSettings(bool firstLoad)
 	return true;
 }
 
-bool CConfig::isAddedAppId(AppId_t appId)
+bool CConfig::isAddedAppId(const AppId_t appId)
 {
 	return addedAppIds.get().contains(appId);
 }
 
-bool CConfig::shouldExcludeAppId(AppId_t appId, bool ignoreAdditionalApps)
+bool CConfig::shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditionalApps)
 {
 	bool exclude = false;
 	//Proper way would be with getAppType, but that seems broken so we need to do this instead
@@ -334,7 +334,7 @@ bool CConfig::shouldExcludeAppId(AppId_t appId, bool ignoreAdditionalApps)
 	else
 	{
 		const bool whitelist = useWhiteList.get();
-		bool found = appIds.get().contains(appId);
+		const bool found = appIds.get().contains(appId);
 		exclude = (!isAddedAppId(appId) || ignoreAdditionalApps) && ((whitelist && !found) || (!whitelist && found));
 
 		if (!ignoreAdditionalApps)
@@ -366,7 +366,7 @@ bool CConfig::shouldExcludeAppId(AppId_t appId, bool ignoreAdditionalApps)
 	return exclude;
 }
 
-uint32_t CConfig::getDenuvoGameOwner(AppId_t appId)
+uint32_t CConfig::getDenuvoGameOwner(const AppId_t appId)
 {
 	for(const auto& tpl : denuvoGames.get())
 	{

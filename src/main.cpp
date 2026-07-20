@@ -29,12 +29,12 @@ static bool cleanEnvVar(const char* varName, const char* endsWith)
 	if (var == NULL)
 		return false;
 
-	auto splits = Utils::strsplit(var, ":");
+	const auto splits = Utils::strsplit(var, ":");
 	auto newEnv = std::string();
 
 	for(unsigned int i = 0; i < splits.size(); i++)
 	{
-		auto split = splits.at(i);
+		const auto split = splits.at(i);
 		if (split.ends_with(endsWith))
 		{
 			g_pLog->debug("Removed %s from $%s\n", endsWith, varName);
@@ -154,8 +154,8 @@ static void load()
 		return;
 	}
 
-	auto path = std::filesystem::path(g_modSteamClient.path);
-	auto dir = path.parent_path();
+	const auto path = std::filesystem::path(g_modSteamClient.path);
+	const auto dir = path.parent_path();
 
 	g_pLog->info
 	(

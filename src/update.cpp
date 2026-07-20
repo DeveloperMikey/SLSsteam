@@ -59,14 +59,14 @@ bool Updater::init()
 		YAML::Node node = YAML::Load(data);
 		for (const auto& sub : node["SafeModeHashes"])
 		{
-			uint64_t version = sub.first.as<uint64_t>();
+			const uint64_t version = sub.first.as<uint64_t>();
 			clientHashMap[version] = std::unordered_set<std::string>();
 
 			g_pLog->debug("Parsing version %llu\n", version);
 
 			for(const auto& hash : sub.second)
 			{
-				auto str = hash.as<std::string>();
+				const auto str = hash.as<std::string>();
 				clientHashMap[version].emplace(str);
 
 				g_pLog->debug("Added %s to SLSsteam version %llu\n", str.c_str(), version);
@@ -85,13 +85,13 @@ bool Updater::init()
 
 std::string Updater::getCacheFilePath()
 {
-	auto path = g_config.getDir().append("/.updates.yaml");
+	const auto path = g_config.getDir().append("/.updates.yaml");
 	return path;
 }
 
-void Updater::saveToCache(std::string yaml)
+void Updater::saveToCache(const std::string yaml)
 {
-	auto path = Updater::getCacheFilePath();
+	const auto path = Updater::getCacheFilePath();
 
 	std::ofstream stream = std::ofstream(path.c_str());
 	stream << yaml;
@@ -102,7 +102,7 @@ void Updater::saveToCache(std::string yaml)
 
 std::string Updater::loadFromCache()
 {
-	auto path = Updater::getCacheFilePath();
+	const auto path = Updater::getCacheFilePath();
 	if (!std::filesystem::exists(path))
 	{
 		return std::string();
@@ -120,11 +120,11 @@ std::string Updater::loadFromCache()
 
 bool Updater::verifySafeModeHash()
 {
-	auto path = std::filesystem::path(g_modSteamClient.path);
+	const auto path = std::filesystem::path(g_modSteamClient.path);
 
 	try
 	{
-		std::string sha256 = Utils::getFileSHA256(path.c_str());
+		const std::string sha256 = Utils::getFileSHA256(path.c_str());
 		g_pLog->info("steamclient.so hash is %s\n", sha256.c_str());
 
 		if (!clientHashMap.contains(VERSION))

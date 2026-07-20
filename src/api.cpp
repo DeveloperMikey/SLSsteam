@@ -44,15 +44,15 @@ void SLSAPI::onFileChange()
 
 	g_pLog->debug("API Running %s\n", cmd);
 
-	auto split = Utils::strsplit(cmd, "|");
+	const auto split = Utils::strsplit(cmd, "|");
 	if (strcmp(split[0].c_str(), "install") == 0 && split.size() > 2)
 	{
 		try
 		{
-			AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
-			uint32_t library = std::strtoul(split[2].c_str(), nullptr, 10);
+			const AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
+			const uint32_t library = std::strtoul(split[2].c_str(), nullptr, 10);
 
-			std::lock_guard guard(executionMutex);
+			const std::lock_guard guard(executionMutex);
 			installs.emplace_back(InstallCommand_t { appId, library } );
 		}
 		catch(...)
@@ -64,9 +64,9 @@ void SLSAPI::onFileChange()
 	{
 		try
 		{
-			AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
+			const AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
 
-			std::lock_guard guard(executionMutex);
+			const std::lock_guard guard(executionMutex);
 			uninstalls.emplace_back(appId);
 		}
 		catch(...)
@@ -87,7 +87,7 @@ void SLSAPI::init()
 	}
 
 	watcher = new CFileWatcher(onFileChange);
-	int fd = watcher->addFile(path);
+	const int fd = watcher->addFile(path);
 	if (fd == -1)
 	{
 		g_pLog->warn("Failed to watch %s!\n API will be unavailable", path);
@@ -105,7 +105,7 @@ void SLSAPI::runIPCFrame()
 		return;
 	}
 
-	std::lock_guard guard(executionMutex);
+	const std::lock_guard guard(executionMutex);
 
 	while(installs.size())
 	{

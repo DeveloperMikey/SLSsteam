@@ -17,7 +17,7 @@ public:
 
 	FileModifyEvent_t onModify;
 
-	CFileWatcher(FileModifyEvent_t onModify);
+	CFileWatcher(const FileModifyEvent_t onModify);
 	~CFileWatcher();
 
 	int addFile(const char* path);

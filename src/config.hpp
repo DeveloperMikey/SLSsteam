@@ -83,16 +83,16 @@ public:
 
 	~CConfig();
 
-	std::string getDir();
-	std::string getPath();
-	bool createFile();
+	std::string getDir() const;
+	std::string getPath() const;
+	bool createFile() const;
 	bool init();
 
-	void setError(ELoadError err);
-	bool loadSettings(bool firstLoad = false);
+	void setError(const ELoadError err);
+	bool loadSettings(const bool firstLoad = false);
 
 	template<typename T>
-	T getSetting(YAML::Node& node, const char* name, T defVal)
+	T getSetting(YAML::Node& node, const char* name, const T defVal)
 	{
 		if (!node[name])
 		{
@@ -130,7 +130,7 @@ public:
 		{
 			try
 			{
-				T val = subNode.as<T>();
+				const T val = subNode.as<T>();
 				list.emplace(val);
 
 				//TODO: Find better way to log shit
@@ -167,8 +167,8 @@ public:
 			try
 			{
 				//TODO: Add error checks for failed parsing since yaml-cpp does not throw
-				auto k = subNode.first.as<T>();
-				auto v = subNode.second.as<T2>();
+				const auto k = subNode.first.as<T>();
+				const auto v = subNode.second.as<T2>();
 
 				map[k] = v;
 
@@ -191,11 +191,11 @@ public:
 		return map;
 	}
 
-	bool isAddedAppId(AppId_t appId);
-	bool addAdditionalAppId(AppId_t appId);
+	bool isAddedAppId(const AppId_t appId);
+	bool addAdditionalAppId(const AppId_t appId);
 
-	bool shouldExcludeAppId(AppId_t appId, bool ignoreAdditionalApps = false);
-	uint32_t getDenuvoGameOwner(AppId_t appId);
+	bool shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditionalApps = false);
+	uint32_t getDenuvoGameOwner(const AppId_t appId);
 };
 
 extern CConfig g_config;

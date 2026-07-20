@@ -38,7 +38,7 @@ std::string Utils::getFileSHA256(const char *filePath)
 		throw std::runtime_error("Unable to read file!");
 	}
 
-	std::vector<unsigned char> bytes(std::istreambuf_iterator<char>(fs), {});
+	const std::vector<unsigned char> bytes(std::istreambuf_iterator<char>(fs), {});
 	unsigned char sha256Bytes[SHA256_DIGEST_LENGTH];
 	SHA256(bytes.data(), bytes.size(), sha256Bytes);
 

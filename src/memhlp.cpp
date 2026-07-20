@@ -13,7 +13,7 @@ std::vector<int16_t> MemHlp::patternToBytes(const char* pattern)
 	auto bytes = std::vector<int16_t>();
 
 	char* start = const_cast<char*>(pattern);
-	char* end = start + strlen(pattern);
+	const char* end = start + strlen(pattern);
 
 	while (start < end)
 	{
@@ -32,7 +32,7 @@ std::vector<int16_t> MemHlp::patternToBytes(const char* pattern)
 	return bytes;
 }
 
-lm_address_t MemHlp::patternScan(const char* pattern, lm_module_t targetModule)
+lm_address_t MemHlp::patternScan(const char* pattern, const lm_module_t targetModule)
 {
 	const auto bytes = patternToBytes(pattern);
 
@@ -76,7 +76,7 @@ lm_address_t MemHlp::patternScan(const char* pattern, lm_module_t targetModule)
 					continue;
 				}
 
-				lm_address_t byteAddr = cur + i;
+				const lm_address_t byteAddr = cur + i;
 				if (byteAddr > itm.second)
 				{
 					found = false;
@@ -107,7 +107,7 @@ lm_address_t MemHlp::patternScan(const char* pattern, lm_module_t targetModule)
 	return address;
 }
 
-lm_address_t MemHlp::searchSignature(const char* name, const char* signature, lm_module_t module, SigFollowMode mode, void* extraData, size_t extraDataSize)
+lm_address_t MemHlp::searchSignature(const char* name, const char* signature, const lm_module_t module, const SigFollowMode mode, const void* extraData, const size_t extraDataSize)
 {
 	//lm_address_t address = LM_SigScan(signature, module.base, module.size);
 	lm_address_t address = patternScan(signature, module);
@@ -126,7 +126,7 @@ lm_address_t MemHlp::searchSignature(const char* name, const char* signature, lm
 
 			case SigFollowMode::PrologueUpwards:
 				g_pLog->debug("Searching function prologue of %s from %p\n", name, address);
-				address = MemHlp::findPrologue(address, static_cast<lm_byte_t*>(extraData), extraDataSize);
+				address = MemHlp::findPrologue(address, static_cast<const lm_byte_t*>(extraData), extraDataSize);
 				break;
 
 			default:
@@ -139,17 +139,17 @@ lm_address_t MemHlp::searchSignature(const char* name, const char* signature, lm
 	return address;
 }
 
-lm_address_t MemHlp::searchSignature(const char* name, const char* signature, lm_module_t module, SigFollowMode mode)
+lm_address_t MemHlp::searchSignature(const char* name, const char* signature, const lm_module_t module, const SigFollowMode mode)
 {
 	return MemHlp::searchSignature(name, signature, module, mode, nullptr, 0);
 }
 
-lm_address_t MemHlp::searchSignature(const char* name, const char* signature, lm_module_t module)
+lm_address_t MemHlp::searchSignature(const char* name, const char* signature, const lm_module_t module)
 {
 	return searchSignature(name, signature, module, SigFollowMode::None);
 }
 
-lm_address_t MemHlp::getJmpTarget(lm_address_t address)
+lm_address_t MemHlp::getJmpTarget(const lm_address_t address)
 {
 	lm_inst_t inst;
 	if (!LM_Disassemble(address, &inst)) //Should not happen if we land in a code section
@@ -161,12 +161,14 @@ lm_address_t MemHlp::getJmpTarget(lm_address_t address)
 	g_pLog->debug("Resolved to %s %s\n", inst.mnemonic, inst.op_str);
 
 	if (strcmp(inst.mnemonic, "jmp") != 0 && strcmp(inst.mnemonic, "call") != 0)
+	{
 		return LM_ADDRESS_BAD;
+	}
 
 	return std::stoul(inst.op_str, nullptr, 16);
 }
 
-lm_address_t MemHlp::findPrologue(lm_address_t address, lm_byte_t* prologueBytes, lm_size_t prologueSize)
+lm_address_t MemHlp::findPrologue(const lm_address_t address, const lm_byte_t* prologueBytes, const lm_size_t prologueSize)
 {
 	constexpr unsigned int scanSize = 0x10000;
 
@@ -194,7 +196,7 @@ lm_address_t MemHlp::findPrologue(lm_address_t address, lm_byte_t* prologueBytes
 	return LM_ADDRESS_BAD;
 }
 
-bool MemHlp::fixPICThunkCall(const char* name, lm_address_t fn, lm_address_t tramp)
+bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_address_t tramp)
 {
 	g_pLog->debug("Fixing PIC thunks for %s's trampoline\n", name);
 	constexpr unsigned int maxBytes = 0x5; //Minimum bytes needed to detour a function, so our tramp will at least be of this size
@@ -202,7 +204,7 @@ bool MemHlp::fixPICThunkCall(const char* name, lm_address_t fn, lm_address_t tra
 	lm_inst_t inst;
 	for(unsigned int curTrampOffset = 0; curTrampOffset <= maxBytes; )
 	{
-		lm_address_t startAddress = tramp + curTrampOffset;
+		const lm_address_t startAddress = tramp + curTrampOffset;
 
 		if (!LM_Disassemble(startAddress, &inst))
 		{
@@ -214,7 +216,9 @@ bool MemHlp::fixPICThunkCall(const char* name, lm_address_t fn, lm_address_t tra
 		g_pLog->debug("%p: %s %s\n", inst.address, inst.mnemonic, inst.op_str);
 		
 		if (strcmp(inst.mnemonic, "call") != 0)
+		{
 			continue;
+		}
 
 		//Calculate the call address manually with it's original location
 		lm_address_t followAddress = fn + curTrampOffset + *reinterpret_cast<lm_address_t*>(startAddress + 1);
@@ -240,7 +244,10 @@ bool MemHlp::fixPICThunkCall(const char* name, lm_address_t fn, lm_address_t tra
 			{
 				case 0:
 					if (strcmp(inst.mnemonic, "mov") != 0)
+					{
 						isIPCThunk = false;
+						break;
+					}
 					
 					splits = Utils::strsplit(inst.op_str, ","); //Not checking for splits.size() since mov NEEDS a , somewhere
 					retAddress = fn + curTrampOffset; //No need to add any bytes here, since i += inst.size in the outer loop takes care of that
@@ -249,16 +256,22 @@ bool MemHlp::fixPICThunkCall(const char* name, lm_address_t fn, lm_address_t tra
 
 				case 1:
 					if (strcmp(inst.mnemonic, "ret") != 0)
+					{
 						isIPCThunk = false;
+					}
 					break;
 			}
 
 			if (!isIPCThunk)
+			{
 				break;
+			}
 		}
 
 		if (!isIPCThunk)
+		{
 			continue;
+		}
 
 		if(!LM_Assemble(newInstr, &inst))
 		{
@@ -278,10 +291,10 @@ bool MemHlp::fixPICThunkCall(const char* name, lm_address_t fn, lm_address_t tra
 }
 
 
-const char* MemHlp::getTypeName(void* pClass)
+const char* MemHlp::getTypeName(const void* pClass)
 {
-	const lm_address_t vft = *reinterpret_cast<lm_address_t*>(pClass);
-	const lm_address_t typeInfo = *reinterpret_cast<lm_address_t*>(vft - sizeof(lm_address_t));
+	const lm_address_t vft = *reinterpret_cast<const lm_address_t*>(pClass);
+	const lm_address_t typeInfo = *reinterpret_cast<const lm_address_t*>(vft - sizeof(lm_address_t));
 	const char* name = *reinterpret_cast<const char**>(typeInfo + sizeof(lm_address_t));
 
 	return name;
