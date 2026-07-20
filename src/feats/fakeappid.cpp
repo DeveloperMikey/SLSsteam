@@ -3,7 +3,6 @@
 #include "../config.hpp"
 
 #include "../sdk/CNetPacket.hpp"
-#include "../sdk/CProtoBufMsgBase.hpp"
 #include "../sdk/CSteamEngine.hpp"
 #include "../sdk/CSteamMatchmakingServers.hpp"
 #include "../sdk/CUser.hpp"
@@ -15,30 +14,30 @@ std::unordered_map<uint32_t, AppId_t> FakeAppIds::fakeAppIdMap = std::unordered_
 std::unordered_map<uint32_t, AppId_t> FakeAppIds::fakeAppIdMapServer = std::unordered_map<uint32_t, AppId_t>();
 std::unordered_map<uint64_t, AppId_t> FakeAppIds::fakeAppIdMapPings = std::unordered_map<uint64_t, AppId_t>();
 
-AppId_t FakeAppIds::getFakeAppId(AppId_t appId)
+AppId_t FakeAppIds::getFakeAppId(const AppId_t appId)
 {
-	auto fakeAppIds = g_config.fakeAppIds.get();
+	const auto fakeAppIds = g_config.fakeAppIds.get();
 
 	if (fakeAppIds.contains(appId))
 	{
-		return fakeAppIds[appId];
+		return fakeAppIds.at(appId);
 	}
 	else if (fakeAppIds.contains(0) && !g_pSteamEngine->getUser(0)->isSubscribed(appId))
 	{
-		return fakeAppIds[0];
+		return fakeAppIds.at(0);
 	}
 
 	return 0;
 }
 
-AppId_t FakeAppIds::getRealAppIdForCurrentPipe(bool fallback)
+AppId_t FakeAppIds::getRealAppIdForCurrentPipe(const bool fallback)
 {
 	if (!g_pClientUtils)
 	{
 		return 0;
 	}
 
-	uint32_t hPipe = *g_pClientUtils->getPipeIndex();
+	const uint32_t hPipe = *g_pClientUtils->getPipeIndex();
 	if (fakeAppIdMap.contains(hPipe))
 	{
 		return fakeAppIdMap[hPipe];
@@ -52,7 +51,7 @@ AppId_t FakeAppIds::getRealAppIdForCurrentPipe(bool fallback)
 	return 0;
 }
 
-void FakeAppIds::launchApp(AppId_t appId)
+void FakeAppIds::launchApp(const AppId_t appId)
 {
 	lastAppLaunched = appId;
 }
@@ -71,7 +70,7 @@ void FakeAppIds::setAppIdForCurrentPipe(AppId_t& appId)
 		return;
 	}
 
-	AppId_t newAppId = getFakeAppId(appId);
+	const AppId_t newAppId = getFakeAppId(appId);
 	if (newAppId)
 	{
 		g_pLog->once("Changing AppId of %u\n", appId);
@@ -79,10 +78,10 @@ void FakeAppIds::setAppIdForCurrentPipe(AppId_t& appId)
 	}
 }
 
-void FakeAppIds::runIPCFrame(bool post)
+void FakeAppIds::runIPCFrame(const bool post)
 {
 	AppId_t appId = getRealAppIdForCurrentPipe(false);
-	AppId_t fakeAppId = getFakeAppId(appId);
+	const AppId_t fakeAppId = getFakeAppId(appId);
 
 	if (!appId || !fakeAppId || appId == fakeAppId)
 	{
@@ -101,7 +100,7 @@ void FakeAppIds::runIPCFrame(bool post)
 	g_pSteamEngine->setAppIdForCurrentPipe(appId);
 }
 
-void FakeAppIds::getServerDetails(uint32_t handle, gameserverdetails_t& details)
+void FakeAppIds::getServerDetails(const uint32_t handle, gameserverdetails_t& details)
 {
 	if (!fakeAppIdMapServer.contains(handle))
 	{
@@ -115,7 +114,7 @@ void FakeAppIds::getServerDetails(uint32_t handle, gameserverdetails_t& details)
 	g_pLog->debug("Changing appId back to %u\n", realAppId);
 }
 
-uint32_t FakeAppIds::requestInternetServerList(AppId_t appId)
+uint32_t FakeAppIds::requestInternetServerList(const AppId_t appId)
 {
 	const AppId_t fake = getFakeAppId(appId);
 	if (!fake)

@@ -21,8 +21,8 @@ namespace Achievements
 
 	extern std::unordered_map<AppId_t, std::unordered_set<uint64_t>> ownerBlacklist;
 
-	std::string getReviewUrl(AppId_t appId);
-	std::unordered_set<uint64_t> getReviewersForGame(AppId_t appId);
+	std::string getReviewUrl(const AppId_t appId);
+	std::unordered_set<uint64_t> getReviewersForGame(const AppId_t appId);
 
 	//CPlayer_GetUserStats
 	uint32_t sendAndRecvGetPlayerStats

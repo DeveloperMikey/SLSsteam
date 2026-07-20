@@ -27,16 +27,16 @@ public:
 	std::string getTicketDir();
 
 	//TODO: Fill with error checks
-	std::string getTicketPath(AppId_t appId);
-	SavedTicket getCachedTicket(AppId_t appId);
-	bool saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse* resp);
+	std::string getTicketPath(const AppId_t appId);
+	SavedTicket getCachedTicket(const AppId_t appId);
+	bool saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse& resp);
 
-	void launchApp(AppId_t appId);
-	void getTicketOwnershipExtendedData(AppId_t appId);
+	void launchApp(const AppId_t appId);
+	void getTicketOwnershipExtendedData(const AppId_t appId);
 
-	std::string getEncryptedTicketPath(AppId_t appId);
-	SavedTicket getCachedEncryptedTicket(AppId_t appId);
-	bool saveEncryptedTicketToCache(CMsgClientRequestEncryptedAppTicketResponse* resp);
+	std::string getEncryptedTicketPath(const AppId_t appId);
+	SavedTicket getCachedEncryptedTicket(const AppId_t appId);
+	bool saveEncryptedTicketToCache(const CMsgClientRequestEncryptedAppTicketResponse& resp);
 
 	void recvEncryptedAppTicket(CNetPacket* pkt);
 	void recvAppTicket(const CNetPacket* pkt);

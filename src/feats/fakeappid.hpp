@@ -19,17 +19,17 @@ namespace FakeAppIds
 	extern std::unordered_map<uint32_t, AppId_t> fakeAppIdMapServer;
 	extern std::unordered_map<uint64_t, AppId_t> fakeAppIdMapPings;
 
-	AppId_t getFakeAppId(AppId_t appId);
-	AppId_t getRealAppIdForCurrentPipe(bool fallback = true);
+	AppId_t getFakeAppId(const AppId_t appId);
+	AppId_t getRealAppIdForCurrentPipe(const bool fallback = true);
 
 	//General functionality
-	void launchApp(AppId_t appId);
+	void launchApp(const AppId_t appId);
 	void setAppIdForCurrentPipe(AppId_t& appId);
-	void runIPCFrame(bool post);
+	void runIPCFrame(const bool post);
 
 	//Serverbrowser
-	void getServerDetails(uint32_t handle, gameserverdetails_t& details);
-	uint32_t requestInternetServerList(AppId_t appId);
+	void getServerDetails(const uint32_t handle, gameserverdetails_t& details);
+	uint32_t requestInternetServerList(const AppId_t appId);
 	void pingResponse(gameserverdetails_t* details);
 
 	void sendGamesPlayed(CNetPacket* pkt);

@@ -21,7 +21,7 @@
 std::unordered_map<AppId_t, std::unordered_set<uint64_t>> Achievements::ownerBlacklist;
 
 
-std::string Achievements::getReviewUrl(AppId_t appId)
+std::string Achievements::getReviewUrl(const AppId_t appId)
 {
 	std::stringstream url;
 	url << "https://store.steampowered.com/appreviews/" << appId
@@ -31,7 +31,7 @@ std::string Achievements::getReviewUrl(AppId_t appId)
 	return url.str();
 }
 
-std::unordered_set<uint64_t> Achievements::getReviewersForGame(AppId_t appId)
+std::unordered_set<uint64_t> Achievements::getReviewersForGame(const AppId_t appId)
 {
 	auto list = std::unordered_set<uint64_t>();
 	if (!g_config.maxSchemaTries.get())

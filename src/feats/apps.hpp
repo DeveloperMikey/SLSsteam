@@ -21,20 +21,20 @@ namespace Apps
 {
 	extern bool applistRequested;
 
-	bool unlockApp(AppId_t appId, AppOwnershipInfo_t* info, uint32_t ownerId);
-	bool unlockApp(AppId_t appId, AppOwnershipInfo_t* info);
+	bool unlockApp(const AppId_t appId, AppOwnershipInfo_t* info, const uint32_t ownerId);
+	bool unlockApp(const AppId_t appId, AppOwnershipInfo_t* info);
 
-	void buildDepotDependency(AppId_t appId, CUtlVector<DepotInfo_t>* depots, CUtlVector<DepotInfo_t>* sharedDepots);
-	bool checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* info);
-	void getSubscribedApps(AppId_t* appList, uint32_t size, uint32_t& count);
+	void buildDepotDependency(const AppId_t appId, CUtlVector<DepotInfo_t>* depots, CUtlVector<DepotInfo_t>* sharedDepots);
+	bool checkAppOwnership(const AppId_t appId, AppOwnershipInfo_t* info);
+	void getSubscribedApps(AppId_t* appList, const uint32_t size, uint32_t& count);
 	void parseProductInfoFromResponse(CMsgClientPICSProductInfoResponse* msg);
 	void runIPCFrame();
 
 	void postAppLicensesChanged(const std::unordered_set<AppId_t>& apps);
 
-	bool shouldDisableCloud(AppId_t appId);
-	bool shouldDisableCDKey(AppId_t appId);
-	bool shouldDisableUpdates(AppId_t appId);
+	bool shouldDisableCloud(const AppId_t appId);
+	bool shouldDisableCDKey(const AppId_t appId);
+	bool shouldDisableUpdates(const AppId_t appId);
 
 	void sendAndRecvLastPlayedTimes(const char* name, CPlayer_GetLastPlayedTimes_Response* recv);
 	void sendGamesPlayed(CNetPacket* pkt);

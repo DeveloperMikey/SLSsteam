@@ -21,7 +21,7 @@
 
 bool Apps::applistRequested;
 
-bool Apps::unlockApp(AppId_t appId, AppOwnershipInfo_t* info, uint32_t ownerId)
+bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info, const uint32_t ownerId)
 {
 	//Changing the purchased field is enough, but just for nicety in the Steamclient UI we change the owner too
 	info->owner = ownerId;
@@ -50,13 +50,13 @@ bool Apps::unlockApp(AppId_t appId, AppOwnershipInfo_t* info, uint32_t ownerId)
 	return true;
 }
 
-bool Apps::unlockApp(AppId_t appId, AppOwnershipInfo_t* info)
+bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info)
 {
 	return unlockApp(appId, info, g_currentSteamId);
 }
 
 
-void Apps::buildDepotDependency(AppId_t appId, CUtlVector<DepotInfo_t>* depots, CUtlVector<DepotInfo_t>* sharedDepots)
+void Apps::buildDepotDependency(const AppId_t appId, CUtlVector<DepotInfo_t>* depots, CUtlVector<DepotInfo_t>* sharedDepots)
 {
 	g_pLog->debug("Vec Alloc %u, Grow %u, Size %u\n", depots->memory.alloc, depots->memory.growSize, depots->size);
 
@@ -143,7 +143,7 @@ bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
 	return true;
 }
 
-void Apps::getSubscribedApps(AppId_t* appList, size_t size, uint32_t& count)
+void Apps::getSubscribedApps(AppId_t* appList, const size_t size, uint32_t& count)
 {
 	//Valve calls this function twice, once with size of 0 then again
 	if (!size || !appList)
@@ -226,7 +226,7 @@ void Apps::runIPCFrame()
 		return;
 	}
 
-	std::lock_guard appsChanged(g_config.appsChangedMutex);
+	const std::lock_guard appsChanged(g_config.appsChangedMutex);
 
 	if (g_config.removedApps.size())
 	{
@@ -264,7 +264,7 @@ void Apps::runIPCFrame()
 	g_config.newApps.clear();
 }
 
-bool Apps::shouldDisableCloud(AppId_t appId)
+bool Apps::shouldDisableCloud(const AppId_t appId)
 {
 	if (!g_config.disableCloud.get())
 	{
@@ -274,12 +274,12 @@ bool Apps::shouldDisableCloud(AppId_t appId)
 	return !g_pSteamEngine->getUser(0)->isSubscribed(appId);
 }
 
-bool Apps::shouldDisableCDKey(AppId_t appId)
+bool Apps::shouldDisableCDKey(const AppId_t appId)
 {
 	return !g_pSteamEngine->getUser(0)->isSubscribed(appId);
 }
 
-bool Apps::shouldDisableUpdates(AppId_t appId)
+bool Apps::shouldDisableUpdates(const AppId_t appId)
 {
 	if (!g_config.disableUpdates.get())
 	{
@@ -313,9 +313,9 @@ void Apps::sendAndRecvLastPlayedTimes(const char* name, CPlayer_GetLastPlayedTim
 
 void Apps::sendGamesPlayed(CNetPacket* pkt)
 {
-	auto msg = pkt->deserializeBody<CMsgClientGamesPlayed>();
+	const auto titles = g_config.gameTitles.get();
 
-	auto titles = g_config.gameTitles.get();
+	auto msg = pkt->deserializeBody<CMsgClientGamesPlayed>();
 	bool owned = false;
 
 	for(int i = 0; i < msg.games_played_size(); i++)
@@ -348,7 +348,7 @@ void Apps::sendGamesPlayed(CNetPacket* pkt)
 
 		if (titles.contains(gameId))
 		{
-			game->set_game_extra_info(titles[gameId]);
+			game->set_game_extra_info(titles.at(gameId));
 		}
 		else if (!owned || FakeAppIds::getFakeAppId(gameId))
 		{
