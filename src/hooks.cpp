@@ -224,7 +224,7 @@ static uint32_t hkClientUnifiedServiceTransport_SendAndRecvMsg(CClientUnifiedSer
 		reinterpret_cast<CPlayer_GetUserStats_Response*>(recv)
 	);
 
-	if (ret == ERESULT_NO_RESULT)
+	if (ret == k_EResultNoResult)
 	{
 		ret = Hooks::CClientUnifiedServiceMethod_SendAndRecvMsg.tramp.fn(pUnifiedServiceTransport, name, send, recv, arg4);
 	}

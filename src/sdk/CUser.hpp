@@ -14,10 +14,12 @@ enum class ECallbackType : uint32_t
 
 enum EReleaseState
 {
-	ERELEASESTATE_UNAVAILABLE = 1,
-	ERELEASESTATE_PRE_RELEASE = 2,
-	ERELEASESTATE_PRELOAD_ONLY = 3,
-	ERELEASESTATE_RELEASED = 4,
+	k_EAppReleaseStateUnknown = 0x0,
+	k_EAppReleaseStateUnavailable = 0x1,
+	k_EAppReleaseStatePrerelease = 0x2,
+	k_EAppReleaseStatePreloadonly = 0x3,
+	k_EAppReleaseStateReleased = 0x4,
+	k_EAppReleaseStateDisabled = 0x5
 };
 
 struct AppOwnershipTicketReceived_t

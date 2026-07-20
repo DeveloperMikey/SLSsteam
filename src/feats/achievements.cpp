@@ -98,13 +98,13 @@ uint32_t Achievements::sendAndRecvGetPlayerStats
 {
 	if (strcmp(serviceName, GET_PLAYER_STATS_SERVICE_NAME) != 0)
 	{
-		return ERESULT_NO_RESULT;
+		return k_EResultNoResult;
 	}
 
 	//Don't do anything for legit apps
 	if (g_pSteamEngine->getUser(0)->isSubscribed(send->appid()))
 	{
-		return ERESULT_NO_RESULT;
+		return k_EResultNoResult;
 	}
 
 	const auto reviewers = getReviewersForGame(send->appid());
@@ -118,9 +118,9 @@ uint32_t Achievements::sendAndRecvGetPlayerStats
 
 		const auto res = serviceTransport->sendAndRecvMsg(GET_PLAYER_STATS_SERVICE_NAME, send, recv);
 
-		if (res != ERESULT_OK)
+		if (res != k_EResultOK)
 		{
-			if (res == ERESULT_FAILURE)
+			if (res == k_EResultFailure)
 			{
 				//Only blacklist confirmed failures, exclude NO_CONNECTION and whatever else could happen
 				ownerBlacklist[send->appid()].emplace(id);
@@ -134,11 +134,11 @@ uint32_t Achievements::sendAndRecvGetPlayerStats
 		recv->clear_stats();
 
 		g_pLog->debug("Using schema from %llu for %u\n", id, send->appid());
-		return ERESULT_OK;
+		return k_EResultOK;
 	}
 
 	g_pLog->debug("No schemas for %u found! Falling back to offline cache\n", send->appid());
-	return ERESULT_NO_CONNECTION;
+	return k_EResultNoConnection;
 }
 
 uint32_t Achievements::sendAndRecvGetUserStats(CAPIJob* job, CProtoBufMsgBase* send, const uint32_t timeOut, CProtoBufMsgBase* recv, const EMsg targetType)
@@ -171,9 +171,9 @@ uint32_t Achievements::sendAndRecvGetUserStats(CAPIJob* job, CProtoBufMsgBase* s
 			continue;
 		}
 
-		if (recvBdy->eresult() != ERESULT_OK)
+		if (recvBdy->eresult() != k_EResultOK)
 		{
-			if (recvBdy->eresult() == ERESULT_FAILURE)
+			if (recvBdy->eresult() == k_EResultFailure)
 			{
 				//Only blacklist confirmed failures, exclude NO_CONNECTION and whatever else could happen
 				ownerBlacklist[recvBdy->game_id()].emplace(id);
@@ -192,6 +192,6 @@ uint32_t Achievements::sendAndRecvGetUserStats(CAPIJob* job, CProtoBufMsgBase* s
 	}
 
 	g_pLog->debug("No schemas for %u found! Falling back to offline cache\n", sendBdy->game_id());
-	recvBdy->set_eresult(ERESULT_NO_CONNECTION);
+	recvBdy->set_eresult(k_EResultNoConnection);
 	return 1;
 }

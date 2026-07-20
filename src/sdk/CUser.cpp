@@ -35,7 +35,7 @@ void CUser::updateAppOwnershipTicket(AppId_t appId, void* pTicket, uint32_t len)
 
 	//Dunno if this achieves anything, but the client does it so we do too
 	AppOwnershipTicketReceived_t cb;
-	cb.result = ERESULT_OK;
+	cb.result = k_EResultOK;
 	cb.appId = appId;
 	postCallback(ECallbackType::AppOwnershipTicketReceived_t, &cb, sizeof(cb));
 }

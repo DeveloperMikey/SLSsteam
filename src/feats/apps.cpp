@@ -34,7 +34,7 @@ bool Apps::unlockApp(AppId_t appId, AppOwnershipInfo_t* info, uint32_t ownerId)
 	info->licensePending = false;
 	info->licenseLocked = false;
 
-	info->releaseState = ERELEASESTATE_RELEASED;
+	info->releaseState = k_EAppReleaseStateReleased;
 	info->ownsLicense = true;
 
 	info->lowViolence = false;

@@ -17,8 +17,8 @@
 enum EGameFlags
 {
 	//1 << 0 is set for spacewar, not other mp games. idk
-	EGAMEFLAG_JOINABLE = 1 << 1, //Or in Server, etc
-	EGAMEFLAG_MULTIPLAYER = 1 << 13,
+	k_EGameFlagJoinable = 1 << 1,
+	k_EGameFlagMultiplayer = 1 << 13,
 };
 
 class CProtoBufMsgBase
