@@ -5,7 +5,6 @@
 #include "../sdk/CSteamEngine.hpp"
 #include "../sdk/CUser.hpp"
 #include "../sdk/CUtl.hpp"
-#include "../sdk/EReleaseState.hpp"
 #include "../sdk/IClientApps.hpp"
 #include "../sdk/IClientAppManager.hpp"
 

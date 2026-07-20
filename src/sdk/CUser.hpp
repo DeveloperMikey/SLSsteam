@@ -1,14 +1,23 @@
 #pragma once
 
-#include "EResult.hpp"
+#include "steam.hpp"
 
 #include <cstdint>
+
 
 enum class ECallbackType : uint32_t
 {
 	LicensesUpdate_t = 0x7d,
 	AppOwnershipTicketReceived_t = 0xf907c,
 	AppLicensesChanged_t = 0xf90be
+};
+
+enum EReleaseState
+{
+	ERELEASESTATE_UNAVAILABLE = 1,
+	ERELEASESTATE_PRE_RELEASE = 2,
+	ERELEASESTATE_PRELOAD_ONLY = 3,
+	ERELEASESTATE_RELEASED = 4,
 };
 
 struct AppOwnershipTicketReceived_t
@@ -66,9 +75,9 @@ struct AppOwnershipInfo_t {
 class CUser
 {
 public:
-	bool checkAppOwnership(uint32_t appId, AppOwnershipInfo_t* pInfo);
-	bool isSubscribed(uint32_t appId);
+	bool checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo);
+	bool isSubscribed(AppId_t appId);
 
 	void postCallback(ECallbackType type, void* pCallback, uint32_t callbackSize);
-	void updateAppOwnershipTicket(uint32_t appId, void* pTicket, uint32_t len);
+	void updateAppOwnershipTicket(AppId_t appId, void* pTicket, uint32_t len);
 };

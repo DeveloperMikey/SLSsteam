@@ -9,8 +9,8 @@
 #include "../sdk/CProtoBufMsgBase.hpp"
 #include "../sdk/CSteamEngine.hpp"
 #include "../sdk/CUser.hpp"
-#include "../sdk/EResult.hpp"
 #include "../sdk/IClientUtils.hpp"
+#include "../sdk/steam.hpp"
 
 #include "base64/base64.hpp"
 #include "yaml-cpp/emitter.h"

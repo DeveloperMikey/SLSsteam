@@ -16,11 +16,11 @@
 #include "sdk/CSteamMatchmakingServers.hpp"
 #include "sdk/CUser.hpp"
 #include "sdk/CUtl.hpp"
-#include "sdk/EResult.hpp"
 #include "sdk/IClientAppManager.hpp"
 #include "sdk/IClientApps.hpp"
 #include "sdk/IClientUser.hpp"
 #include "sdk/IClientUtils.hpp"
+#include "sdk/steam.hpp"
 
 #include "feats/achievements.hpp"
 #include "feats/apps.hpp"
