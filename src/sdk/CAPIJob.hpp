@@ -10,5 +10,5 @@ class CProtoBufMsgBase;
 class CAPIJob
 {
 public:
-	uint32_t sendAndRecv(CProtoBufMsgBase* send, uint32_t timeOut, CProtoBufMsgBase* recv, EMsg targetType);
+	uint32_t sendAndRecv(CProtoBufMsgBase* send, const uint32_t timeOut, CProtoBufMsgBase* recv, const EMsg targetType);
 };

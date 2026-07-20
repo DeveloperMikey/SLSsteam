@@ -6,7 +6,7 @@ uint32_t g_packetsArrayIndex = 0;
 
 std::mutex g_packetSerializeMutex;
 
-std::string CNetPacket::getProtoBufTypeName()
+std::string CNetPacket::getProtoBufTypeName() const
 {
 	auto name = std::string("Unknown");
 

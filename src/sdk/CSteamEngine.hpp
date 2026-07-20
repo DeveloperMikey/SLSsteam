@@ -10,8 +10,8 @@ class CUser;
 class CSteamEngine
 {
 public:
-	CUser* getUser(uint32_t index);
-	void setAppIdForCurrentPipe(AppId_t appId);
+	CUser* getUser(const uint32_t index);
+	void setAppIdForCurrentPipe(const AppId_t appId);
 };
 
 extern CSteamEngine* g_pSteamEngine;

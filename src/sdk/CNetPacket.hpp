@@ -53,7 +53,7 @@ public:
 		return body->type;
 	}
 
-	std::string getProtoBufTypeName();
+	std::string getProtoBufTypeName() const;
 
 	constexpr bool isProtoBuf() const
 	{

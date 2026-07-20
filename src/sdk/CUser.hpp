@@ -77,9 +77,9 @@ struct AppOwnershipInfo_t {
 class CUser
 {
 public:
-	bool checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo);
-	bool isSubscribed(AppId_t appId);
+	bool checkAppOwnership(const AppId_t appId, AppOwnershipInfo_t* pInfo);
+	bool isSubscribed(const AppId_t appId);
 
-	void postCallback(ECallbackType type, void* pCallback, uint32_t callbackSize);
-	void updateAppOwnershipTicket(AppId_t appId, void* pTicket, uint32_t len);
+	void postCallback(const ECallbackType type, void* pCallback, const uint32_t callbackSize);
+	void updateAppOwnershipTicket(const AppId_t appId, void* pTicket, const uint32_t len);
 };

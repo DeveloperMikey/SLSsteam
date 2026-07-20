@@ -40,9 +40,9 @@ struct DepotInfo_t
 class IClientAppManager
 {
 public:
-	bool installApp(AppId_t appId, uint32_t librarIndex);
-	uint32_t uninstallApp(AppId_t appId);
-	EAppState getAppInstallState(AppId_t appId);
+	bool installApp(const AppId_t appId, const uint32_t librarIndex);
+	uint32_t uninstallApp(const AppId_t appId);
+	EAppState getAppInstallState(const AppId_t appId);
 };
 
 extern IClientAppManager* g_pClientAppManager;

@@ -32,7 +32,7 @@ public:
 	void* __pBody;				//0x20
 	char __pad_0x24[0x8];		//0x24
 	
-	constexpr EMsg getProtoBufType()
+	constexpr EMsg getProtoBufType() const
 	{
 		return static_cast<EMsg>(type & ~PROTOBUF_TYPE_MASK);
 	}
