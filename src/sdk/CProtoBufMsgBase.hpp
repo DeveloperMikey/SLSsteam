@@ -14,6 +14,7 @@
 
 #include <cstdint>
 
+
 enum EGameFlags
 {
 	//1 << 0 is set for spacewar, not other mp games. idk
@@ -30,6 +31,11 @@ public:
 	CMsgProtoBufHeader* header; //0x1C
 	void* __pBody;				//0x20
 	char __pad_0x24[0x8];		//0x24
+	
+	constexpr EMsg getProtoBufType()
+	{
+		return static_cast<EMsg>(type & ~PROTOBUF_TYPE_MASK);
+	}
 	
 	template<typename T> constexpr T* getBody() const
 	{

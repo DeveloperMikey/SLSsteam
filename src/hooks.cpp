@@ -260,17 +260,13 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 
 		if (disableFamilyShareLock && type == k_EMsgClientSharedLibraryStopPlaying)
 		{
-			//Hide body and call original function so steam uses it's own free
-			//We can also free the body ourself, but not the pNetPacket
-			pNetPacket->size = pNetPacket->body->headerSize + sizeof(CNetPacketBody);
-			g_pLog->debug("Chocked EMSG_SHARED_LIBRARY_STOP_PLAYING\n");
+			pNetPacket->clearBody();
+			g_pLog->debug("Chocked k_EMsgClientSharedLibraryStopPlaying\n");
 		}
 
 		if (disableFamilyShareLock && type == k_EMsgServiceMethod && header.target_job_name() == "FamilyGroupsClient.NotifyRunningApps#1")
 		{
-			//Hide body and call original function so steam uses it's own free
-			//We can also free the body ourself, but not the pNetPacket
-			pNetPacket->size = pNetPacket->body->headerSize + sizeof(CNetPacketBody);
+			pNetPacket->clearBody();
 			g_pLog->debug("Chocked FamilyGroupsClient.NotifyRunningApps#1\n");
 		}
 
