@@ -409,14 +409,17 @@ void Apps::sendMsg(CNetPacket *pkt)
 {
 	switch(pkt->getProtoBufType())
 	{
-		case EMSG_PICS_PRODUCTINFO_REQUEST:
+		case k_EMsgClientPICSProductInfoRequest:
 			sendPICSInfoRequest(pkt);
 			break;
 
-		case EMSG_GAMESPLAYED:
-		case EMSG_GAMESPLAYED_NO_DATABLOB:
-		case EMSG_GAMESPLAYED_WITH_DATABLOB:
+		case k_EMsgClientGamesPlayed:
+		case k_EMsgClientGamesPlayedNoDataBlob:
+		case k_EMsgClientGamesPlayedWithDataBlob:
 			sendGamesPlayed(pkt);
+			break;
+
+		default:
 			break;
 	}
 }

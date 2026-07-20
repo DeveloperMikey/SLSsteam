@@ -3,8 +3,12 @@
 #include <cstdint>
 
 typedef uint32_t AppId_t;
-typedef uint32_t EMsg;
 typedef uint64_t GameId_t;
+
+typedef int32_t ENetPacket;
+
+constexpr static ENetPacket INVALID_NETPACKET_TYPE = -1;
+constexpr static ENetPacket PROTOBUF_TYPE_MASK = 0x80000000;
 
 enum EResult
 {

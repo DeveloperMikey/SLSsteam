@@ -1,8 +1,7 @@
 #pragma once
 
+#include "CProtoBufMsgBase.hpp"
 #include "steam.hpp"
-
-#include "protobufs/steammessages_base.pb.h"
 
 #include "../log.hpp"
 
@@ -15,7 +14,7 @@ class CNetPacketBody
 {
 public:
 
-	EMsg type;
+	ENetPacket type;
 	uint32_t headerSize;
 	//Header[headerSize]
 	//Body[CNetPacket->size - headerSize - sizeof(CNetPacketBody)]
@@ -33,9 +32,6 @@ extern std::mutex g_packetSerializeMutex;
 class CNetPacket
 {
 public:
-	constexpr static unsigned int INVALID_MESSAGE_TYPE = 0xFFFFFFFF;
-	constexpr static unsigned int PROTOBUF_TYPE_MASK = 0x80000000;
-
 	uint8_t __pad0x0[0x4];			//0x0
 	CNetPacketBody* body;			//0x4
 	uint32_t size;					//0x8
@@ -44,10 +40,10 @@ public:
 	
 	constexpr bool isValid() const
 	{
-		return body && size >= 8 && body->type != INVALID_MESSAGE_TYPE;
+		return body && size >= 8 && body->type != INVALID_NETPACKET_TYPE;
 	}
 	
-	constexpr EMsg getType() const
+	constexpr ENetPacket getType() const
 	{
 		if (!body)
 		{
@@ -66,7 +62,7 @@ public:
 
 	constexpr EMsg getProtoBufType() const
 	{
-		return getType() & ~PROTOBUF_TYPE_MASK;
+		return static_cast<EMsg>(getType() & ~PROTOBUF_TYPE_MASK);
 	}
 
 	void serializeHeader(const CMsgProtoBufHeader& header);

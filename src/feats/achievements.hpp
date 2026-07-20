@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../sdk/protobufs/enums_clientserver.pb.h"
+
 #include "../sdk/steam.hpp"
 
 #include <cstdint>
@@ -31,5 +33,5 @@ namespace Achievements
 		CPlayer_GetUserStats_Response* recv
 	);
 	//GetUserStats
-	uint32_t sendAndRecvGetUserStats(CAPIJob* job, CProtoBufMsgBase* send, const uint32_t timeOut, CProtoBufMsgBase* recv, const uint32_t targetType);
+	uint32_t sendAndRecvGetUserStats(CAPIJob* job, CProtoBufMsgBase* send, const uint32_t timeOut, CProtoBufMsgBase* recv, const EMsg targetType);
 }

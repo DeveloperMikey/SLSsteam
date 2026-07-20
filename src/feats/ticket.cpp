@@ -260,12 +260,15 @@ void Ticket::recvMsg(CNetPacket* pkt)
 {
 	switch(pkt->getProtoBufType())
 	{
-		case EMSG_APPOWNERSHIPTICKET_RESPONSE:
+		case k_EMsgClientGetAppOwnershipTicketResponse:
 			recvAppTicket(pkt);
 			break;
 
-		case EMSG_ENCRYPTED_APPTICKET_RESPONSE:
+		case k_EMsgClientRequestEncryptedAppTicketResponse:
 			recvEncryptedAppTicket(pkt);
+			break;
+
+		default:
 			break;
 	}
 }

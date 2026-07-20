@@ -193,14 +193,17 @@ void FakeAppIds::sendMsg(CNetPacket* pkt)
 {
 	switch(pkt->getProtoBufType())
 	{
-		case EMSG_GAMESPLAYED:
-		case EMSG_GAMESPLAYED_NO_DATABLOB:
-		case EMSG_GAMESPLAYED_WITH_DATABLOB:
+		case k_EMsgClientGamesPlayed:
+		case k_EMsgClientGamesPlayedNoDataBlob:
+		case k_EMsgClientGamesPlayedWithDataBlob:
 			sendGamesPlayed(pkt);
 			break;
 		
-		case EMSG_RICH_PRESENCE_UPLOAD:
+		case k_EMsgClientRichPresenceUpload:
 			sendRichPresenceUpload(pkt);
+			break;
+
+		default:
 			break;
 	}
 }

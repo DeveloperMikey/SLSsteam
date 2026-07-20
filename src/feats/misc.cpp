@@ -31,7 +31,7 @@ void Misc::recvMsg(CNetPacket *pkt)
 {
 	switch(pkt->getProtoBufType())
 	{
-		case EMSG_WALLET_INFO_UPDATE:
+		case k_EMsgClientWalletInfoUpdate:
 		{
 			const int32_t amount = g_config.fakeWalletBalance.get();
 			if (!amount)
@@ -48,7 +48,7 @@ void Misc::recvMsg(CNetPacket *pkt)
 			break;
 		}
 
-		case EMSG_EMAIL_ADDRESS_INFO:
+		case k_EMsgClientEmailAddrInfo:
 		{
 			const auto email = g_config.fakeEmail.get();
 			if (email.size() < 1)
@@ -63,5 +63,8 @@ void Misc::recvMsg(CNetPacket *pkt)
 			pkt->serialize(msg);
 			break;
 		}
+
+		default:
+			break;
 	}
 }

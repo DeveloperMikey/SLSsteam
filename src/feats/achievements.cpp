@@ -141,9 +141,9 @@ uint32_t Achievements::sendAndRecvGetPlayerStats
 	return ERESULT_NO_CONNECTION;
 }
 
-uint32_t Achievements::sendAndRecvGetUserStats(CAPIJob* job, CProtoBufMsgBase* send, const uint32_t timeOut, CProtoBufMsgBase* recv, const uint32_t targetType)
+uint32_t Achievements::sendAndRecvGetUserStats(CAPIJob* job, CProtoBufMsgBase* send, const uint32_t timeOut, CProtoBufMsgBase* recv, const EMsg targetType)
 {
-	if (targetType != EMSG_REQUEST_USERSTATS_RESPONSE)
+	if (targetType != k_EMsgClientGetUserStatsResponse)
 	{
 		return 0;
 	}

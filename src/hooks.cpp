@@ -171,7 +171,7 @@ static void hkTraceIPC(const char* iface, const char* fn)
 	}
 }
 
-static uint32_t hkAPIJob_SendAndRecv(CAPIJob* pAPIJob, CProtoBufMsgBase* send, uint32_t a2, uint32_t timeOut, CProtoBufMsgBase* recv, uint32_t targetType)
+static uint32_t hkAPIJob_SendAndRecv(CAPIJob* pAPIJob, CProtoBufMsgBase* send, uint32_t a2, uint32_t timeOut, CProtoBufMsgBase* recv, EMsg targetType)
 {
 	uint32_t ret = Achievements::sendAndRecvGetUserStats(pAPIJob, send, timeOut, recv, targetType);
 
@@ -258,7 +258,7 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 
 		const bool disableFamilyShareLock = g_config.disableFamilyLock.get();
 
-		if (disableFamilyShareLock && type == EMSG_SHARED_LIBRARY_STOP_PLAYING)
+		if (disableFamilyShareLock && type == k_EMsgClientSharedLibraryStopPlaying)
 		{
 			//Hide body and call original function so steam uses it's own free
 			//We can also free the body ourself, but not the pNetPacket
@@ -266,7 +266,7 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 			g_pLog->debug("Chocked EMSG_SHARED_LIBRARY_STOP_PLAYING\n");
 		}
 
-		if (disableFamilyShareLock && type == EMSG_SERVICE_METHOD && header.target_job_name() == "FamilyGroupsClient.NotifyRunningApps#1")
+		if (disableFamilyShareLock && type == k_EMsgServiceMethod && header.target_job_name() == "FamilyGroupsClient.NotifyRunningApps#1")
 		{
 			//Hide body and call original function so steam uses it's own free
 			//We can also free the body ourself, but not the pNetPacket
