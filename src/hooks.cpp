@@ -274,7 +274,6 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 			g_pLog->debug("Chocked FamilyGroupsClient.NotifyRunningApps#1\n");
 		}
 
-		FakeAppIds::recvMsg(pNetPacket);
 		Misc::recvMsg(pNetPacket);
 		Ticket::recvMsg(pNetPacket);
 	}
