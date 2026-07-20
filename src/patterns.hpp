@@ -28,7 +28,6 @@ public:
 
 namespace Patterns
 {
-	extern Pattern_t GetMessageFlags;
 	extern Pattern_t TraceIPC;
 
 	namespace CAPIJob

@@ -6,7 +6,7 @@
 #include "../log.hpp"
 
 #include <cstdint>
-#include <cstring>
+#include <string>
 
 
 //Helper class to make calculations more legible
@@ -53,7 +53,7 @@ public:
 		return body->type;
 	}
 
-	const char* getProtoBufTypeName();
+	std::string getProtoBufTypeName();
 
 	constexpr bool isProtoBuf() const
 	{

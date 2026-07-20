@@ -1,17 +1,27 @@
 #include "CNetPacket.hpp"
 
-#include "../patterns.hpp"
-
 
 uint8_t g_packetsArray[MAX_PACKET_SIZE * MAX_PACKETS] { };
 uint32_t g_packetsArrayIndex = 0;
 
 std::mutex g_packetSerializeMutex;
 
-const char* CNetPacket::getProtoBufTypeName()
+std::string CNetPacket::getProtoBufTypeName()
 {
-	const static auto fn = reinterpret_cast<const char*(*)(uint32_t)>(Patterns::GetMessageFlags.address);
-	return fn(getProtoBufType());
+	auto name = std::string("Unknown");
+
+	if (!isProtoBuf())
+	{
+		return name;
+	}
+
+	const EMsg type = getProtoBufType();
+	if (!EMsg_IsValid(type))
+	{
+		return name;
+	}
+
+	return EMsg_Name(type);
 }
 
 CMsgProtoBufHeader CNetPacket::deserializeHeader() const
