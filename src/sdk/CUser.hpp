@@ -23,7 +23,7 @@ enum EReleaseState
 struct AppOwnershipTicketReceived_t
 {
 	EResult result;
-	uint32_t appId;
+	AppId_t appId;
 };
 
 struct AppLicensesChanged_t
@@ -35,7 +35,7 @@ struct AppLicensesChanged_t
 	uint8_t __pad_0x2[0x2];					//0x2
 	uint32_t remainingPackets;				//0x4
 	uint32_t count;							//0x8
-	uint32_t apps[MAX_APPS_PER_CALLBACK];	//0xC
+	AppId_t apps[MAX_APPS_PER_CALLBACK];	//0xC
 	uint64_t appsAdded;						//0x10C
 }; //0x114
 

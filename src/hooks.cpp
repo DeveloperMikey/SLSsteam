@@ -289,11 +289,11 @@ static void hkSteamEngine_Init(void* pSteamEngine)
 	g_pLog->once("g_pSteamEngine at %p\n", pSteamEngine);
 }
 
-static uint32_t hkSteamEngine_SetAppIdForCurrentPipe(void* pSteamEngine, uint32_t appId, bool a2)
+static AppId_t hkSteamEngine_SetAppIdForCurrentPipe(void* pSteamEngine, AppId_t appId, bool a2)
 {
 	FakeAppIds::setAppIdForCurrentPipe(appId);
 
-	const uint32_t ret = Hooks::CSteamEngine_SetAppIdForCurrentPipe.tramp.fn(pSteamEngine, appId, a2);
+	const AppId_t ret = Hooks::CSteamEngine_SetAppIdForCurrentPipe.tramp.fn(pSteamEngine, appId, a2);
 
 	g_pLog->debug
 	(
@@ -356,7 +356,7 @@ static gameserverdetails_t* hkSteamMatchmakingServers_GetServerDetails(void* pSt
 	return ret;
 }
 
-static uint32_t hkSteamMatchmakingServers_RequestInternetServerList(void* pSteamMatchmakingServers, uint32_t appId, uint32_t a2, uint32_t a3, uint32_t a4)
+static uint32_t hkSteamMatchmakingServers_RequestInternetServerList(void* pSteamMatchmakingServers, AppId_t appId, uint32_t a2, uint32_t a3, uint32_t a4)
 {
 	const uint32_t fake = FakeAppIds::requestInternetServerList(appId);
 
@@ -381,7 +381,7 @@ static uint32_t hkSteamMatchmakingServers_RequestInternetServerList(void* pSteam
 }
 
 __attribute__((hot))
-static uint32_t hkUser_CheckAppOwnership(void* pClientUser, uint32_t appId, AppOwnershipInfo_t* pOwnershipInfo)
+static uint32_t hkUser_CheckAppOwnership(void* pClientUser, AppId_t appId, AppOwnershipInfo_t* pOwnershipInfo)
 {
 	const uint32_t ret = Hooks::CUser_CheckAppOwnership.tramp.fn(pClientUser, appId, pOwnershipInfo);
 
@@ -404,7 +404,7 @@ static uint32_t hkUser_CheckAppOwnership(void* pClientUser, uint32_t appId, AppO
 	return ret;
 }
 
-static uint32_t hkUser_GetSubscribedApps(void* pClientUser, uint32_t* pAppList, uint32_t size, uint8_t a3)
+static uint32_t hkUser_GetSubscribedApps(void* pClientUser, AppId_t* pAppList, uint32_t size, uint8_t a3)
 {
 	uint32_t count = Hooks::CUser_GetSubscribedApps.tramp.fn(pClientUser, pAppList, size, a3);
 
@@ -428,7 +428,7 @@ static uint32_t hkUser_GetSubscribedApps(void* pClientUser, uint32_t* pAppList, 
 static bool hkUserAppManager_BuildDepotDependency
 (
 	void* a0,
-	uint32_t appId,
+	AppId_t appId,
 	void* a2,
 	CUtlVector<DepotInfo_t>* depots,
 	CUtlVector<DepotInfo_t>* sharedDepots,
@@ -446,7 +446,7 @@ static bool hkUserAppManager_BuildDepotDependency
 }
 
 
-static bool hkClientAppManager_BCanRemotePlayTogether(void* pClientAppManager, uint32_t appId)
+static bool hkClientAppManager_BCanRemotePlayTogether(void* pClientAppManager, AppId_t appId)
 {
 	const bool ret = Hooks::IClientAppManager_BCanRemotePlayTogether.tramp.fn(pClientAppManager, appId);
 	g_pLog->debug
@@ -461,7 +461,7 @@ static bool hkClientAppManager_BCanRemotePlayTogether(void* pClientAppManager, u
 	return true;
 }
 
-static void* hkClientAppManager_LaunchApp(void* pClientAppManager, uint32_t* pAppId, void* a2, void* a3, void* a4)
+static void* hkClientAppManager_LaunchApp(void* pClientAppManager, AppId_t* pAppId, void* a2, void* a3, void* a4)
 {
 	if (pAppId)
 	{
@@ -485,7 +485,7 @@ static void* hkClientAppManager_LaunchApp(void* pClientAppManager, uint32_t* pAp
 	return Hooks::IClientAppManager_LaunchApp.originalFn.fn(pClientAppManager, pAppId, a2, a3, a4);
 }
 
-static bool hkClientAppManager_IsAppDlcInstalled(void* pClientAppManager, uint32_t appId, uint32_t dlcId)
+static bool hkClientAppManager_IsAppDlcInstalled(void* pClientAppManager, AppId_t appId, AppId_t dlcId)
 {
 	const bool ret = Hooks::IClientAppManager_IsAppDlcInstalled.originalFn.fn(pClientAppManager, appId, dlcId);
 	g_pLog->once
@@ -507,7 +507,7 @@ static bool hkClientAppManager_IsAppDlcInstalled(void* pClientAppManager, uint32
 	return ret;
 }
 
-static bool hkClientAppManager_BIsDlcEnabled(void* pClientAppManager, uint32_t appId, uint32_t dlcId, void* a3)
+static bool hkClientAppManager_BIsDlcEnabled(void* pClientAppManager, AppId_t appId, AppId_t dlcId, void* a3)
 {
 	const bool ret = Hooks::IClientAppManager_BIsDlcEnabled.originalFn.fn(pClientAppManager, appId, dlcId, a3);
 	g_pLog->once
@@ -531,7 +531,7 @@ static bool hkClientAppManager_BIsDlcEnabled(void* pClientAppManager, uint32_t a
 	return ret;
 }
 
-static bool hkClientAppManager_GetUpdateInfo(void* pClientAppManager, uint32_t appId, uint32_t* a2)
+static bool hkClientAppManager_GetUpdateInfo(void* pClientAppManager, AppId_t appId, uint32_t* a2)
 {
 	const bool success = Hooks::IClientAppManager_GetAppUpdateInfo.originalFn.fn(pClientAppManager, appId, a2);
 	g_pLog->once("%s(%p, %u, %p) -> %i\n", Hooks::IClientAppManager_GetAppUpdateInfo.name.c_str(), pClientAppManager, appId, a2, success);
@@ -570,7 +570,7 @@ static void hkClientAppManager_RunIPCFrame(void* pClientAppManager, void* a1, vo
 	Hooks::IClientAppManager_RunIPCFrame.originalFn.fn(pClientAppManager, a1, a2, a3);
 }
 
-static unsigned int hkClientApps_GetDLCCount(void* pClientApps, uint32_t appId)
+static unsigned int hkClientApps_GetDLCCount(void* pClientApps, AppId_t appId)
 {
 	uint32_t count = Hooks::IClientApps_GetDLCCount.originalFn.fn(pClientApps, appId);
 	g_pLog->once
@@ -594,7 +594,7 @@ static unsigned int hkClientApps_GetDLCCount(void* pClientApps, uint32_t appId)
 	return count;
 }
 
-static bool hkClientApps_GetDLCDataByIndex(void* pClientApps, uint32_t appId, int dlcIndex, uint32_t* pDlcId, bool* pIsAvailable, char* pChDlcName, size_t dlcNameLen)
+static bool hkClientApps_GetDLCDataByIndex(void* pClientApps, AppId_t appId, int dlcIndex, AppId_t* pDlcId, bool* pIsAvailable, char* pChDlcName, size_t dlcNameLen)
 {
 	appId = FakeAppIds::getRealAppIdForCurrentPipe();
 
@@ -646,7 +646,7 @@ static void hkClientApps_RunIPCFrame(void* pClientApps, void* a1, void* a2, void
 	Hooks::IClientApps_RunIPCFrame.tramp.fn(pClientApps, a1, a2, a3);
 }
 
-static bool hkClientRemoteStorage_IsCloudEnabledForApp(void* pClientRemoteStorage, uint32_t appId)
+static bool hkClientRemoteStorage_IsCloudEnabledForApp(void* pClientRemoteStorage, AppId_t appId)
 {
 	const bool enabled = Hooks::IClientRemoteStorage_IsCloudEnabledForApp.originalFn.fn(pClientRemoteStorage, appId);
 	g_pLog->once
@@ -699,9 +699,9 @@ static void hkClientUGC_RunIPCFrame(void* pClientUGC, void* a1, void* a2, void* 
 	FakeAppIds::runIPCFrame(true);
 }
 
-static uint32_t hkClientUtils_GetAppId(void* pClientUtils)
+static AppId_t hkClientUtils_GetAppId(void* pClientUtils)
 {
-	uint32_t appId = Hooks::IClientUtils_GetAppId.originalFn.fn(pClientUtils);
+	AppId_t appId = Hooks::IClientUtils_GetAppId.originalFn.fn(pClientUtils);
 
 	g_pLog->debug
 	(
@@ -712,7 +712,7 @@ static uint32_t hkClientUtils_GetAppId(void* pClientUtils)
 		appId
 	);
 
-	const uint32_t real = FakeAppIds::getRealAppIdForCurrentPipe(false);
+	const AppId_t real = FakeAppIds::getRealAppIdForCurrentPipe(false);
 	if(real)
 	{
 		g_pLog->debug("Overwriting appId with %u\n", real);
@@ -780,7 +780,7 @@ static bool hkClientUser_BLoggedOn(void* pClientUser)
 	return ret;
 }
 
-static uint32_t hkClientUser_BUpdateOwnershipTicket(void* pClientUser, uint32_t appId, bool staleOnly)
+static uint32_t hkClientUser_BUpdateOwnershipTicket(void* pClientUser, AppId_t appId, bool staleOnly)
 {
 	const auto cached = Ticket::getCachedTicket(appId);
 	if (g_pSteamEngine->getUser(0)->isSubscribed(appId) && !cached.steamId)
@@ -808,7 +808,7 @@ static uint32_t hkClientUser_BUpdateOwnershipTicket(void* pClientUser, uint32_t 
 static uint32_t hkClientUser_GetAppOwnershipTicketExtendedData
 (
 	void* pClientUser,
-	uint32_t appId,
+	AppId_t appId,
 	void* pTicket,
 	uint32_t ticketSize,
 	uint32_t* pOffAppId,
@@ -836,7 +836,7 @@ static uint32_t hkClientUser_GetAppOwnershipTicketExtendedData
 	return ret;
 }
 
-static uint8_t hkClientUser_IsUserSubscribedAppInTicket(void* pClientUser, uint32_t steamId, uint32_t a2, uint32_t a3, uint32_t appId)
+static uint8_t hkClientUser_IsUserSubscribedAppInTicket(void* pClientUser, uint32_t steamId, uint32_t a2, uint32_t a3, AppId_t appId)
 {
 	const uint8_t ticketState = Hooks::IClientUser_IsUserSubscribedAppInTicket.tramp.fn(pClientUser, steamId, a2, a3, appId);
 	//g_pLog->once("IClientUser::IsUserSubscribedAppInTicket(%p, %u, %u, %u, %u) -> %i\n", pClientUser, steamId, a2, a3, appId, ticketState);
@@ -886,7 +886,7 @@ static uint32_t hkClientUser_GetSteamId(uint32_t steamId)
 	return steamId;
 }
 
-static bool hkClientUser_RequiresLegacyCDKey(void* pClientUser, uint32_t appId, uint32_t* a2)
+static bool hkClientUser_RequiresLegacyCDKey(void* pClientUser, AppId_t appId, uint32_t* a2)
 {
 	const bool requiresKey = Hooks::IClientUser_RequiresLegacyCDKey.tramp.fn(pClientUser, appId, a2);
 	g_pLog->once

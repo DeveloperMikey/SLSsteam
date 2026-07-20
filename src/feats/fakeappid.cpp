@@ -9,13 +9,13 @@
 #include "../sdk/CUser.hpp"
 #include "../sdk/IClientUtils.hpp"
 
-uint32_t FakeAppIds::lastAppLaunched;
+AppId_t FakeAppIds::lastAppLaunched;
 
-std::unordered_map<uint32_t, uint32_t> FakeAppIds::fakeAppIdMap = std::unordered_map<uint32_t, uint32_t>();
-std::unordered_map<uint32_t, uint32_t> FakeAppIds::fakeAppIdMapServer = std::unordered_map<uint32_t, uint32_t>();
-std::unordered_map<uint64_t, uint32_t> FakeAppIds::fakeAppIdMapPings = std::unordered_map<uint64_t, uint32_t>();
+std::unordered_map<uint32_t, AppId_t> FakeAppIds::fakeAppIdMap = std::unordered_map<AppId_t, AppId_t>();
+std::unordered_map<uint32_t, AppId_t> FakeAppIds::fakeAppIdMapServer = std::unordered_map<uint32_t, AppId_t>();
+std::unordered_map<uint64_t, AppId_t> FakeAppIds::fakeAppIdMapPings = std::unordered_map<uint64_t, AppId_t>();
 
-uint32_t FakeAppIds::getFakeAppId(uint32_t appId)
+AppId_t FakeAppIds::getFakeAppId(AppId_t appId)
 {
 	auto fakeAppIds = g_config.fakeAppIds.get();
 
@@ -31,7 +31,7 @@ uint32_t FakeAppIds::getFakeAppId(uint32_t appId)
 	return 0;
 }
 
-uint32_t FakeAppIds::getRealAppIdForCurrentPipe(bool fallback)
+AppId_t FakeAppIds::getRealAppIdForCurrentPipe(bool fallback)
 {
 	if (!g_pClientUtils)
 	{
@@ -52,12 +52,12 @@ uint32_t FakeAppIds::getRealAppIdForCurrentPipe(bool fallback)
 	return 0;
 }
 
-void FakeAppIds::launchApp(uint32_t appId)
+void FakeAppIds::launchApp(AppId_t appId)
 {
 	lastAppLaunched = appId;
 }
 
-void FakeAppIds::setAppIdForCurrentPipe(uint32_t& appId)
+void FakeAppIds::setAppIdForCurrentPipe(AppId_t& appId)
 {
 	//Keep track of every AppId, for various reasons
 	//fakeAppIdMap[*g_pClientUtils->getPipeIndex()] = appId;
@@ -71,7 +71,7 @@ void FakeAppIds::setAppIdForCurrentPipe(uint32_t& appId)
 		return;
 	}
 
-	uint32_t newAppId = getFakeAppId(appId);
+	AppId_t newAppId = getFakeAppId(appId);
 	if (newAppId)
 	{
 		g_pLog->once("Changing AppId of %u\n", appId);
@@ -81,8 +81,8 @@ void FakeAppIds::setAppIdForCurrentPipe(uint32_t& appId)
 
 void FakeAppIds::runIPCFrame(bool post)
 {
-	uint32_t appId = getRealAppIdForCurrentPipe(false);
-	uint32_t fakeAppId = getFakeAppId(appId);
+	AppId_t appId = getRealAppIdForCurrentPipe(false);
+	AppId_t fakeAppId = getFakeAppId(appId);
 
 	if (!appId || !fakeAppId || appId == fakeAppId)
 	{
@@ -108,16 +108,16 @@ void FakeAppIds::getServerDetails(uint32_t handle, gameserverdetails_t& details)
 		return;
 	}
 
-	const uint32_t realAppId = fakeAppIdMapServer[handle];
+	const AppId_t realAppId = fakeAppIdMapServer[handle];
 	fakeAppIdMapPings[*reinterpret_cast<uint64_t*>(&details.address)] = realAppId;
 	details.appId = realAppId;
 
 	g_pLog->debug("Changing appId back to %u\n", realAppId);
 }
 
-uint32_t FakeAppIds::requestInternetServerList(uint32_t appId)
+uint32_t FakeAppIds::requestInternetServerList(AppId_t appId)
 {
-	const uint32_t fake = getFakeAppId(appId);
+	const AppId_t fake = getFakeAppId(appId);
 	if (!fake)
 	{
 		return 0;
@@ -157,7 +157,7 @@ void FakeAppIds::sendGamesPlayed(CNetPacket *pkt)
 			continue;
 		}
 
-		const uint32_t fakeAppId = FakeAppIds::getFakeAppId(gameId);
+		const AppId_t fakeAppId = FakeAppIds::getFakeAppId(gameId);
 		if (!fakeAppId)
 		{
 			continue;

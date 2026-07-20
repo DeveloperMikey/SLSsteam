@@ -21,7 +21,7 @@
 
 bool Apps::applistRequested;
 
-bool Apps::unlockApp(uint32_t appId, AppOwnershipInfo_t* info, uint32_t ownerId)
+bool Apps::unlockApp(AppId_t appId, AppOwnershipInfo_t* info, uint32_t ownerId)
 {
 	//Changing the purchased field is enough, but just for nicety in the Steamclient UI we change the owner too
 	info->owner = ownerId;
@@ -50,13 +50,13 @@ bool Apps::unlockApp(uint32_t appId, AppOwnershipInfo_t* info, uint32_t ownerId)
 	return true;
 }
 
-bool Apps::unlockApp(uint32_t appId, AppOwnershipInfo_t* info)
+bool Apps::unlockApp(AppId_t appId, AppOwnershipInfo_t* info)
 {
 	return unlockApp(appId, info, g_currentSteamId);
 }
 
 
-void Apps::buildDepotDependency(uint32_t appId, CUtlVector<DepotInfo_t>* depots, CUtlVector<DepotInfo_t>* sharedDepots)
+void Apps::buildDepotDependency(AppId_t appId, CUtlVector<DepotInfo_t>* depots, CUtlVector<DepotInfo_t>* sharedDepots)
 {
 	g_pLog->debug("Vec Alloc %u, Grow %u, Size %u\n", depots->memory.alloc, depots->memory.growSize, depots->size);
 
@@ -92,7 +92,7 @@ void Apps::buildDepotDependency(uint32_t appId, CUtlVector<DepotInfo_t>* depots,
 
 }
 
-bool Apps::checkAppOwnership(uint32_t appId, AppOwnershipInfo_t* pInfo)
+bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
 {
 	//Wait Until GetSubscribedApps gets called once to let Steam request and populate legit data first.
 	//Afterwards modifying should hopefully not affect false positives anymore
@@ -143,7 +143,7 @@ bool Apps::checkAppOwnership(uint32_t appId, AppOwnershipInfo_t* pInfo)
 	return true;
 }
 
-void Apps::getSubscribedApps(uint32_t* appList, size_t size, uint32_t& count)
+void Apps::getSubscribedApps(AppId_t* appList, size_t size, uint32_t& count)
 {
 	//Valve calls this function twice, once with size of 0 then again
 	if (!size || !appList)
@@ -163,7 +163,7 @@ void Apps::getSubscribedApps(uint32_t* appList, size_t size, uint32_t& count)
 
 void Apps::parseProductInfoFromResponse(CMsgClientPICSProductInfoResponse* msg)
 {
-	auto set = std::unordered_set<uint32_t>();
+	auto set = std::unordered_set<AppId_t>();
 	for(const auto& app : msg->apps())
 	{
 		set.emplace(app.appid());
@@ -171,7 +171,7 @@ void Apps::parseProductInfoFromResponse(CMsgClientPICSProductInfoResponse* msg)
 	postAppLicensesChanged(set);
 }
 
-void Apps::postAppLicensesChanged(const std::unordered_set<uint32_t>& apps)
+void Apps::postAppLicensesChanged(const std::unordered_set<AppId_t>& apps)
 {
 	if (!apps.size())
 	{
@@ -238,7 +238,7 @@ void Apps::runIPCFrame()
 
 	//Max batch of 15, otherwise not all apps will get a response which means they won't get added
 	constexpr unsigned int MAX_APPS_PER_REQUEST = 15;
-	uint32_t apps[MAX_APPS_PER_REQUEST] { };
+	AppId_t apps[MAX_APPS_PER_REQUEST] { };
 
 	unsigned int i = 0;
 	for(; i < added.size(); i++)
@@ -264,7 +264,7 @@ void Apps::runIPCFrame()
 	g_config.newApps.clear();
 }
 
-bool Apps::shouldDisableCloud(uint32_t appId)
+bool Apps::shouldDisableCloud(AppId_t appId)
 {
 	if (!g_config.disableCloud.get())
 	{
@@ -274,12 +274,12 @@ bool Apps::shouldDisableCloud(uint32_t appId)
 	return !g_pSteamEngine->getUser(0)->isSubscribed(appId);
 }
 
-bool Apps::shouldDisableCDKey(uint32_t appId)
+bool Apps::shouldDisableCDKey(AppId_t appId)
 {
 	return !g_pSteamEngine->getUser(0)->isSubscribed(appId);
 }
 
-bool Apps::shouldDisableUpdates(uint32_t appId)
+bool Apps::shouldDisableUpdates(AppId_t appId)
 {
 	if (!g_config.disableUpdates.get())
 	{

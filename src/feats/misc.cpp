@@ -3,6 +3,7 @@
 #include "../sdk/CNetPacket.hpp"
 #include "../sdk/CProtoBufMsgBase.hpp"
 #include "../sdk/IClientUtils.hpp"
+#include "../sdk/steam.hpp"
 
 #include "../config.hpp"
 
@@ -15,7 +16,7 @@ bool Misc::shouldFakeOffline()
 		return false;
 	}
 	
-	const uint32_t appId = FakeAppIds::getRealAppIdForCurrentPipe();
+	const AppId_t appId = FakeAppIds::getRealAppIdForCurrentPipe();
 	if (!appId || !g_config.fakeOffline.get().contains(appId))
 	{
 		return false;

@@ -1,8 +1,11 @@
 #pragma once
 
+#include "../sdk/steam.hpp"
+
 #include <cstdint>
 #include <map>
 #include <string>
+
 
 class CMsgClientGetAppOwnershipTicketResponse;
 class CMsgClientRequestEncryptedAppTicketResponse;
@@ -18,21 +21,21 @@ public:
 	};
 
 	extern uint32_t oneTimeSteamIdSpoof;
-	extern std::map<uint32_t, SavedTicket> ticketMap;
-	extern std::map<uint32_t, SavedTicket> encryptedTicketMap;
+	extern std::map<AppId_t, SavedTicket> ticketMap;
+	extern std::map<AppId_t, SavedTicket> encryptedTicketMap;
 
 	std::string getTicketDir();
 
 	//TODO: Fill with error checks
-	std::string getTicketPath(uint32_t appId);
-	SavedTicket getCachedTicket(uint32_t appId);
+	std::string getTicketPath(AppId_t appId);
+	SavedTicket getCachedTicket(AppId_t appId);
 	bool saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse* resp);
 
-	void launchApp(uint32_t appId);
-	void getTicketOwnershipExtendedData(uint32_t appId);
+	void launchApp(AppId_t appId);
+	void getTicketOwnershipExtendedData(AppId_t appId);
 
-	std::string getEncryptedTicketPath(uint32_t appId);
-	SavedTicket getCachedEncryptedTicket(uint32_t appId);
+	std::string getEncryptedTicketPath(AppId_t appId);
+	SavedTicket getCachedEncryptedTicket(AppId_t appId);
 	bool saveEncryptedTicketToCache(CMsgClientRequestEncryptedAppTicketResponse* resp);
 
 	void recvEncryptedAppTicket(CNetPacket* pkt);

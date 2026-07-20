@@ -1,6 +1,9 @@
 #pragma once
 
+#include "steam.hpp"
+
 #include <cstdint>
+
 
 class CUser;
 
@@ -8,7 +11,7 @@ class CSteamEngine
 {
 public:
 	CUser* getUser(uint32_t index);
-	void setAppIdForCurrentPipe(uint32_t appId);
+	void setAppIdForCurrentPipe(AppId_t appId);
 };
 
 extern CSteamEngine* g_pSteamEngine;

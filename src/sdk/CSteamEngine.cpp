@@ -24,7 +24,7 @@ CUser* CSteamEngine::getUser(uint32_t index)
 	//return *reinterpret_cast<CUser**>(ppUser + 4);
 }
 
-void CSteamEngine::setAppIdForCurrentPipe(uint32_t appId)
+void CSteamEngine::setAppIdForCurrentPipe(AppId_t appId)
 {
 	//Last argument needs to be 0, otherwise steam crashes.
 	//Might be only 1 when steam first sets it, then 0

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "steam.hpp"
+
 #include <cstdint>
 
 
@@ -15,5 +17,5 @@ struct gameserverdetails_t
 public:
 	servernetadr_t address; //0x0
 	char __pad_0x0[0x88]; //0x8
-	uint32_t appId;
+	AppId_t appId;
 };

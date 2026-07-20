@@ -1,5 +1,7 @@
 #pragma once
 
+#include "steam.hpp"
+
 #include <cstdint>
 
 enum EAppState : uint32_t
@@ -29,8 +31,8 @@ enum EAppState : uint32_t
 
 struct DepotInfo_t
 {
-	uint32_t depotId;		//0x0
-	uint32_t appId;			//0x4
+	AppId_t depotId;		//0x0
+	AppId_t appId;			//0x4
 	uint64_t manifestId;	//0x8
 	char __pad0x10[0x10];	//0x10
 }; //0x20
@@ -38,9 +40,9 @@ struct DepotInfo_t
 class IClientAppManager
 {
 public:
-	bool installApp(uint32_t appId, uint32_t librarIndex);
-	uint32_t uninstallApp(uint32_t appId);
-	EAppState getAppInstallState(uint32_t appId);
+	bool installApp(AppId_t appId, uint32_t librarIndex);
+	uint32_t uninstallApp(AppId_t appId);
+	EAppState getAppInstallState(AppId_t appId);
 };
 
 extern IClientAppManager* g_pClientAppManager;

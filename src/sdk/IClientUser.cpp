@@ -5,7 +5,7 @@
 
 uint32_t IClientUser::getAppOwnershipTicketExtendeData
 (
-	uint32_t appId,
+	AppId_t appId,
 	void* pTicket,
 	uint32_t ticketSize,
 	uint32_t* pOffAppId,

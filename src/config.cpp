@@ -160,7 +160,7 @@ bool CConfig::loadSettings(bool firstLoad)
 
 	std::lock_guard appsChanged(appsChangedMutex);
 	auto prevAppIds = addedAppIds.get();
-	auto _addedAppIds = getList<uint32_t>(node, "AdditionalApps");
+	auto _addedAppIds = getList<AppId_t>(node, "AdditionalApps");
 
 	if (!firstLoad)
 	{
@@ -188,15 +188,15 @@ bool CConfig::loadSettings(bool firstLoad)
 
 	addedAppIds = _addedAppIds;
 
-	appIds = getList<uint32_t>(node, "AppIds");
-	fakeOffline = getList<uint32_t>(node, "FakeOffline");
-	depotBlacklist = getList<uint32_t>(node, "DepotBlacklist");
+	appIds = getList<AppId_t>(node, "AppIds");
+	fakeOffline = getList<AppId_t>(node, "FakeOffline");
+	depotBlacklist = getList<AppId_t>(node, "DepotBlacklist");
 
-	fakeAppIds = getMap<uint32_t, uint32_t>(node, "FakeAppIds");
-	manifestIds = getMap<uint32_t, uint64_t>(node, "ManifestIds");
-	appTokens = getMap<uint32_t, uint64_t>(node, "AppTokens");
-	gameTitles = getMap<uint32_t, std::string>(node, "GameTitles");
-	subscriptionTimestamps = getMap<uint32_t, uint32_t>(node, "SubscriptionTimestamps");
+	fakeAppIds = getMap<AppId_t, AppId_t>(node, "FakeAppIds");
+	manifestIds = getMap<AppId_t, uint64_t>(node, "ManifestIds");
+	appTokens = getMap<AppId_t, uint64_t>(node, "AppTokens");
+	gameTitles = getMap<AppId_t, std::string>(node, "GameTitles");
+	subscriptionTimestamps = getMap<AppId_t, uint32_t>(node, "SubscriptionTimestamps");
 
 	//Do not warn for these (yet?)
 	const auto idleStatusNode = node["IdleStatus"];
@@ -204,7 +204,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	{
 		try
 		{
-			auto appId = idleStatusNode["AppId"].as<uint32_t>();
+			auto appId = idleStatusNode["AppId"].as<AppId_t>();
 			auto title = idleStatusNode["Title"].as<std::string>();
 
 			idleStatus = FakeGame_t
@@ -231,7 +231,7 @@ bool CConfig::loadSettings(bool firstLoad)
 		{
 			try
 			{
-				const uint32_t parentId = app.first.as<uint32_t>();
+				const AppId_t parentId = app.first.as<AppId_t>();
 
 				CDlcData data;
 				data.parentId = parentId;
@@ -239,7 +239,7 @@ bool CConfig::loadSettings(bool firstLoad)
 
 				for(auto& dlc : app.second)
 				{
-					const uint32_t dlcId = dlc.first.as<uint32_t>();
+					const AppId_t dlcId = dlc.first.as<AppId_t>();
 					//There's more efficient types to store strings, but they mostly do not work
 					const std::string dlcName = dlc.second.as<std::string>();
 
@@ -275,11 +275,11 @@ bool CConfig::loadSettings(bool firstLoad)
 			try
 			{
 				const uint32_t steamId = steamIdNode.first.as<uint32_t>();
-				_denuvoGames[steamId] = std::unordered_set<uint32_t>();
+				_denuvoGames[steamId] = std::unordered_set<AppId_t>();
 
 				for (auto& appIdNode : steamIdNode.second)
 				{
-					const uint32_t appId = appIdNode.as<uint32_t>();
+					const AppId_t appId = appIdNode.as<AppId_t>();
 					_denuvoGames[steamId].emplace(appId);
 
 					//Again, not loggin SteamId because of privacy
@@ -317,16 +317,16 @@ bool CConfig::loadSettings(bool firstLoad)
 	return true;
 }
 
-bool CConfig::isAddedAppId(uint32_t appId)
+bool CConfig::isAddedAppId(AppId_t appId)
 {
 	return addedAppIds.get().contains(appId);
 }
 
-bool CConfig::shouldExcludeAppId(uint32_t appId, bool ignoreAdditionalApps)
+bool CConfig::shouldExcludeAppId(AppId_t appId, bool ignoreAdditionalApps)
 {
 	bool exclude = false;
 	//Proper way would be with getAppType, but that seems broken so we need to do this instead
-	constexpr uint32_t ONE_BILLION = 1E9; //Implicit cast from double to unsigned int, hopefully this does not break anything
+	constexpr AppId_t ONE_BILLION = 1E9; //Implicit cast from double to unsigned int, hopefully this does not break anything
 	if (appId >= ONE_BILLION) //Higher and equal to 10^9 gets used by Steam Internally
 	{
 		exclude = true;
@@ -346,7 +346,7 @@ bool CConfig::shouldExcludeAppId(uint32_t appId, bool ignoreAdditionalApps)
 			if (len > 0)
 			{
 				//g_pLog->debug("AppId %i, parent %s (%i)\n", appId, chParent, len);
-				uint32_t parentId = std::stoul(chParent);
+				AppId_t parentId = std::stoul(chParent);
 
 				if (whitelist && !shouldExcludeAppId(parentId, true))
 				{
@@ -366,7 +366,7 @@ bool CConfig::shouldExcludeAppId(uint32_t appId, bool ignoreAdditionalApps)
 	return exclude;
 }
 
-uint32_t CConfig::getDenuvoGameOwner(uint32_t appId)
+uint32_t CConfig::getDenuvoGameOwner(AppId_t appId)
 {
 	for(const auto& tpl : denuvoGames.get())
 	{

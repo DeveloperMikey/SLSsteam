@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sdk/steam.hpp"
+
 #include "mtvar.hpp"
 #include "log.hpp"
 
@@ -22,15 +24,15 @@ class CConfig {
 public:
 	struct FakeGame_t
 	{
-		uint32_t appId = 0;
+		AppId_t appId = 0;
 		std::string title;
 	};
 
 	class CDlcData
 	{
 	public:
-		uint32_t parentId;
-		std::unordered_map<uint32_t, std::string> dlcIds;
+		AppId_t parentId;
+		std::unordered_map<AppId_t, std::string> dlcIds;
 		//No default constructor, otherwise dlcData will complain that no matching one was found
 		//without implementing it ourself anyway
 	};
@@ -43,19 +45,19 @@ public:
 	};
 	MTVariable<ELoadError> __loadErrors;
 
-	MTVariable<std::unordered_set<uint32_t>> appIds;
-	MTVariable<std::unordered_set<uint32_t>> addedAppIds;
-	MTVariable<std::unordered_map<uint32_t, CDlcData>> dlcData;
-	MTVariable<std::unordered_map<uint32_t, uint64_t>> appTokens;
-	MTVariable<std::unordered_set<uint32_t>> fakeOffline;
-	MTVariable<std::unordered_map<uint32_t, uint32_t>> fakeAppIds;
-	MTVariable<std::unordered_map<uint32_t, uint64_t>> manifestIds;
-	MTVariable<std::unordered_set<uint32_t>> depotBlacklist;
+	MTVariable<std::unordered_set<AppId_t>> appIds;
+	MTVariable<std::unordered_set<AppId_t>> addedAppIds;
+	MTVariable<std::unordered_map<AppId_t, CDlcData>> dlcData;
+	MTVariable<std::unordered_map<AppId_t, uint64_t>> appTokens;
+	MTVariable<std::unordered_set<AppId_t>> fakeOffline;
+	MTVariable<std::unordered_map<AppId_t, AppId_t>> fakeAppIds;
+	MTVariable<std::unordered_map<AppId_t, uint64_t>> manifestIds;
+	MTVariable<std::unordered_set<AppId_t>> depotBlacklist;
 	MTVariable<FakeGame_t> idleStatus;
-	MTVariable<std::unordered_map<uint32_t, std::string>> gameTitles;
-	MTVariable<std::unordered_map<uint32_t, uint32_t>> subscriptionTimestamps;
+	MTVariable<std::unordered_map<AppId_t, std::string>> gameTitles;
+	MTVariable<std::unordered_map<AppId_t, uint32_t>> subscriptionTimestamps;
 
-	MTVariable<std::unordered_map<uint32_t, std::unordered_set<uint32_t>>> denuvoGames;
+	MTVariable<std::unordered_map<uint32_t, std::unordered_set<AppId_t>>> denuvoGames;
 
 	MTVariable<bool> disableFamilyLock;
 	MTVariable<bool> useWhiteList;
@@ -73,8 +75,8 @@ public:
 	MTVariable<bool> extendedLogging;
 
 	std::mutex appsChangedMutex;
-	std::unordered_set<uint32_t> newApps;
-	std::unordered_set<uint32_t> removedApps;
+	std::unordered_set<AppId_t> newApps;
+	std::unordered_set<AppId_t> removedApps;
 
 	//Using incomplete class to avoid runtime linking errors
 	CFileWatcher* watcher;
@@ -189,11 +191,11 @@ public:
 		return map;
 	}
 
-	bool isAddedAppId(uint32_t appId);
-	bool addAdditionalAppId(uint32_t appId);
+	bool isAddedAppId(AppId_t appId);
+	bool addAdditionalAppId(AppId_t appId);
 
-	bool shouldExcludeAppId(uint32_t appId, bool ignoreAdditionalApps = false);
-	uint32_t getDenuvoGameOwner(uint32_t appId);
+	bool shouldExcludeAppId(AppId_t appId, bool ignoreAdditionalApps = false);
+	uint32_t getDenuvoGameOwner(AppId_t appId);
 };
 
 extern CConfig g_config;

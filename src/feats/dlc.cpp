@@ -9,7 +9,7 @@
 #include "apps.hpp"
 
 
-bool DLC::shouldUnlockDlc(uint32_t appId)
+bool DLC::shouldUnlockDlc(AppId_t appId)
 {
 	//Don't unlock inside the SteamClient (AppId 0)
 	if (!g_pClientUtils->getAppId())
@@ -30,7 +30,7 @@ bool DLC::shouldUnlockDlc(uint32_t appId)
 	return true;
 }
 
-bool DLC::checkAppOwnership(uint32_t appId, AppOwnershipInfo_t *info)
+bool DLC::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t *info)
 {
 	if (!shouldUnlockDlc(appId))
 	{
@@ -42,24 +42,24 @@ bool DLC::checkAppOwnership(uint32_t appId, AppOwnershipInfo_t *info)
 	return true;
 }
 
-bool DLC::isDlcEnabled(uint32_t appId)
+bool DLC::isDlcEnabled(AppId_t appId)
 {
 	return shouldUnlockDlc(appId);
 }
 
-bool DLC::isAppDlcInstalled(uint32_t appId)
+bool DLC::isAppDlcInstalled(AppId_t appId)
 {
 	return shouldUnlockDlc(appId);
 }
 
-bool DLC::userSubscribedInTicket(uint32_t appId)
+bool DLC::userSubscribedInTicket(AppId_t appId)
 {
 	//Might want to compare the steamId param to the g_currentSteamId in the future
 	//Although not doing that might also work for Dedicated servers?
 	return shouldUnlockDlc(appId);
 }
 
-uint32_t DLC::getDlcCount(uint32_t appId)
+uint32_t DLC::getDlcCount(AppId_t appId)
 {
 	const auto dlcData = g_config.dlcData.get();
 	if (dlcData.contains(appId))
@@ -70,7 +70,7 @@ uint32_t DLC::getDlcCount(uint32_t appId)
 	return 0;
 }
 
-bool DLC::getDlcDataByIndex(uint32_t appId, int index, uint32_t* dlcId, bool* available, char* dlcName, size_t& dlcNameLen)
+bool DLC::getDlcDataByIndex(AppId_t appId, int index, AppId_t* dlcId, bool* available, char* dlcName, size_t& dlcNameLen)
 {
 	if (!dlcId || !available || !dlcName)
 	{

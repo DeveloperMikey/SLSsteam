@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../sdk/steam.hpp"
+
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -15,10 +17,10 @@ namespace Achievements
 {
 	constexpr const char* GET_PLAYER_STATS_SERVICE_NAME = "Player.GetUserStats#1";
 
-	extern std::unordered_map<uint32_t, std::unordered_set<uint64_t>> ownerBlacklist;
+	extern std::unordered_map<AppId_t, std::unordered_set<uint64_t>> ownerBlacklist;
 
-	std::string getReviewUrl(uint32_t appId);
-	std::unordered_set<uint64_t> getReviewersForGame(uint32_t appId);
+	std::string getReviewUrl(AppId_t appId);
+	std::unordered_set<uint64_t> getReviewersForGame(AppId_t appId);
 
 	//CPlayer_GetUserStats
 	uint32_t sendAndRecvGetPlayerStats

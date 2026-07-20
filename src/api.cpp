@@ -19,7 +19,7 @@ namespace SLSAPI
 
 	std::mutex executionMutex;
 	std::vector<InstallCommand_t> installs;
-	std::vector<uint32_t> uninstalls;
+	std::vector<AppId_t> uninstalls;
 }
 
 bool SLSAPI::isEnabled()
@@ -49,7 +49,7 @@ void SLSAPI::onFileChange()
 	{
 		try
 		{
-			uint32_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
+			AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
 			uint32_t library = std::strtoul(split[2].c_str(), nullptr, 10);
 
 			std::lock_guard guard(executionMutex);
@@ -64,7 +64,7 @@ void SLSAPI::onFileChange()
 	{
 		try
 		{
-			uint32_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
+			AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
 
 			std::lock_guard guard(executionMutex);
 			uninstalls.emplace_back(appId);
