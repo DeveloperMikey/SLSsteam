@@ -68,6 +68,8 @@ namespace MemHlp
 	//TODO: Create hooking wrapper that calls this automatically
 	bool fixPICThunkCall(const char* name, const lm_address_t fn, const lm_address_t tramp);
 
+	std::string hexdump(const void* address, const size_t size);
+
 	const char* getTypeName(const void* pClass);
 	
 	template<typename tFN, typename ...Args>

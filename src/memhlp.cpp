@@ -5,8 +5,13 @@
 
 #include "libmem/libmem.h"
 
+#include <cstdint>
+#include <cstring>
+#include <iomanip>
 #include <map>
+#include <sstream>
 #include <vector>
+
 
 std::vector<int16_t> MemHlp::patternToBytes(const char* pattern)
 {
@@ -290,6 +295,56 @@ bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_a
 	return false;
 }
 
+std::string MemHlp::hexdump(const void* address, const size_t size)
+{
+	constexpr unsigned int ROWS = 0x10;
+	std::ostringstream ss;
+
+	ss << std::setfill(' ') << std::hex;
+
+	for(unsigned int i = 0; i < ROWS; i++)
+	{
+		if (i == 0)
+		{
+			ss << std::setw(13) << i;
+		}
+		else
+		{
+			ss << std::setw(3) << i;
+		}
+	}
+
+	for(uintptr_t i = 0; i < size; i += ROWS)
+	{
+		const unsigned int byteStart = reinterpret_cast<uintptr_t>(address) + i;
+		const unsigned int num = ROWS > size - i ? size - i : ROWS;
+
+		ss << "\n0x" << byteStart;
+
+		for(uintptr_t j = 0; j < num; j++)
+		{
+			const unsigned int byte = *reinterpret_cast<uint8_t*>(byteStart + j);
+			ss << " " << std::setfill('0') << std::setw(2) << byte;
+		}
+
+		ss << std::setfill(' ') << std::setw((ROWS - num) * 3 + 1) << " ";
+
+		for(uintptr_t j = 0; j < num; j++)
+		{
+			const unsigned char byte = *reinterpret_cast<unsigned char*>(byteStart + j);
+			if (std::isprint(byte))
+			{
+				ss << byte;
+			}
+			else
+			{
+				ss << ".";
+			}
+		}
+	}
+
+	return ss.str();
+}
 
 const char* MemHlp::getTypeName(const void* pClass)
 {
