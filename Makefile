@@ -10,6 +10,7 @@ objs := $(srcs:src/%.cpp=obj/%.o)
 deps := $(objs:%.o=%.d)
 
 CXXFLAGS := -O3 -flto=auto -fPIC -m32 -std=c++20 -Wall -Wextra -Wpedantic -Wno-error=format-security -D_GLIBCXX_USE_CXX11_ABI=0
+CXXFLAGS += -floop-block -fgraphite-identity -floop-parallelize-all -pipe -fopenmp -fomit-frame-pointer
 
 LDFLAGS := -shared -Wl,--no-undefined
 LDFLAGS += $(shell pkg-config --libs "openssl")
