@@ -41,11 +41,6 @@ namespace Patterns
 		extern Pattern_t BParseResponseMessage;
 	}
 
-	namespace CProtoBufMsgBase
-	{
-		extern Pattern_t Send;
-	};
-
 	namespace CSteamEngine
 	{
 		extern Pattern_t Init;
