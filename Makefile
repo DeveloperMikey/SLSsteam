@@ -84,7 +84,7 @@ clean:
 install:
 	sh setup.sh
 
-zips: rebuild
+zips: build
 	@mkdir -p zips
 	7z a -mx9 -m9=lzma2 \
 		"zips/SLSsteam $(DATE).7z" \
@@ -112,7 +112,9 @@ zips-config:
 	#Compatibility for Github issues
 	7z a -mx9 -m9=lzma2 "zips/SLSsteam - SLSConfig $(DATE).7z" "$(HOME)/.config/SLSsteam/config.yaml"
 
+
 build: audit-libs tools
 rebuild: clean build
+release: rebuild zips
 
 .PHONY: audit-libs tools build clean rebuild zips
