@@ -17,7 +17,6 @@ struct DepotInfo_t;
 namespace Apps
 {
 	extern bool applistRequested;
-	extern uint32_t lastAppLaunched;
 
 	bool unlockApp(uint32_t appId, AppOwnershipInfo_t* info, uint32_t ownerId);
 	bool unlockApp(uint32_t appId, AppOwnershipInfo_t* info);
@@ -34,12 +33,8 @@ namespace Apps
 	bool shouldDisableCDKey(uint32_t appId);
 	bool shouldDisableUpdates(uint32_t appId);
 
-	void recvPersonaState(CNetPacket* pkt);
-	void recvMsg(CNetPacket* pkt);
-
 	void sendAndRecvLastPlayedTimes(const char* name, CPlayer_GetLastPlayedTimes_Response* recv);
 	void sendGamesPlayed(CNetPacket* pkt);
 	void sendPICSInfoRequest(CNetPacket* pkt);
-	void sendRichPresenceUpload(CNetPacket* pkt);
 	void sendMsg(CNetPacket* pkt);
 };

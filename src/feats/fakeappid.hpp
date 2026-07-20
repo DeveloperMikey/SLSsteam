@@ -29,5 +29,10 @@ namespace FakeAppIds
 	uint32_t requestInternetServerList(uint32_t appId);
 	void pingResponse(gameserverdetails_t* details);
 
+	void recvPersonaState(CNetPacket* pkt);
+	void recvMsg(CNetPacket* pkt);
+
+	void sendGamesPlayed(CNetPacket* pkt);
+	void sendRichPresenceUpload(CNetPacket* pkt);
 	void sendMsg(CNetPacket* pkt);
 }
