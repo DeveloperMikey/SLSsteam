@@ -117,6 +117,11 @@ namespace VFTIndexes
 
 	namespace IClientAppManager
 	{
+		VFTableInfo_t BCanRemotePlayTogether
+		{
+			"20IClientAppManagerMap",
+			"BCanRemotePlayTogether"
+		};
 		VFTableInfo_t InstallApp
 		{
 			"20IClientAppManagerMap",

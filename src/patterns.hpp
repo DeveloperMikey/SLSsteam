@@ -76,7 +76,6 @@ namespace Patterns
 	namespace IClientAppManager
 	{
 		extern Pattern_t RunIPCFrame;
-		extern Pattern_t BCanRemotePlayTogether;
 	}
 
 	namespace IClientApps

@@ -175,13 +175,6 @@ namespace Patterns
 			SigFollowMode::PrologueUpwards,
 			std::vector<uint8_t> { 0x56, 0x57, 0xe5, 0x89, 0x55 }
 		};
-		Pattern_t BCanRemotePlayTogether
-		{
-			"IClientAppManager::BCanRemotePlayTogether",
-			"58 5A FF 74 24 ? 56 E8 ? ? ? ? 83 C4 10 85 C0 74",
-			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0xe8, 0x53, 0x56, 0x57 }
-		};
 	}
 
 	namespace IClientApps

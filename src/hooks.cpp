@@ -456,7 +456,7 @@ static bool hkUserAppManager_BuildDepotDependency
 
 static bool hkClientAppManager_BCanRemotePlayTogether(void* pClientAppManager, AppId_t appId)
 {
-	const bool ret = Hooks::IClientAppManager_BCanRemotePlayTogether.tramp.fn(pClientAppManager, appId);
+	const bool ret = Hooks::IClientAppManager_BCanRemotePlayTogether.originalFn.fn(pClientAppManager, appId);
 	g_pLog->debug
 	(
 		"%s(%p, %u) -> %u\n",
@@ -561,14 +561,15 @@ static void hkClientAppManager_RunIPCFrame(void* pClientAppManager, void* a1, vo
 	std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
 	LM_VmtNew(*reinterpret_cast<lm_address_t**>(pClientAppManager), vft.get());
 
+	Hooks::IClientAppManager_BCanRemotePlayTogether.setup(vft, VFTIndexes::IClientAppManager::BCanRemotePlayTogether, hkClientAppManager_BCanRemotePlayTogether);
 	Hooks::IClientAppManager_BIsDlcEnabled.setup(vft, VFTIndexes::IClientAppManager::BIsDlcEnabled, hkClientAppManager_BIsDlcEnabled);
 	Hooks::IClientAppManager_GetAppUpdateInfo.setup(vft, VFTIndexes::IClientAppManager::GetUpdateInfo, hkClientAppManager_GetUpdateInfo);
 	Hooks::IClientAppManager_LaunchApp.setup(vft, VFTIndexes::IClientAppManager::LaunchApp, hkClientAppManager_LaunchApp);
 	Hooks::IClientAppManager_IsAppDlcInstalled.setup(vft, VFTIndexes::IClientAppManager::IsAppDlcInstalled, hkClientAppManager_IsAppDlcInstalled);
 
+	Hooks::IClientAppManager_BCanRemotePlayTogether.place();
 	Hooks::IClientAppManager_BIsDlcEnabled.place();
 	Hooks::IClientAppManager_GetAppUpdateInfo.place();
-
 	Hooks::IClientAppManager_LaunchApp.place();
 	Hooks::IClientAppManager_IsAppDlcInstalled.place();
 
@@ -928,16 +929,21 @@ static void hkClientUser_RunIPCFrame(void* pClientUser, void* a1, void* a2, void
 		std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
 		LM_VmtNew(*reinterpret_cast<lm_address_t**>(pClientUser), vft.get());
 
-
 		Hooks::IClientUser_BLoggedOn.setup(vft, VFTIndexes::IClientUser::BLoggedOn, &hkClientUser_BLoggedOn);
 		Hooks::IClientUser_BUpdateAppOwnershipTicket.setup(vft, VFTIndexes::IClientUser::BUpdateAppOwnershipTicket, hkClientUser_BUpdateOwnershipTicket);
 		Hooks::IClientUser_GetAppOwnershipTicketExtendedData.setup(vft, VFTIndexes::IClientUser::GetAppOwnershipTicketExtendedData, hkClientUser_GetAppOwnershipTicketExtendedData);
 		Hooks::IClientUser_IsUserSubscribedAppInTicket.setup(vft, VFTIndexes::IClientUser::IsUserSubscribedAppInTicket, &hkClientUser_IsUserSubscribedAppInTicket);
 		Hooks::IClientUser_RequiresLegacyCDKey.setup(vft, VFTIndexes::IClientUser::RequiresLegacyCDKey, hkClientUser_RequiresLegacyCDKey);
 
+		Hooks::IClientUser_BLoggedOn.place();
+		Hooks::IClientUser_BUpdateAppOwnershipTicket.place();
+		Hooks::IClientUser_GetAppOwnershipTicketExtendedData.place();
+		Hooks::IClientUser_IsUserSubscribedAppInTicket.place();
+		Hooks::IClientUser_RequiresLegacyCDKey.place();
+
 		g_pLog->debug("IClientUser->vft at %p\n", vft->vtable);
 
-		//We can hook from herre since this gets called before CheckAppOwnership
+		//We can hook from here since this gets called before CheckAppOwnership
 		Hooks::IClientUser_GetSteamId = vft->vtable[VFTIndexes::IClientUser::GetSteamID.index];
 		Hooks::createAndPlaceSteamIdHook();
 
@@ -1109,8 +1115,7 @@ namespace Hooks
 
 	DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
-	DetourHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
-
+	VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 	VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;
 	VFTHook<IClientAppManager_GetAppUpdateInfo_t> IClientAppManager_GetAppUpdateInfo;
 	VFTHook<IClientAppManager_LaunchApp_t> IClientAppManager_LaunchApp;
@@ -1178,8 +1183,6 @@ bool Hooks::setup()
 
 		&& CWebSocketConnection_BBuildAndAsyncSendFrame.setup(Patterns::CWebSocketConnection::BBuildAndAsyncSendFrame, &hkWebSocketConnection_BBuildAndAsyncSendFrame)
 
-		&& IClientAppManager_BCanRemotePlayTogether.setup(Patterns::IClientAppManager::BCanRemotePlayTogether, hkClientAppManager_BCanRemotePlayTogether)
-
 		&& ISteamMatchmakingPingResponse_ServerResponded.setup(Patterns::ISteamMatchmakingPingResponse::ServerResponded, hkSteamMatchmakingPingResponse_ServerResponded);
 
 	Hooks::place();
@@ -1221,8 +1224,6 @@ void Hooks::place()
 
 	CWebSocketConnection_BBuildAndAsyncSendFrame.place();
 
-	IClientAppManager_BCanRemotePlayTogether.place();
-
 	ISteamMatchmakingPingResponse_ServerResponded.place();
 }
 
@@ -1260,11 +1261,10 @@ void Hooks::remove()
 
 	CWebSocketConnection_BBuildAndAsyncSendFrame.remove();
 
-	IClientAppManager_BCanRemotePlayTogether.remove();
-
 	ISteamMatchmakingPingResponse_ServerResponded.remove();
 
 	//VFT Hooks
+	IClientAppManager_BCanRemotePlayTogether.remove();
 	IClientAppManager_BIsDlcEnabled.remove();
 	IClientAppManager_GetAppUpdateInfo.remove();
 	IClientAppManager_LaunchApp.remove();

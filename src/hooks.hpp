@@ -115,16 +115,6 @@ namespace Hooks
 
 	typedef bool(*CWebSocketConnection_BBuildAndAsyncSendFrame_t)(void*, uint32_t, void*, uint32_t);
 
-	typedef bool(*IClientAppManager_BCanRemotePlayTogether_t)(void*, AppId_t);
-
-	typedef bool(*IClientUser_BLoggedOn_t)(void*);
-	typedef uint32_t(*IClientUser_BUpdateAppOwnershipTicket_t)(void*, AppId_t, bool);
-	typedef uint32_t(*IClientUser_GetAppOwnershipTicketExtendedData_t)(void*, uint32_t, void*, uint32_t, uint32_t*, uint32_t*, uint32_t*, uint32_t*);
-	typedef uint8_t(*IClientUser_IsUserSubscribedAppInTicket_t)(void*, uint32_t, uint32_t, uint32_t, AppId_t);
-	typedef bool(*IClientUser_RequiresLegacyCDKey_t)(void*, AppId_t, uint32_t*);
-
-	typedef bool(*IClientUtils_GetOfflineMode_t)(void*);
-
 	extern DetourHook<TraceIPC_t> TraceIPC;
 
 	extern DetourHook<IClientAppManager_RunIPCFrame_t> IClientAppManager_RunIPCFrame;
@@ -156,8 +146,7 @@ namespace Hooks
 
 	extern DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
-	extern DetourHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
-
+	typedef bool(*IClientAppManager_BCanRemotePlayTogether_t)(void*, AppId_t);
 	typedef bool(*IClientAppManager_BIsDlcEnabled_t)(void*, AppId_t, AppId_t, void*);
 	typedef bool(*IClientAppManager_GetAppUpdateInfo_t)(void*, AppId_t, uint32_t*);
 	typedef void*(*IClientAppManager_LaunchApp_t)(void*, AppId_t*, void*, void*, void*);
@@ -170,7 +159,16 @@ namespace Hooks
 	typedef bool(*IClientRemoteStorage_IsCloudEnabledForApp_t)(void*, AppId_t);
 
 	typedef AppId_t(*IClientUtils_GetAppId_t)(void*);
+	typedef bool(*IClientUtils_GetOfflineMode_t)(void*);
 
+	typedef bool(*IClientUser_BLoggedOn_t)(void*);
+	typedef uint32_t(*IClientUser_BUpdateAppOwnershipTicket_t)(void*, AppId_t, bool);
+	typedef uint32_t(*IClientUser_GetAppOwnershipTicketExtendedData_t)(void*, uint32_t, void*, uint32_t, uint32_t*, uint32_t*, uint32_t*, uint32_t*);
+	typedef uint8_t(*IClientUser_IsUserSubscribedAppInTicket_t)(void*, uint32_t, uint32_t, uint32_t, AppId_t);
+	typedef bool(*IClientUser_RequiresLegacyCDKey_t)(void*, AppId_t, uint32_t*);
+
+
+	extern VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 	extern VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;
 	extern VFTHook<IClientAppManager_GetAppUpdateInfo_t> IClientAppManager_GetAppUpdateInfo;
 	extern VFTHook<IClientAppManager_LaunchApp_t> IClientAppManager_LaunchApp;

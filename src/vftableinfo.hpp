@@ -45,6 +45,7 @@ namespace VFTIndexes
 
 	namespace IClientAppManager
 	{
+		extern VFTableInfo_t BCanRemotePlayTogether;
 		extern VFTableInfo_t InstallApp;
 		extern VFTableInfo_t UninstallApp;
 		extern VFTableInfo_t LaunchApp;
