@@ -139,16 +139,6 @@ namespace Patterns
 		};
 	}
 
-	namespace CClientUnifiedServiceTransport
-	{
-		Pattern_t SendAndRecvMsg
-		{
-			"CClientUnifiedServiceTransport::SendAndRecvMsg",
-			"E8 ? ? ? ? 83 C4 ? 84 C0 0F 84 ? ? ? ? 0F B6 45 B2",
-			SigFollowMode::Relative
-		};
-	}
-
 	namespace CUser
 	{
 		Pattern_t CheckAppOwnership

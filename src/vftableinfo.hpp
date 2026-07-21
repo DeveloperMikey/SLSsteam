@@ -1,5 +1,7 @@
 #pragma once
 
+#include "libmem/libmem.h"
+
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -10,6 +12,7 @@ struct VFTableInfo_t
 {
 	std::string typeName;
 	std::string functionName;
+	lm_address_t address;
 	unsigned int index;
 
 	VFTableInfo_t(const char* typeName, const char* functionName, const unsigned int index = 0);
@@ -18,9 +21,13 @@ struct VFTableInfo_t
 	std::string getPrintName() const;
 };
 
-
 namespace VFTIndexes
 {
+	namespace CClientUnifiedServiceTransport
+	{
+		extern VFTableInfo_t SendAndRecvMsg;
+	}
+
 	namespace IClientApps
 	{
 		extern VFTableInfo_t GetAppData;

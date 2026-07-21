@@ -76,13 +76,18 @@ VFTHook<T>::VFTHook() : VFTHook<T>("")
 template<typename T>
 bool DetourHook<T>::setup(const Pattern_t& pattern, T hookFn)
 {
-	if (pattern.address == LM_ADDRESS_BAD)
-	{
-		return false;
-	}
-
 	this->name = pattern.name;
 	this->originalFn.address = pattern.address;
+	this->hookFn.fn = hookFn;
+
+	return true;
+}
+
+template<typename T>
+bool DetourHook<T>::setup(const VFTableInfo_t& info, T hookFn)
+{
+	this->name = info.getPrintName();
+	this->originalFn.address = info.address;
 	this->hookFn.fn = hookFn;
 
 	return true;
@@ -1163,7 +1168,9 @@ bool Hooks::setup()
 
 		&& CAppDataCache_BParseResponseFromMessage.setup(Patterns::CAppDataCache::BParseResponseMessage, &hkAppDataCache_BParseResponseFromMessage)
 
-		&& CClientUnifiedServiceMethod_SendAndRecvMsg.setup(Patterns::CClientUnifiedServiceTransport::SendAndRecvMsg, &hkClientUnifiedServiceTransport_SendAndRecvMsg)
+		//We detour hook this virtual function out of respect for my friend Selectively11. His amazing project
+		//CloudRedirect hooks the same function using a VFT hook already
+		&& CClientUnifiedServiceMethod_SendAndRecvMsg.setup(VFTIndexes::CClientUnifiedServiceTransport::SendAndRecvMsg, &hkClientUnifiedServiceTransport_SendAndRecvMsg)
 
 		&& CCMInterface_RecvPkt.setup(Patterns::CCMInterface::RecvPkt, &hkCMInterface_RecvPkt)
 

@@ -62,6 +62,7 @@ public:
 	virtual void remove();
 
 	bool setup(const Pattern_t& pattern, T hookFn);
+	bool setup(const VFTableInfo_t& info, T hookFn);
 };
 
 template<typename T>

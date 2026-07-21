@@ -29,6 +29,12 @@ unsigned int VFTable::analzye()
 	//*(address + sizeof(lm_address_t)) = TypeInfo*
 	//*(address + sizeof(lm_address_t) * 2) = First VFunc
 	
+	//Already analysed
+	if (functions.size())
+	{
+		return 0;
+	}
+
 	const lm_address_t start = address + sizeof(lm_address_t) * 2;
 
 	for(unsigned int i = 0; ;i++)

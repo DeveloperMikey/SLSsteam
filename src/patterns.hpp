@@ -54,11 +54,6 @@ namespace Patterns
 		extern Pattern_t RequestInternetServerList;
 	}
 
-	namespace CClientUnifiedServiceTransport
-	{
-		extern Pattern_t SendAndRecvMsg;
-	}
-
 	namespace CCMInterface
 	{
 		extern Pattern_t RecvPkt;
