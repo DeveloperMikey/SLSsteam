@@ -765,7 +765,7 @@ static void hkClientUtils_RunIPCFrame(void* pClientUtils, void* a1, void* a2, vo
 
 static bool hkClientUser_BLoggedOn(void* pClientUser)
 {
-	const bool ret = Hooks::IClientUser_BLoggedOn.tramp.fn(pClientUser);
+	const bool ret = Hooks::IClientUser_BLoggedOn.originalFn.fn(pClientUser);
 	//Useless logging
 	//g_pLog->debug
 	//(
@@ -792,7 +792,7 @@ static uint32_t hkClientUser_BUpdateOwnershipTicket(void* pClientUser, AppId_t a
 		g_pLog->debug("Force re-requesting OwnershipInfo for %u\n", appId);
 	}
 
-	const uint32_t ret = Hooks::IClientUser_BUpdateAppOwnershipTicket.tramp.fn(pClientUser, appId, staleOnly);
+	const uint32_t ret = Hooks::IClientUser_BUpdateAppOwnershipTicket.originalFn.fn(pClientUser, appId, staleOnly);
 
 	g_pLog->debug
 	(
@@ -820,7 +820,7 @@ static uint32_t hkClientUser_GetAppOwnershipTicketExtendedData
 	uint32_t* pSigSize
 )
 {
-	const uint32_t ret = Hooks::IClientUser_GetAppOwnershipTicketExtendedData.tramp.fn
+	const uint32_t ret = Hooks::IClientUser_GetAppOwnershipTicketExtendedData.originalFn.fn
 	(
 		pClientUser,
 		appId,
@@ -841,7 +841,7 @@ static uint32_t hkClientUser_GetAppOwnershipTicketExtendedData
 
 static uint8_t hkClientUser_IsUserSubscribedAppInTicket(void* pClientUser, uint32_t steamId, uint32_t a2, uint32_t a3, AppId_t appId)
 {
-	const uint8_t ticketState = Hooks::IClientUser_IsUserSubscribedAppInTicket.tramp.fn(pClientUser, steamId, a2, a3, appId);
+	const uint8_t ticketState = Hooks::IClientUser_IsUserSubscribedAppInTicket.originalFn.fn(pClientUser, steamId, a2, a3, appId);
 	//g_pLog->once("IClientUser::IsUserSubscribedAppInTicket(%p, %u, %u, %u, %u) -> %i\n", pClientUser, steamId, a2, a3, appId, ticketState);
 	//Don't log the steamId, protect users from themselves and stuff
 	g_pLog->once
@@ -891,7 +891,7 @@ static uint32_t hkClientUser_GetSteamId(uint32_t steamId)
 
 static bool hkClientUser_RequiresLegacyCDKey(void* pClientUser, AppId_t appId, uint32_t* a2)
 {
-	const bool requiresKey = Hooks::IClientUser_RequiresLegacyCDKey.tramp.fn(pClientUser, appId, a2);
+	const bool requiresKey = Hooks::IClientUser_RequiresLegacyCDKey.originalFn.fn(pClientUser, appId, a2);
 	g_pLog->once
 	(
 		"%s(%p, %u, %u) -> %i\n",
@@ -919,10 +919,23 @@ static void hkClientUser_RunIPCFrame(void* pClientUser, void* a1, void* a2, void
 	{
 		g_pClientUser = reinterpret_cast<IClientUser*>(pClientUser);
 
-		//std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
-		//LM_VmtNew(*reinterpret_cast<lm_address_t**>(pClientUser), vft.get());
 
-		//g_pLog->debug("IClientUser->vft at %p\n", vft->vtable);
+		std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
+		LM_VmtNew(*reinterpret_cast<lm_address_t**>(pClientUser), vft.get());
+
+
+		Hooks::IClientUser_BLoggedOn.setup(vft, VFTIndexes::IClientUser::BLoggedOn, &hkClientUser_BLoggedOn);
+		Hooks::IClientUser_BUpdateAppOwnershipTicket.setup(vft, VFTIndexes::IClientUser::BUpdateAppOwnershipTicket, hkClientUser_BUpdateOwnershipTicket);
+		Hooks::IClientUser_GetAppOwnershipTicketExtendedData.setup(vft, VFTIndexes::IClientUser::GetAppOwnershipTicketExtendedData, hkClientUser_GetAppOwnershipTicketExtendedData);
+		Hooks::IClientUser_IsUserSubscribedAppInTicket.setup(vft, VFTIndexes::IClientUser::IsUserSubscribedAppInTicket, &hkClientUser_IsUserSubscribedAppInTicket);
+		Hooks::IClientUser_RequiresLegacyCDKey.setup(vft, VFTIndexes::IClientUser::RequiresLegacyCDKey, hkClientUser_RequiresLegacyCDKey);
+
+		g_pLog->debug("IClientUser->vft at %p\n", vft->vtable);
+
+		//We can hook from herre since this gets called before CheckAppOwnership
+		Hooks::IClientUser_GetSteamId = vft->vtable[VFTIndexes::IClientUser::GetSteamID.index];
+		Hooks::createAndPlaceSteamIdHook();
+
 		hooked = true;
 	}
 
@@ -958,8 +971,8 @@ static void patchRetn(lm_address_t address)
 	LM_ProtMemory(address, 1, oldProt, LM_NULL);
 }
 
-static lm_address_t hkNakedGetSteamId;
-static bool createAndPlaceSteamIdHook()
+lm_address_t Hooks::hkNakedGetSteamId;
+bool Hooks::createAndPlaceSteamIdHook()
 {
 	hkNakedGetSteamId = LM_AllocMemory(0, LM_PROT_XRW);
 	if (hkNakedGetSteamId == LM_ADDRESS_BAD)
@@ -1103,12 +1116,6 @@ namespace Hooks
 
 	DetourHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 
-	DetourHook<IClientUser_BLoggedOn_t> IClientUser_BLoggedOn;
-	DetourHook<IClientUser_BUpdateAppOwnershipTicket_t> IClientUser_BUpdateAppOwnershipTicket;
-	DetourHook<IClientUser_GetAppOwnershipTicketExtendedData_t> IClientUser_GetAppOwnershipTicketExtendedData;
-	DetourHook<IClientUser_IsUserSubscribedAppInTicket_t> IClientUser_IsUserSubscribedAppInTicket;
-	DetourHook<IClientUser_RequiresLegacyCDKey_t> IClientUser_RequiresLegacyCDKey;
-
 	VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;
 	VFTHook<IClientAppManager_GetAppUpdateInfo_t> IClientAppManager_GetAppUpdateInfo;
 	VFTHook<IClientAppManager_LaunchApp_t> IClientAppManager_LaunchApp;
@@ -1122,6 +1129,12 @@ namespace Hooks
 	VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
 	VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;
 
+	VFTHook<IClientUser_BLoggedOn_t> IClientUser_BLoggedOn;
+	VFTHook<IClientUser_BUpdateAppOwnershipTicket_t> IClientUser_BUpdateAppOwnershipTicket;
+	VFTHook<IClientUser_GetAppOwnershipTicketExtendedData_t> IClientUser_GetAppOwnershipTicketExtendedData;
+	VFTHook<IClientUser_IsUserSubscribedAppInTicket_t> IClientUser_IsUserSubscribedAppInTicket;
+	VFTHook<IClientUser_RequiresLegacyCDKey_t> IClientUser_RequiresLegacyCDKey;
+
 
 	//steamui.so
 	DetourHook<ISteamMatchmakingPingResponse_ServerResponded_t> ISteamMatchmakingPingResponse_ServerResponded;
@@ -1134,8 +1147,6 @@ namespace Hooks
 bool Hooks::setup()
 {
 	g_pLog->debug("Hooks::setup()\n");
-
-	IClientUser_GetSteamId = Patterns::IClientUser::GetSteamId.address;
 
 	bool succeeded =
 		TraceIPC.setup(Patterns::TraceIPC, &hkTraceIPC)
@@ -1170,12 +1181,6 @@ bool Hooks::setup()
 		&& CWebSocketConnection_BBuildAndAsyncSendFrame.setup(Patterns::CWebSocketConnection::BBuildAndAsyncSendFrame, &hkWebSocketConnection_BBuildAndAsyncSendFrame)
 
 		&& IClientAppManager_BCanRemotePlayTogether.setup(Patterns::IClientAppManager::BCanRemotePlayTogether, hkClientAppManager_BCanRemotePlayTogether)
-
-		&& IClientUser_BLoggedOn.setup(Patterns::IClientUser::BLoggedOn, &hkClientUser_BLoggedOn)
-		&& IClientUser_BUpdateAppOwnershipTicket.setup(Patterns::IClientUser::BUpdateAppOwnershipTicket, hkClientUser_BUpdateOwnershipTicket)
-		&& IClientUser_GetAppOwnershipTicketExtendedData.setup(Patterns::IClientUser::GetAppOwnershipTicketExtendedData, hkClientUser_GetAppOwnershipTicketExtendedData)
-		&& IClientUser_IsUserSubscribedAppInTicket.setup(Patterns::IClientUser::IsUserSubscribedAppInTicket, &hkClientUser_IsUserSubscribedAppInTicket)
-		&& IClientUser_RequiresLegacyCDKey.setup(Patterns::IClientUser::RequiresLegacyCDKey, hkClientUser_RequiresLegacyCDKey)
 
 		&& ISteamMatchmakingPingResponse_ServerResponded.setup(Patterns::ISteamMatchmakingPingResponse::ServerResponded, hkSteamMatchmakingPingResponse_ServerResponded);
 
@@ -1220,15 +1225,7 @@ void Hooks::place()
 
 	IClientAppManager_BCanRemotePlayTogether.place();
 
-	IClientUser_BLoggedOn.place();
-	IClientUser_BUpdateAppOwnershipTicket.place();
-	IClientUser_GetAppOwnershipTicketExtendedData.place();
-	IClientUser_IsUserSubscribedAppInTicket.place();
-	IClientUser_RequiresLegacyCDKey.place();
-
 	ISteamMatchmakingPingResponse_ServerResponded.place();
-
-	createAndPlaceSteamIdHook();
 }
 
 void Hooks::remove()
@@ -1267,12 +1264,6 @@ void Hooks::remove()
 
 	IClientAppManager_BCanRemotePlayTogether.remove();
 
-	IClientUser_BLoggedOn.remove();
-	IClientUser_BUpdateAppOwnershipTicket.remove();
-	IClientUser_GetAppOwnershipTicketExtendedData.remove();
-	IClientUser_IsUserSubscribedAppInTicket.remove();
-	IClientUser_RequiresLegacyCDKey.remove();
-
 	ISteamMatchmakingPingResponse_ServerResponded.remove();
 
 	//VFT Hooks
@@ -1287,6 +1278,14 @@ void Hooks::remove()
 	IClientRemoteStorage_IsCloudEnabledForApp.remove();
 
 	IClientUtils_GetAppId.remove();
+	IClientUtils_GetOfflineMode.remove();
+
+	IClientUser_BLoggedOn.remove();
+	IClientUser_BUpdateAppOwnershipTicket.remove();
+	IClientUser_GetAppOwnershipTicketExtendedData.remove();
+	IClientUser_IsUserSubscribedAppInTicket.remove();
+	IClientUser_RequiresLegacyCDKey.remove();
+
 	
 	//TODO: Remove jmp
 	if (hkNakedGetSteamId != LM_ADDRESS_BAD)

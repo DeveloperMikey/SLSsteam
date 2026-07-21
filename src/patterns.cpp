@@ -236,47 +236,6 @@ namespace Patterns
 			SigFollowMode::PrologueUpwards,
 			std::vector<uint8_t> { 0x56, 0x57, 0xe5, 0x89, 0x55 }
 		};
-
-		Pattern_t BLoggedOn
-		{
-			"IClientUser::BLoggedOn",
-			"E9 ? ? ? ? ? ? ? ? ? ? 5B 5E 5F FF E0",
-			SigFollowMode::Relative
-		};
-		Pattern_t BUpdateAppOwnershipTicket
-		{
-			"IClientUser::BUpdateAppOwnershipTicket",
-			"83 EC 0C 89 F3 8B 7D ? FF 30 E8 ? ? ? ? 83 C4 10 83 FF 01 77 ? 84 C0 75 ? 80 7D ? 00 74 ? 80 7D ? 00 0F 84 ? ? ? ? 8D 65",
-			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0x56, 0x57, 0xe5, 0x89, 0x55 }
-		};
-		Pattern_t GetAppOwnershipTicketExtendedData
-		{
-			"IClientUser::GetAppOwnershipTicketExtendedData",
-			"83 EC 24 FF 74 24 ? 8B 44 24",
-			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0x53, 0x56, 0x57, 0x55 }
-		};
-		Pattern_t GetSteamId
-		{
-			"IClientUser::GetSteamID",
-			//Not unique. All matches point to correct function though
-			"E8 ? ? ? ? 89 D8 83 C4 0C 83 C4 08 5B C2 04 00 ? 83 EC 08 50 53 FF D2 89 D8 83 C4 0C 83 C4 08 5B C2 04 00",
-			SigFollowMode::Relative
-		};
-		Pattern_t IsUserSubscribedAppInTicket
-		{
-			"IClientUser::IsUserSubscribedAppInTicket",
-			"E8 ? ? ? ? 89 C3 83 C4 20 8B ? ? ? ? ? 8B",
-			SigFollowMode::Relative
-		};
-		Pattern_t RequiresLegacyCDKey
-		{
-			"IClientUser::RequiresLegacyCDKey",
-			"75 ? 83 C4 1C 31 C0 5B 5E 5F 5D C3 ? ? ? ? ? 8B 44 24 ? 83 C4 1C 89 F9 89 F2 5B 5E 5F 5D 2D ? ? 00 00",
-			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0x53, 0x56, 0x57, 0x55 }
-		};
 	}
 
 	namespace IClientUGC

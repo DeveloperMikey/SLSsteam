@@ -157,12 +157,6 @@ namespace Hooks
 
 	extern DetourHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 
-	extern DetourHook<IClientUser_BLoggedOn_t> IClientUser_BLoggedOn;
-	extern DetourHook<IClientUser_BUpdateAppOwnershipTicket_t> IClientUser_BUpdateAppOwnershipTicket;
-	extern DetourHook<IClientUser_GetAppOwnershipTicketExtendedData_t> IClientUser_GetAppOwnershipTicketExtendedData;
-	extern DetourHook<IClientUser_IsUserSubscribedAppInTicket_t> IClientUser_IsUserSubscribedAppInTicket;
-	extern DetourHook<IClientUser_RequiresLegacyCDKey_t> IClientUser_RequiresLegacyCDKey;
-
 	typedef bool(*IClientAppManager_BIsDlcEnabled_t)(void*, AppId_t, AppId_t, void*);
 	typedef bool(*IClientAppManager_GetAppUpdateInfo_t)(void*, AppId_t, uint32_t*);
 	typedef void*(*IClientAppManager_LaunchApp_t)(void*, AppId_t*, void*, void*, void*);
@@ -189,6 +183,13 @@ namespace Hooks
 	extern VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
 	extern VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;
 
+	extern VFTHook<IClientUser_BLoggedOn_t> IClientUser_BLoggedOn;
+	extern VFTHook<IClientUser_BUpdateAppOwnershipTicket_t> IClientUser_BUpdateAppOwnershipTicket;
+	extern VFTHook<IClientUser_GetAppOwnershipTicketExtendedData_t> IClientUser_GetAppOwnershipTicketExtendedData;
+	extern VFTHook<IClientUser_IsUserSubscribedAppInTicket_t> IClientUser_IsUserSubscribedAppInTicket;
+	extern VFTHook<IClientUser_RequiresLegacyCDKey_t> IClientUser_RequiresLegacyCDKey;
+
+
 	typedef void(*ISteamMatchmakingPingResponse_ServerResponded_t)(void*, gameserverdetails_t*);
 
 
@@ -198,7 +199,9 @@ namespace Hooks
 
 	//Naked
 	extern lm_address_t IClientUser_GetSteamId;
+	extern lm_address_t hkNakedGetSteamId;
 
+	bool createAndPlaceSteamIdHook();
 	bool setup();
 	void place();
 	void remove();
