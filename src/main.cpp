@@ -1,5 +1,6 @@
 #include "api.hpp"
 #include "config.hpp"
+#include "decompiler.hpp"
 #include "globals.hpp"
 #include "hooks.hpp"
 #include "log.hpp"
@@ -172,7 +173,6 @@ static void load()
 		g_modSteamUI.end
 	);
 
-
 	if (!Updater::verifySafeModeHash())
 	{
 		if (g_config.safeMode.get())
@@ -186,6 +186,8 @@ static void load()
 			g_pLog->warn("steamclient.so hash missmatch! Please update :)");
 		}
 	}
+
+	Decompiler::parseModule(g_modSteamClient);
 
 	if (!Patterns::init())
 	{
