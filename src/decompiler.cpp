@@ -1,7 +1,6 @@
 #include "decompiler.hpp"
 
 #include "log.hpp"
-#include "memhlp.hpp"
 #include "utils.hpp"
 
 #include "libmem/libmem.h"
@@ -12,8 +11,6 @@
 #include <cstring>
 #include <dlfcn.h>
 #include <elf.h>
-#include <regex>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -383,9 +380,9 @@ void Decompiler::parseModule(const lm_module_t &mod)
 	collectVFTables(mod, shDataRelRO);
 }
 
-std::unordered_map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char* interface)
+std::map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char* interface)
 {
-	auto functionMap = std::unordered_map<std::string, unsigned int>();
+	auto functionMap = std::map<std::string, unsigned int>();
 	if(!vftables.contains(interface))
 	{
 		return functionMap;
@@ -479,7 +476,7 @@ std::unordered_map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(
 						continue;
 					}
 
-					g_pLog->debug("Found string ref to %s at %p for vft[%u]\n", str.c_str(), targetAddr, index);
+					//g_pLog->debug("Found string ref to %s at %p for vft[%u]\n", str.c_str(), targetAddr, index);
 					functionMap[str] = index;
 
 					stage++;

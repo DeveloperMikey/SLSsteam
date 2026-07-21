@@ -1,47 +1,72 @@
 #pragma once
 
+#include <map>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+
+struct VFTableInfo_t
+{
+	std::string typeName;
+	std::string functionName;
+	unsigned int index;
+
+	VFTableInfo_t(const char* typeName, const char* functionName, const unsigned int index = 0);
+	bool init();
+
+	std::string getPrintName() const;
+};
+
+
 namespace VFTIndexes
 {
-	namespace IClientEngine
-	{
-		constexpr int GetClientUser = 7;
-	}
-
 	namespace IClientApps
 	{
-		constexpr int GetAppData = 0;
-		constexpr int GetAppDataSection = 5;
-		constexpr int RequestAppInfoUpdate = 7;
-		constexpr int GetDLCCount = 8;
-		constexpr int GetDLCDataByIndex = 9;
-		constexpr int GetAppType = 10;
+		extern VFTableInfo_t GetAppData;
+		extern VFTableInfo_t GetAppDataSection;
+		extern VFTableInfo_t RequestAppInfoUpdate;
+		extern VFTableInfo_t GetDLCCount;
+		extern VFTableInfo_t GetDLCDataByIndex;
+		extern VFTableInfo_t GetAppType;
 	}
 
 	namespace IClientAppManager
 	{
-		constexpr int InstallApp = 0;
-		constexpr int UninstallApp = 1;
-		constexpr int LaunchApp = 2;
-		constexpr int GetAppInstallState = 4;
-		constexpr int IsAppDlcInstalled = 9;
-		constexpr int BIsDlcEnabled = 11;
-		constexpr int GetUpdateInfo = 20;
+		extern VFTableInfo_t InstallApp;
+		extern VFTableInfo_t UninstallApp;
+		extern VFTableInfo_t LaunchApp;
+		extern VFTableInfo_t GetAppInstallState;
+		extern VFTableInfo_t IsAppDlcInstalled;
+		extern VFTableInfo_t BIsDlcEnabled;
+		extern VFTableInfo_t GetUpdateInfo;
+	}
+
+	namespace IClientEngine
+	{
+		extern VFTableInfo_t GetClientUser;
 	}
 
 	namespace IClientRemoteStorage
 	{
-		constexpr int IsCloudEnabledForApp = 24;
-	}
-
-	namespace IClientUser
-	{
-		constexpr int BLoggedOn = 4;
-		constexpr int GetSteamID = 10;
+		extern VFTableInfo_t IsCloudEnabledForApp;
 	}
 
 	namespace IClientUtils
 	{
-		constexpr int GetOfflineMode = 17;
-		constexpr int GetAppId = 19;
+		extern VFTableInfo_t GetOfflineMode;
+		extern VFTableInfo_t GetAppId;
 	}
+
+	namespace IClientUser
+	{
+		extern VFTableInfo_t BLoggedOn;
+		extern VFTableInfo_t GetSteamID;
+	}
+
+	extern std::vector<VFTableInfo_t*> functions;
+	extern std::unordered_map<std::string, std::map<std::string, unsigned int>> tableMap;
+
+	void dump(const std::map<std::string, unsigned int>& interfaceMap);
+	bool init();
 }

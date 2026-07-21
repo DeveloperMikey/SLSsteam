@@ -3,6 +3,7 @@
 #include <elf.h>
 #include <libmem/libmem.h>
 
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -50,5 +51,5 @@ namespace Decompiler
 	bool parseHeader(const lm_module_t& mod);
 	void parseModule(const lm_module_t& mod);
 
-	std::unordered_map<std::string, unsigned int> parseInterfaceMapBase(const char* interface);
+	std::map<std::string, unsigned int> parseInterfaceMapBase(const char* interface);
 }

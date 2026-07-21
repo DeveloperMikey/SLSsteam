@@ -68,7 +68,13 @@ VFTHook<T>::VFTHook(const char* name) : Hook<T>::Hook(name)
 }
 
 template<typename T>
-bool DetourHook<T>::setup(Pattern_t pattern, T hookFn)
+VFTHook<T>::VFTHook() : VFTHook<T>("")
+{
+
+}
+
+template<typename T>
+bool DetourHook<T>::setup(const Pattern_t& pattern, T hookFn)
 {
 	if (pattern.address == LM_ADDRESS_BAD)
 	{
@@ -144,10 +150,11 @@ void VFTHook<T>::remove()
 }
 
 template<typename T>
-void VFTHook<T>::setup(std::shared_ptr<lm_vmt_t> vft, unsigned int index, T hookFn)
+void VFTHook<T>::setup(std::shared_ptr<lm_vmt_t> vft, const VFTableInfo_t& info, T hookFn)
 {
 	this->vft = vft;
-	this->index = index;
+	this->index = info.index;
+	this->name = info.getPrintName();
 
 	this->originalFn.address = LM_VmtGetOriginal(this->vft.get(), this->index);
 	this->hookFn.fn = hookFn;
@@ -1102,18 +1109,18 @@ namespace Hooks
 	DetourHook<IClientUser_IsUserSubscribedAppInTicket_t> IClientUser_IsUserSubscribedAppInTicket;
 	DetourHook<IClientUser_RequiresLegacyCDKey_t> IClientUser_RequiresLegacyCDKey;
 
-	VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled("IClientAppManager::BIsDlcEnabled");
-	VFTHook<IClientAppManager_GetAppUpdateInfo_t> IClientAppManager_GetAppUpdateInfo("IClientAppManager::GetUpdateInfo");
-	VFTHook<IClientAppManager_LaunchApp_t> IClientAppManager_LaunchApp("IClientAppManager::LaunchApp");
-	VFTHook<IClientAppManager_IsAppDlcInstalled_t> IClientAppManager_IsAppDlcInstalled("IClientAppManager::IsAppDlcInstalled");
+	VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;
+	VFTHook<IClientAppManager_GetAppUpdateInfo_t> IClientAppManager_GetAppUpdateInfo;
+	VFTHook<IClientAppManager_LaunchApp_t> IClientAppManager_LaunchApp;
+	VFTHook<IClientAppManager_IsAppDlcInstalled_t> IClientAppManager_IsAppDlcInstalled;
 
-	VFTHook<IClientApps_GetDLCDataByIndex_t> IClientApps_GetDLCDataByIndex("IClientApps::GetDLCDataByIndex");
-	VFTHook<IClientApps_GetDLCCount_t> IClientApps_GetDLCCount("IClientApps::GetDLCCount");
+	VFTHook<IClientApps_GetDLCDataByIndex_t> IClientApps_GetDLCDataByIndex;
+	VFTHook<IClientApps_GetDLCCount_t> IClientApps_GetDLCCount;
 
-	VFTHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp("IClientRemoteStorage::IsCloudEnabledForApp");
+	VFTHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
 
-	VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId("IClientUtils::GetAppId");
-	VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode("IClientUtils::GetOfflineMode");
+	VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
+	VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;
 
 
 	//steamui.so

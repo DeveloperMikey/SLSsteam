@@ -7,6 +7,7 @@
 #include "patterns.hpp"
 #include "update.hpp"
 #include "utils.hpp"
+#include "vftableinfo.hpp"
 
 #include "libmem/libmem.h"
 
@@ -188,6 +189,11 @@ static void load()
 	}
 
 	Decompiler::parseModule(g_modSteamClient);
+	if(!VFTIndexes::init())
+	{
+		g_pLog->debug("Failed to parse VFTables! Aborting...");
+		return;
+	}
 
 	if (!Patterns::init())
 	{

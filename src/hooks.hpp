@@ -23,6 +23,7 @@ struct DepotInfo_t;
 struct gameserverdetails_t;
 
 struct Pattern_t;
+struct VFTableInfo_t;
 
 template<typename T>
 union FunctionUnion_t
@@ -60,7 +61,7 @@ public:
 	virtual void place();
 	virtual void remove();
 
-	bool setup(Pattern_t pattern, T hookFn);
+	bool setup(const Pattern_t& pattern, T hookFn);
 };
 
 template<typename T>
@@ -72,11 +73,12 @@ public:
 	bool hooked;
 
 	VFTHook(const char* name);
+	VFTHook();
 
 	virtual void place();
 	virtual void remove();
 
-	void setup(std::shared_ptr<lm_vmt_t> vft, unsigned int index, T hookFn);
+	void setup(std::shared_ptr<lm_vmt_t> vft, const VFTableInfo_t&, T hookFn);
 };
 
 namespace Hooks
