@@ -54,11 +54,6 @@ namespace Patterns
 		extern Pattern_t RequestInternetServerList;
 	}
 
-	namespace CCMInterface
-	{
-		extern Pattern_t RecvPkt;
-	}
-
 	namespace CWebSocketConnection
 	{
 		extern Pattern_t BBuildAndAsyncSendFrame;

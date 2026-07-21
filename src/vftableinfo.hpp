@@ -23,6 +23,11 @@ struct VFTableInfo_t
 
 namespace VFTIndexes
 {
+	namespace CCMInterface
+	{
+		extern VFTableInfo_t RecvPkt;
+	}
+
 	namespace CClientUnifiedServiceTransport
 	{
 		extern VFTableInfo_t SendAndRecvMsg;

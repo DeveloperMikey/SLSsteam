@@ -17,7 +17,7 @@ bool VFTableInfo_t::init()
 {
 	if (!Decompiler::vftables.contains(typeName))
 	{
-		g_pLog->debug("%s not found in Decompiler::vftables!\n", typeName);
+		g_pLog->debug("%s not found in Decompiler::vftables!\n", typeName.c_str());
 		return false;
 	}
 
@@ -61,6 +61,16 @@ std::string VFTableInfo_t::getPrintName() const
 
 namespace VFTIndexes
 {
+	namespace CCMInterface
+	{
+		VFTableInfo_t RecvPkt
+		{
+			"12CCMInterface",
+			"RecvPkt",
+			3
+		};
+	};
+
 	namespace CClientUnifiedServiceTransport
 	{
 		VFTableInfo_t SendAndRecvMsg
