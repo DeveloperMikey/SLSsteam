@@ -966,16 +966,6 @@ static void hkSteamMatchmakingPingResponse_ServerResponded(void* pSteamMatchingP
 	Hooks::ISteamMatchmakingPingResponse_ServerResponded.tramp.fn(pSteamMatchingPingResponse, details);
 }
 
-static void patchRetn(lm_address_t address)
-{
-	constexpr lm_byte_t retn = 0xC3;
-
-	lm_prot_t oldProt;
-	LM_ProtMemory(address, 1, LM_PROT_XRW, &oldProt); //LM_PROT_W Should be enough, but just in case something tries to execute it inbetween us setting the prot and writing to it
-	LM_WriteMemory(address, &retn, 1);
-	LM_ProtMemory(address, 1, oldProt, LM_NULL);
-}
-
 lm_address_t Hooks::hkNakedGetSteamId;
 bool Hooks::createAndPlaceSteamIdHook()
 {
