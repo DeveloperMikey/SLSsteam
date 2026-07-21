@@ -131,8 +131,6 @@ lm_address_t Decompiler::extractHexNum(const std::string& str)
 	}
 
 	const std::string numStr = str.substr(start, end - start + 1);
-	g_pLog->debug("Extracted num %s\n", numStr.c_str());
-
 	return std::stoull(numStr, nullptr, 16);
 }
 
@@ -500,12 +498,6 @@ void Decompiler::parseModule(const lm_module_t &mod)
 	}
 
 	auto references = std::unordered_map<lm_address_t, unsigned int>();
-	parseFunction(mod.base + 0x02d989b0 - 0x10000, references);
-
-	//for(const auto& ref : references)
-	//{
-	//	g_pLog->debug("Function %p referenced %s %u times\n", strings.at(ref.first), ref.second);
-	//}
 }
 
 void Decompiler::parseFunction(const lm_address_t begin, std::unordered_map<lm_address_t, unsigned int>& references)
@@ -537,7 +529,7 @@ void Decompiler::__parseFunction
 			return;
 		}
 
-		g_pLog->debug("%p: %s %s\n", addr, instr.mnemonic, instr.op_str);
+		//g_pLog->debug("%p: %s %s\n", addr, instr.mnemonic, instr.op_str);
 
 		addr += instr.size;
 
@@ -549,7 +541,7 @@ void Decompiler::__parseFunction
 				return;
 			}
 
-			g_pLog->debug("Taking branch at %p to %p\n", instr.address, addr);
+			//g_pLog->debug("Taking branch at %p to %p\n", instr.address, addr);
 			continue;
 		}
 		else if (instr.mnemonic[0] == 'j')
@@ -567,7 +559,7 @@ void Decompiler::__parseFunction
 			}
 
 			branchesTaken.emplace(branch);
-			g_pLog->debug("Taking branch at %p to %p\n", instr.address, branch);
+			//g_pLog->debug("Taking branch at %p to %p\n", instr.address, branch);
 			__parseFunction(branch, references, branchesTaken, thunkReg, leaOffset);
 
 			continue;
@@ -614,15 +606,15 @@ void Decompiler::__parseFunction
 			continue;
 		}
 
-		g_pLog->debug("Target addr for op %p\n", targetAddr);
+		//g_pLog->debug("Target addr for op %p\n", targetAddr);
 
 		if (!strings.contains(targetAddr))
 		{
 			continue;
 		}
 
-		const auto& str = strings.at(targetAddr);
-		g_pLog->debug("String reference to %s at %p\n", str.c_str(), instr.address);
+		//const auto& str = strings.at(targetAddr);
+		//g_pLog->debug("String reference to %s at %p\n", str.c_str(), instr.address);
 		references[targetAddr]++;
 	}
 }
@@ -640,103 +632,28 @@ std::map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char
 
 	g_pLog->debug("Disassembling %s's functions\n", interface);
 
-	lm_inst_t instr;
-	lm_address_t leaOffset = 0;
-	std::string thunkRegister;
-
-	unsigned int index = 0;
-
-	for(const auto& fn : vft.functions)
+	for(unsigned int i = 0; i < vft.functions.size(); i++)
 	{
-		lm_address_t addr = fn;
-		unsigned int stage = 0;
+		const lm_address_t fn = vft.functions[i];
 
-		for(unsigned int i = 0; i < 1000; i++)
+		auto refs = std::unordered_map<lm_address_t, unsigned int>();
+		parseFunction(fn, refs);
+
+		for(const auto& ref : refs)
 		{
-			if (!LM_Disassemble(addr, &instr))
+			const auto& str = strings[ref.first];
+			if (strstr(interface, str.c_str()))
 			{
-				g_pLog->debug("Failed to disassemble vft function %p at %p\n", fn, instr.address);
+				continue;
 			}
 
-			addr += instr.size;
-
-			auto split = std::vector<std::string>();
-
-			switch(stage)
-			{
-				//Check PIC thunk
-				case 0:
-					if (!isPICThunk(instr, &thunkRegister))
-					{
-						continue;
-					}
-					//Thunk moves the return address into our target register
-
-					leaOffset = instr.address + instr.size;
-					//g_pLog->debug("Found thunk with %s target\n", thunkRegister.c_str());
-					stage++;
-					break;
-
-				//Thunk is followed by 'add thunkReg, num'
-				case 1:
-					if (strcmp(instr.mnemonic, "add") != 0)
-					{
-						continue;
-					}
-
-					//g_pLog->debug("Found %s %s\n", instr.mnemonic, instr.op_str);
-					split = Utils::strsplit(instr.op_str, ",");
-					if (split[0] != thunkRegister)
-					{
-						continue;
-					}
-					
-					split[1] = split[1].substr(3, split[1].size() - 3);
-					leaOffset += std::stoul(split[1], nullptr, 16);
-
-					stage++;
-					break;
-
-				case 2:
-					if (strcmp(instr.mnemonic, "lea") != 0)
-					{
-						continue;
-					}
-
-					if (!strstr(instr.op_str, thunkRegister.c_str()) || !strstr(instr.op_str, " - "))
-					{
-						continue;
-					}
-
-					split = Utils::strsplit(instr.op_str, "-");
-					auto hexnumStr = split[1].substr(3, split[1].size() - 4);
-					const lm_address_t targetAddr = leaOffset - std::stoul(hexnumStr, nullptr, 16);
-
-					if (!strings.contains(targetAddr))
-					{
-						continue;
-					}
-
-					const auto& str = strings.at(targetAddr);
-					if (strstr(interface, str.c_str()))
-					{
-						continue;
-					}
-
-					//g_pLog->debug("Found string ref to %s at %p for vft[%u]\n", str.c_str(), targetAddr, index);
-					functionMap[str] = index;
-
-					stage++;
-					break;
-			}
-
-			if (stage > 2)
-			{
-				break;
-			}
+			//I would love to add a break statement after this.
+			//But some functions do reference multiple strings
+			//Since we can't know which one is the right one without applying possibly wrong heuristics
+			//We just index all of them
+			functionMap[str] = i;
+			//g_pLog->debug("%s::%s at %u (%u times)\n", interface, str.c_str(), i, ref.second);
 		}
-
-		index++;
 	}
 
 	return functionMap;
