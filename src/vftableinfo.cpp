@@ -93,10 +93,10 @@ namespace VFTIndexes
 			"14IClientAppsMap",
 			"GetAppDataSection"
 		};
-		VFTableInfo_t RequestAppInfoUpdate
+		VFTableInfo_t GetAppType
 		{
 			"14IClientAppsMap",
-			"RequestAppInfoUpdate"
+			"GetAppType"
 		};
 		VFTableInfo_t GetDLCCount
 		{
@@ -108,10 +108,10 @@ namespace VFTIndexes
 			"14IClientAppsMap",
 			"BGetDLCDataByIndex"
 		};
-		VFTableInfo_t GetAppType
+		VFTableInfo_t RequestAppInfoUpdate
 		{
 			"14IClientAppsMap",
-			"GetAppType"
+			"RequestAppInfoUpdate"
 		};
 	}
 
@@ -122,40 +122,40 @@ namespace VFTIndexes
 			"20IClientAppManagerMap",
 			"BCanRemotePlayTogether"
 		};
-		VFTableInfo_t InstallApp
+		VFTableInfo_t BIsDlcEnabled
 		{
 			"20IClientAppManagerMap",
-			"InstallApp"
-		};
-		VFTableInfo_t UninstallApp
-		{
-			"20IClientAppManagerMap",
-			"UninstallApp"
-		};
-		VFTableInfo_t LaunchApp
-		{
-			"20IClientAppManagerMap",
-			"LaunchApp"
+			"BIsDlcEnabled"
 		};
 		VFTableInfo_t GetAppInstallState
 		{
 			"20IClientAppManagerMap",
 			"GetAppInstallState"
 		};
+		VFTableInfo_t GetUpdateInfo
+		{
+			"20IClientAppManagerMap",
+			"GetUpdateInfo"
+		};
+		VFTableInfo_t InstallApp
+		{
+			"20IClientAppManagerMap",
+			"InstallApp"
+		};
 		VFTableInfo_t IsAppDlcInstalled
 		{
 			"20IClientAppManagerMap",
 			"IsAppDlcInstalled"
 		};
-		VFTableInfo_t BIsDlcEnabled
+		VFTableInfo_t LaunchApp
 		{
 			"20IClientAppManagerMap",
-			"BIsDlcEnabled"
+			"LaunchApp"
 		};
-		VFTableInfo_t GetUpdateInfo
+		VFTableInfo_t UninstallApp
 		{
 			"20IClientAppManagerMap",
-			"GetUpdateInfo"
+			"UninstallApp"
 		};
 	}
 
@@ -181,15 +181,15 @@ namespace VFTIndexes
 
 	namespace IClientUtils
 	{
-		VFTableInfo_t GetOfflineMode
-		{
-			"15IClientUtilsMap",
-			"GetOfflineMode"
-		};
 		VFTableInfo_t GetAppId
 		{
 			"15IClientUtilsMap",
 			"GetAppID"
+		};
+		VFTableInfo_t GetOfflineMode
+		{
+			"15IClientUtilsMap",
+			"GetOfflineMode"
 		};
 	}
 

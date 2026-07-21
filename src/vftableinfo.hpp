@@ -37,22 +37,22 @@ namespace VFTIndexes
 	{
 		extern VFTableInfo_t GetAppData;
 		extern VFTableInfo_t GetAppDataSection;
-		extern VFTableInfo_t RequestAppInfoUpdate;
+		extern VFTableInfo_t GetAppType;
 		extern VFTableInfo_t GetDLCCount;
 		extern VFTableInfo_t GetDLCDataByIndex;
-		extern VFTableInfo_t GetAppType;
+		extern VFTableInfo_t RequestAppInfoUpdate;
 	}
 
 	namespace IClientAppManager
 	{
 		extern VFTableInfo_t BCanRemotePlayTogether;
-		extern VFTableInfo_t InstallApp;
-		extern VFTableInfo_t UninstallApp;
-		extern VFTableInfo_t LaunchApp;
-		extern VFTableInfo_t GetAppInstallState;
-		extern VFTableInfo_t IsAppDlcInstalled;
 		extern VFTableInfo_t BIsDlcEnabled;
+		extern VFTableInfo_t GetAppInstallState;
 		extern VFTableInfo_t GetUpdateInfo;
+		extern VFTableInfo_t InstallApp;
+		extern VFTableInfo_t IsAppDlcInstalled;
+		extern VFTableInfo_t LaunchApp;
+		extern VFTableInfo_t UninstallApp;
 	}
 
 	namespace IClientEngine
@@ -67,8 +67,8 @@ namespace VFTIndexes
 
 	namespace IClientUtils
 	{
-		extern VFTableInfo_t GetOfflineMode;
 		extern VFTableInfo_t GetAppId;
+		extern VFTableInfo_t GetOfflineMode;
 	}
 
 	namespace IClientUser
