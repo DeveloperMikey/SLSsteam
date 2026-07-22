@@ -154,9 +154,8 @@ namespace Patterns
 		Pattern_t RunIPCFrame
 		{
 			"IClientAppManager::RunIPCFrame",
-			"E8 ? ? ? ? 8B 85 ? ? ? ? 83 C4 10 3D ? 85 0A 7A",
-			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0x56, 0x57, 0xe5, 0x89, 0x55 }
+			"55 89 E5 57 56 E8 ? ? ? ? 81 C6 ? ? ? ? 53 81 EC ? ? ? ? 8B 45 08 8B 4D 0C 8B 7D 14 89 85 30 FC FF FF",
+			SigFollowMode::None,
 		};
 	}
 
@@ -165,9 +164,8 @@ namespace Patterns
 		Pattern_t RunIPCFrame
 		{
 			"IClientApps::RunIPCFrame",
-			"E8 ? ? ? ? 8B 85 ? ? ? ? 83 C4 10 3D ? 9C 88 A6",
-			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0x56, 0x57, 0xe5, 0x89, 0x55 }
+			"55 89 E5 57 56 E8 ? ? ? ? 81 C6 ? ? ? ? 53 81 EC ? ? ? ? 8B 45 08 8B 4D 0C 8B 7D 14 89 85 18 FF FF FF 8B 45 10 89 8D 28 FF FF FF",
+			SigFollowMode::None,
 		};
 	}
 
@@ -176,9 +174,8 @@ namespace Patterns
 		Pattern_t RunIPCFrame
 		{
 			"IClientRemoteStorage::RunIPCFrame",
-			"E8 ? ? ? ? 8B 85 ? ? ? ? 83 C4 10 3D ? E8 2F 87",
-			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0x56, 0x57, 0xe5, 0x89, 0x55 }
+			"55 89 E5 57 56 E8 ? ? ? ? 81 ? ? ? ? ? 53 81 EC ? ? ? ? 8B 45 08 8B 4D 0C 8B 7D 14 89 85 D8 FE FF FF 8B 45 10 89 8D CC FE FF FF",
+			SigFollowMode::None,
 		};
 	}
 
@@ -187,9 +184,8 @@ namespace Patterns
 		Pattern_t RunIPCFrame
 		{
 			"IClientUser::RunIPCFrame",
-			"E8 ? ? ? ? 8B 85 ? ? ? ? 83 C4 10 3D ? A3 86 73",
-			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0x56, 0x57, 0xe5, 0x89, 0x55 }
+			"55 89 E5 57 56 E8 ? ? ? ? 81 C6 ? ? ? ? 53 81 EC ? ? ? ? 8B 45 08 8B 4D 0C 8B 7D 14 89 85 E8 FE FF FF 8B 45 10 89 8D F8 FE FF FF",
+			SigFollowMode::None,
 		};
 	}
 
@@ -198,9 +194,8 @@ namespace Patterns
 		Pattern_t RunIPCFrame
 		{
 			"IClientUtils::RunIPCFrame",
-			"E8 ? ? ? ? 8B 85 ? ? ? ? 83 C4 10 3D ? BF 7D 82",
-			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0x56, 0x57, 0xe5, 0x89, 0x55 }
+			"55 89 E5 57 56 E8 ? ? ? ? 81 C6 ? ? ? ? 53 81 EC ? ? ? ? 8B 45 08 8B 7D 0C 89 85 48 FF FF FF",
+			SigFollowMode::None,
 		};
 		Pattern_t Offset_GetPipeIndex
 		{
