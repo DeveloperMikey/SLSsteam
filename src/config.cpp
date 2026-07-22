@@ -139,6 +139,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	fakeWalletBalance = getSetting<int32_t>(node, "FakeWalletBalance", 0);
 	disableCloud = getSetting<bool>(node, "DisableCloud", true);
 	disableUpdates = getSetting<bool>(node, "DisableUpdates", true);
+	dumpInterfaceMaps = getSetting<bool>(node, "DumpClientInterfaces", false);
 	extendedLogging = getSetting<bool>(node, "ExtendedLogging", false);
 	logLevel = getSetting<unsigned int>(node, "LogLevel", 2);
 
@@ -155,6 +156,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	g_pLog->info("FakeWalletBalance: %i\n", fakeWalletBalance.get());
 	g_pLog->info("DisableCloud: %i\n", disableCloud.get());
 	g_pLog->info("DisableUpdates: %i\n", disableUpdates.get());
+	g_pLog->info("DumpClientInterfaces: %i\n", dumpInterfaceMaps.get());
 	g_pLog->info("ExtendedLogging: %i\n", extendedLogging.get());
 	g_pLog->info("LogLevel: %i\n", logLevel.get());
 

@@ -84,6 +84,6 @@ namespace VFTIndexes
 	extern std::vector<VFTableInfo_t*> functions;
 	extern std::unordered_map<std::string, std::map<std::string, unsigned int>> tableMap;
 
-	void dump(const std::map<std::string, unsigned int>& interfaceMap);
+	void dump(const std::string& name, const std::map<std::string, unsigned int>& functionMap);
 	bool init();
 }

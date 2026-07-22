@@ -1,5 +1,6 @@
 #include "vftableinfo.hpp"
 
+#include "config.hpp"
 #include "decompiler.hpp"
 #include "log.hpp"
 
@@ -231,14 +232,18 @@ namespace VFTIndexes
 	std::unordered_map<std::string, std::map<std::string, unsigned int>> tableMap;
 }
 
-void VFTIndexes::dump(const std::map<std::string, unsigned int>& interfaceMap)
+void VFTIndexes::dump(const std::string& name, const std::map<std::string, unsigned int>& functionMap)
 {
 	std::ostringstream ss;
 
-	for(const auto& kv : interfaceMap)
+	ss << "\n" << name << "\n{";
+
+	for(const auto& kv : functionMap)
 	{
-		ss << "\n" << kv.first << " = " << kv.second;
+		ss << "\n\t" << kv.first << " = " << kv.second;
 	}
+
+	ss << "\n};";
 
 	g_pLog->debug("Dump %s\n", ss.str().c_str());
 }
@@ -250,6 +255,14 @@ bool VFTIndexes::init()
 		if (!fn->init())
 		{
 			return false;
+		}
+	}
+
+	if (g_config.dumpInterfaceMaps.get())
+	{
+		for(const auto& tbl : tableMap)
+		{
+			dump(tbl.first, tbl.second);
 		}
 	}
 

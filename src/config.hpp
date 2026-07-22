@@ -72,6 +72,7 @@ public:
 	MTVariable<std::string> fakeEmail;
 	MTVariable<int32_t> fakeWalletBalance;
 	MTVariable<unsigned int> logLevel;
+	MTVariable<bool> dumpInterfaceMaps;
 	MTVariable<bool> extendedLogging;
 
 	std::mutex appsChangedMutex;
