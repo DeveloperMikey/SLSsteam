@@ -654,3 +654,11 @@ std::map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char
 
 	return functionMap;
 }
+
+void Decompiler::cleanUp()
+{
+	sections.clear();
+	picThunks.clear();
+	strings.clear();
+	vftables.clear();
+}

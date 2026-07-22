@@ -67,4 +67,6 @@ namespace Decompiler
 	);
 	
 	std::map<std::string, unsigned int> parseInterfaceMapBase(const char* interface);
+
+	void cleanUp();
 }

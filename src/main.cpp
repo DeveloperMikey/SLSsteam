@@ -208,6 +208,7 @@ static void load()
 	}
 
 	SLSAPI::init();
+	Decompiler::cleanUp();
 
 	if (g_config.notifyInit.get())
 	{
