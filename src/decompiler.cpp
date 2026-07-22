@@ -496,8 +496,6 @@ void Decompiler::parseModule(const lm_module_t &mod)
 		//Use collected strings to identify typeInfos, then cross reference those to find VFTables
 		collectVFTables(mod, *shDataRelRO);
 	}
-
-	auto references = std::unordered_map<lm_address_t, unsigned int>();
 }
 
 void Decompiler::parseFunction(const lm_address_t begin, std::unordered_map<lm_address_t, unsigned int>& references)
@@ -533,20 +531,10 @@ void Decompiler::__parseFunction
 
 		addr += instr.size;
 
-		if (strcmp(instr.mnemonic, "jmp") == 0)
-		{
-			if (!getRelativeTarget(instr, addr))
-			{
-				g_pLog->debug("Failed to follow %s %s at %p!\n", instr.address, instr.mnemonic, instr.op_str);
-				return;
-			}
-
-			//g_pLog->debug("Taking branch at %p to %p\n", instr.address, addr);
-			continue;
-		}
-		else if (instr.mnemonic[0] == 'j')
+		if (instr.mnemonic[0] == 'j')
 		{
 			lm_address_t branch;
+
 			if (!getRelativeTarget(instr, branch))
 			{
 				g_pLog->debug("Failed to follow %s %s at %p!\n", instr.address, instr.mnemonic, instr.op_str);
@@ -559,9 +547,17 @@ void Decompiler::__parseFunction
 			}
 
 			branchesTaken.emplace(branch);
-			//g_pLog->debug("Taking branch at %p to %p\n", instr.address, branch);
-			__parseFunction(branch, references, branchesTaken, thunkReg, leaOffset);
 
+			if (strcmp(instr.mnemonic, "jmp") == 0)
+			{
+				addr = branch;
+			}
+			else
+			{
+				__parseFunction(branch, references, branchesTaken, thunkReg, leaOffset);
+			}
+
+			//g_pLog->debug("Taking branch at %p to %p\n", instr.address, addr);
 			continue;
 		}
 		else if(strcmp(instr.mnemonic, "ret") == 0)
