@@ -33,6 +33,12 @@ namespace VFTIndexes
 		extern VFTableInfo_t SendAndRecvMsg;
 	}
 
+	namespace CSteamMatchmakingServers
+	{
+		extern VFTableInfo_t GetServerDetails;
+		extern VFTableInfo_t RequestInternetServerList;
+	}
+
 	namespace IClientApps
 	{
 		extern VFTableInfo_t GetAppData;

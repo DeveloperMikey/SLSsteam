@@ -82,6 +82,22 @@ namespace VFTIndexes
 		};
 	}
 
+	namespace CSteamMatchmakingServers
+	{
+		VFTableInfo_t GetServerDetails
+		{
+			"24CSteamMatchMakingServers",
+			"GetServerDetails",
+			7
+		};
+		VFTableInfo_t RequestInternetServerList
+		{
+			"24CSteamMatchMakingServers",
+			"RequestInternetServerList",
+			0
+		};
+	}
+
 	namespace IClientApps
 	{
 		VFTableInfo_t GetAppData
