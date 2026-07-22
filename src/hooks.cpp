@@ -297,20 +297,7 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	}
 
 	const EInterfaceType type = static_cast<EInterfaceType>(*reinterpret_cast<EInterfaceType*>(pBufInterfaceInfo->mem.base + pBufInterfaceInfo->get) & 0xff);
-	bool switchFakeAppIds = false;
-
-	switch(type)
-	{
-		case k_EInterfaceTypeClientInventory:
-		case k_EInterfaceTypeClientRemoteStorage:
-		case k_EInterfaceTypeClientUGC:
-		case k_EInterfaceTypeClientUserStats:
-			switchFakeAppIds = true;
-			break;
-
-		default:
-			break;
-	}
+	const bool switchFakeAppIds = FakeAppIds::shouldUseRealAppIdForInterface(type);
 
 	if (switchFakeAppIds)
 	{
