@@ -50,7 +50,7 @@ bool VFTableInfo_t::init()
 	}
 
 	address = funcs.at(index);
-	g_pLog->debug("%s at index %u\n", getPrintName().c_str(), index);
+	g_pLog->debug("%s at index %u, address %p\n", getPrintName().c_str(), index, address);
 	return true;
 }
 
