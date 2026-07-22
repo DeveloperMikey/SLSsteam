@@ -318,14 +318,16 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	{
 		g_pLog->debug
 		(
-			"%s(%p, %p, %p) -> %u with type %p\n",
+			"%s(%p, %p, %p) -> %u with type %p for appId %u (%u)\n",
 
 			Hooks::CSteamEngine_RunInterface.name.c_str(),
 			pSteamEngine,
 			pBufInterfaceInfo,
 			a2,
 			ret,
-			type
+			type,
+			FakeAppIds::getRealAppIdForCurrentPipe(),
+			g_pClientUtils->getAppId()
 		);
 	}
 
