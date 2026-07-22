@@ -181,6 +181,13 @@ namespace Patterns
 
 	namespace IClientUser
 	{
+		Pattern_t GetSteamId
+		{
+			"IClientUser::GetSteamID",
+			//Not unique. All matches point to correct function though
+			"E8 ? ? ? ? 89 D8 83 C4 0C 83 C4 08 5B C2 04 00 ? 83 EC 08 50 53 FF D2 89 D8 83 C4 0C 83 C4 08 5B C2 04 00",
+			SigFollowMode::Relative
+		};
 		Pattern_t RunIPCFrame
 		{
 			"IClientUser::RunIPCFrame",

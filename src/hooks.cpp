@@ -961,8 +961,8 @@ static void hkClientUser_RunIPCFrame(void* pClientUser, void* a1, void* a2, void
 	g_pLog->debug("IClientUser->vft at %p\n", vft->vtable);
 
 	//We can hook from here since this gets called before CheckAppOwnership
-	Hooks::IClientUser_GetSteamId = vft->vtable[VFTIndexes::IClientUser::GetSteamID.index];
-	Hooks::createAndPlaceSteamIdHook();
+	//Hooks::IClientUser_GetSteamId = vft->vtable[VFTIndexes::IClientUser::GetSteamID.index];
+	//Hooks::createAndPlaceSteamIdHook();
 
 
 	Hooks::IClientUser_RunIPCFrame.remove();
@@ -1149,6 +1149,8 @@ bool Hooks::setup()
 {
 	g_pLog->debug("Hooks::setup()\n");
 
+	IClientUser_GetSteamId = Patterns::IClientUser::GetSteamId.address;
+
 	bool succeeded =
 		TraceIPC.setup(Patterns::TraceIPC, &hkTraceIPC)
 
@@ -1191,6 +1193,8 @@ bool Hooks::setup()
 
 void Hooks::place()
 {
+	createAndPlaceSteamIdHook();
+
 	//Detours
 	TraceIPC.place();
 
