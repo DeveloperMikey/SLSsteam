@@ -301,8 +301,8 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 
 	switch(type)
 	{
-		case k_EInterfaceTypeClientRemoteStorage:
 		case k_EInterfaceTypeClientInventory:
+		case k_EInterfaceTypeClientRemoteStorage:
 		case k_EInterfaceTypeClientUGC:
 		case k_EInterfaceTypeClientUserStats:
 			switchFakeAppIds = true;
@@ -327,7 +327,20 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	Apps::runIPCFrame();
 	SLSAPI::runIPCFrame();
 
-	g_pLog->debug("%s(%p, %p, %p) -> %u\n", Hooks::CSteamEngine_RunInterface.name.c_str(), pSteamEngine, pBufInterfaceInfo, a2, ret);
+	if (g_config.extendedLogging.get())
+	{
+		g_pLog->debug
+		(
+			"%s(%p, %p, %p) -> %u with type %p\n",
+
+			Hooks::CSteamEngine_RunInterface.name.c_str(),
+			pSteamEngine,
+			pBufInterfaceInfo,
+			a2,
+			ret,
+			type
+		);
+	}
 
 	return ret;
 }
