@@ -7,8 +7,14 @@ typedef uint64_t GameId_t;
 
 typedef int32_t ENetPacket;
 
+typedef uint32_t HSteamPipe;
+typedef uint32_t HSteamUser;
+
 constexpr static ENetPacket INVALID_NETPACKET_TYPE = -1;
 constexpr static ENetPacket PROTOBUF_TYPE_MASK = 0x80000000;
+
+constexpr static HSteamPipe g_globalSteamPipe = 2;
+constexpr static HSteamPipe g_globalSteamUser = 1;
 
 enum EResult
 {

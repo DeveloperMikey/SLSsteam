@@ -42,8 +42,8 @@ namespace Patterns
 
 	namespace CSteamEngine
 	{
-		extern Pattern_t Init;
 		extern Pattern_t SetAppIdForCurrentPipe;
+		extern Pattern_t RunInterface;
 
 		extern Pattern_t Offset_User;
 	}
@@ -89,16 +89,6 @@ namespace Patterns
 	}
 
 	namespace IClientUser
-	{
-		extern Pattern_t RunIPCFrame;
-	}
-
-	namespace IClientUGC
-	{
-		extern Pattern_t RunIPCFrame;
-	}
-
-	namespace IClientUserStats
 	{
 		extern Pattern_t RunIPCFrame;
 	}

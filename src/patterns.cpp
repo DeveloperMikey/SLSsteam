@@ -90,17 +90,18 @@ namespace Patterns
 
 	namespace CSteamEngine
 	{
-		Pattern_t Init
-		{
-			"CSteamEngine::Init",
-			"E8 ? ? ? ? 83 C4 10 8D 83 ? ? ? ? 83 EC 0C 89 AB",
-			SigFollowMode::Relative
-		};
 		Pattern_t SetAppIdForCurrentPipe
 		{
 			"CSteamEngine::SetAppIdForCurrentPipe",
 			"E8 ? ? ? ? E9 ? ? ? ? ? ? ? ? ? 8B 85 ? ? ? ? 83 EC 08 FF B5",
 			SigFollowMode::Relative
+		};
+		Pattern_t RunInterface
+		{
+			"CSteamEngine::RunInterface",
+			"E8 ? ? ? ? 8B 55 C4 83 C4 ? 8B 42 ? 8B 5A ?",
+			SigFollowMode::PrologueUpwards,
+			std::vector<uint8_t> { 0x56, 0x57, 0xE5, 0x89, 0x55 }
 		};
 		Pattern_t Offset_User
 		{
@@ -205,28 +206,6 @@ namespace Patterns
 		{
 			"IClientUser::RunIPCFrame",
 			"E8 ? ? ? ? 8B 85 ? ? ? ? 83 C4 10 3D ? A3 86 73",
-			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0x56, 0x57, 0xe5, 0x89, 0x55 }
-		};
-	}
-
-	namespace IClientUGC
-	{
-		Pattern_t RunIPCFrame
-		{
-			"IClientUGC::RunIPCFrame",
-			"E8 ? ? ? ? 8B 85 ? ? ? ? 83 C4 10 3D ? 0C D2 71",
-			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0x56, 0x57, 0xe5, 0x89, 0x55 }
-		};
-	}
-
-	namespace IClientUserStats
-	{
-		Pattern_t RunIPCFrame
-		{
-			"IClientUserStats::RunIPCFrame",
-			"E8 ? ? ? ? 8B 85 ? ? ? ? 83 C4 10 3D ? 65 6D 87",
 			SigFollowMode::PrologueUpwards,
 			std::vector<uint8_t> { 0x56, 0x57, 0xe5, 0x89, 0x55 }
 		};

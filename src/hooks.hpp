@@ -15,6 +15,8 @@ class CClientUnifiedServiceTransport;
 class CNetPacket;
 class CProtoBufMsgBase;
 
+class CUtlBuffer;
+
 template<typename T>
 class CUtlVector;
 
@@ -89,10 +91,8 @@ namespace Hooks
 	typedef void(*IClientAppManager_RunIPCFrame_t)(void*, void*, void*, void*);
 	typedef void(*IClientApps_RunIPCFrame_t)(void*, void*, void*, void*);
 	typedef void(*IClientRemoteStorage_RunIPCFrame_t)(void*, void*, void*, void*);
-	typedef void(*IClientUGC_RunIPCFrame_t)(void*, void*, void*, void*);
 	typedef void(*IClientUtils_RunIPCFrame_t)(void*, void*, void*, void*);
 	typedef void(*IClientUser_RunIPCFrame_t)(void*, void*, void*, void*);
-	typedef void(*IClientUserStats_RunIPCFrame_t)(void*, void*, void*, void*);
 
 	typedef uint32_t(*CAPIJob_SendAndRecv_t)(CAPIJob*, CProtoBufMsgBase*, uint32_t, uint32_t, CProtoBufMsgBase*, EMsg);
 
@@ -102,7 +102,7 @@ namespace Hooks
 
 	typedef void(*CCMInterface_RecvPkt_t)(void*, CNetPacket*);
 
-	typedef void(*CSteamEngine_Init_t)(void*);
+	typedef uint32_t(*CSteamEngine_RunInterface_t)(void*, CUtlBuffer*, CUtlBuffer*);
 	typedef AppId_t(*CSteamEngine_SetAppIdForCurrentPipe_t)(void*, AppId_t, bool);
 
 	typedef gameserverdetails_t*(*CSteamMatchmakingServers_GetServerDetails_t)(void*, uint32_t, uint32_t);
@@ -120,10 +120,8 @@ namespace Hooks
 	extern DetourHook<IClientAppManager_RunIPCFrame_t> IClientAppManager_RunIPCFrame;
 	extern DetourHook<IClientApps_RunIPCFrame_t> IClientApps_RunIPCFrame;
 	extern DetourHook<IClientRemoteStorage_RunIPCFrame_t> IClientRemoteStorage_RunIPCFrame;
-	extern DetourHook<IClientUGC_RunIPCFrame_t> IClientUGC_RunIPCFrame;
 	extern DetourHook<IClientUtils_RunIPCFrame_t> IClientUtils_RunIPCFrame;
 	extern DetourHook<IClientUser_RunIPCFrame_t> IClientUser_RunIPCFrame;
-	extern DetourHook<IClientUserStats_RunIPCFrame_t> IClientUserStats_RunIPCFrame;
 
 	extern DetourHook<CAPIJob_SendAndRecv_t> CAPIJob_SendAndRecv;
 
@@ -136,7 +134,7 @@ namespace Hooks
 	extern DetourHook<CSteamMatchmakingServers_GetServerDetails_t> CSteamMatchmakingServers_GetServerDetails;
 	extern DetourHook<CSteamMatchmakingServers_RequestInternetServerList_t> CSteamMatchmakingServers_RequestInternetServerList;
 
-	extern DetourHook<CSteamEngine_Init_t> CSteamEngine_Init;
+	extern DetourHook<CSteamEngine_RunInterface_t> CSteamEngine_RunInterface;
 	extern DetourHook<CSteamEngine_SetAppIdForCurrentPipe_t> CSteamEngine_SetAppIdForCurrentPipe;
 
 	extern DetourHook<CUser_CheckAppOwnership_t> CUser_CheckAppOwnership;
