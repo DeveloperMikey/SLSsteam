@@ -189,9 +189,10 @@ static void load()
 	}
 
 	Decompiler::parseModule(g_modSteamClient);
+	
 	if(!VFTIndexes::init())
 	{
-		g_pLog->debug("Failed to parse VFTables! Aborting...");
+		g_pLog->warn("Failed to parse VFTables! Aborting...");
 		return;
 	}
 

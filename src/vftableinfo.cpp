@@ -245,7 +245,7 @@ void VFTIndexes::dump(const std::string& name, const std::map<std::string, unsig
 
 	ss << "\n};";
 
-	g_pLog->debug("Dump %s\n", ss.str().c_str());
+	g_pLog->info("Dump %s\n", ss.str().c_str());
 }
 
 bool VFTIndexes::init()
