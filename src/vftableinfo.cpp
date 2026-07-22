@@ -22,7 +22,7 @@ bool VFTableInfo_t::init()
 		return false;
 	}
 
-	if (!index)
+	if (index == NO_INDEX)
 	{
 		if (!VFTIndexes::tableMap.contains(typeName))
 		{
