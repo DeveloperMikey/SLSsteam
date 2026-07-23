@@ -1,5 +1,6 @@
 #include "memhlp.hpp"
 
+#include "decompiler.hpp"
 #include "log.hpp"
 #include "utils.hpp"
 
@@ -41,70 +42,53 @@ lm_address_t MemHlp::patternScan(const char* pattern, const lm_module_t targetMo
 {
 	const auto bytes = patternToBytes(pattern);
 
-	auto codeSegments = std::map<lm_address_t, lm_address_t>();
-	const static auto enumSegments = [](lm_segment_t* seg, lm_void_t* arg) -> lm_bool_t
+	const Elf_Shdr* shText = Decompiler::getSection(targetModule, ".text");
+	if (!shText)
 	{
-		auto rSegments = reinterpret_cast<std::map<lm_address_t, lm_address_t>*>(arg);
-		if(seg->prot & LM_PROT_XR)
-		{
-			(*rSegments)[seg->base] = seg->base + seg->size;
-			//g_pLog->debug("Code section at %p to %p\n", seg->base, seg->base + seg->size);
-		}
+		g_pLog->debug("Didn't find .text section for %s!\n", targetModule.name);
+		return LM_ADDRESS_BAD;
+	}
 
-		return LM_TRUE;
-	};
-
-	LM_EnumSegments(enumSegments, &codeSegments);
+	const lm_address_t start = targetModule.base + shText->sh_addr;
+	const lm_address_t end = start + shText->sh_size;
 
 	lm_address_t address = LM_ADDRESS_BAD;
 	unsigned int matches = 0;
 
-	for(const auto& itm : codeSegments)
+	for (lm_address_t addr = start; addr < end ; addr++)
 	{
-		if (targetModule.base > itm.second)
-		{
-			continue;
-		}
-		if (targetModule.base + targetModule.size < itm.first)
-		{
-			continue;
-		}
+		bool found = true;
 
-		for (lm_address_t cur = itm.first; cur < itm.second; cur++)
+		for(unsigned int i = 0; i < bytes.size(); i++)
 		{
-			bool found = true;
-
-			for(unsigned int i = 0; i < bytes.size(); i++)
+			if (bytes.at(i) == -1)
 			{
-				if (bytes.at(i) == -1)
-				{
-					continue;
-				}
-
-				const lm_address_t byteAddr = cur + i;
-				if (byteAddr > itm.second)
-				{
-					found = false;
-					break;
-				}
-
-				const lm_byte_t* pbyte = reinterpret_cast<lm_byte_t*>(byteAddr);
-				if (*pbyte != bytes.at(i))
-				{
-					found = false;
-					break;
-				}
+				continue;
 			}
 
-			if (found)
+			const lm_address_t byteAddr = addr + i;
+			if (byteAddr > end)
 			{
-				address = cur;
-				matches++;
+				found = false;
+				break;
+			}
 
-				if (matches > 1)
-				{
-					g_pLog->debug("Pattern %s found %i times at %p!\n", pattern, matches, cur);
-				}
+			const lm_byte_t* pbyte = reinterpret_cast<lm_byte_t*>(byteAddr);
+			if (*pbyte != bytes.at(i))
+			{
+				found = false;
+				break;
+			}
+		}
+
+		if (found)
+		{
+			address = addr;
+			matches++;
+
+			if (matches > 1)
+			{
+				g_pLog->debug("Pattern %s found %i times at %p!\n", pattern, matches, addr);
 			}
 		}
 	}

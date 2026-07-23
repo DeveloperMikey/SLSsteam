@@ -189,6 +189,7 @@ static void load()
 	}
 
 	Decompiler::parseModule(g_modSteamClient);
+	Decompiler::parseHeader(g_modSteamUI); //We only need the sections for pattern scanning
 	
 	if(!VFTIndexes::init())
 	{
