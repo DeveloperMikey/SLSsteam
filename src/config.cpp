@@ -5,12 +5,14 @@
 
 #include "filewatcher.hpp"
 #include "log.hpp"
+#include "utils.hpp"
 
 #include "yaml-cpp/yaml.h"
 
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <string>
 
@@ -343,9 +345,10 @@ bool CConfig::shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditiona
 		{
 			//Might be worth to check for APPTYPE_DLC, but knowing Valve & individual gamedevs
 			//surely not every DLC will be tagged as such
-			char chParent[16];
+			char chParent[16] { };
 			const int len = g_pClientApps ? g_pClientApps->getAppData(appId, "parent", chParent, sizeof(chParent)) : 0;
-			if (len > 0)
+			//Do not blindly trust len, nor the str included. Some devs just like to mess with Valve or something (for example appId 221300)
+			if (len > 0 && Utils::isNumber(chParent))
 			{
 				//g_pLog->debug("AppId %i, parent %s (%i)\n", appId, chParent, len);
 				AppId_t parentId = std::stoul(chParent);

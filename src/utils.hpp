@@ -6,6 +6,7 @@
 
 namespace Utils
 {
+	bool isNumber(const char* str);
 	std::vector<std::string> strsplit(char* str, const char* delimeter);
 	std::string getFileSHA256(const char* filePath);
 }

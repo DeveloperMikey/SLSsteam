@@ -1,5 +1,6 @@
 #include "utils.hpp"
 
+#include <cctype>
 #include <cstring>
 #include <fstream>
 #include <iomanip>
@@ -7,6 +8,28 @@
 #include <vector>
 
 #include <openssl/sha.h>
+
+
+bool Utils::isNumber(const char* str)
+{
+	const unsigned int len = strlen(str);
+	if (len < 1)
+	{
+		return false;
+	}
+
+	for(unsigned int i = 0; i < len; i++)
+	{
+		const char c = str[i];
+
+		if (!std::isdigit(c))
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
 
 std::vector<std::string> Utils::strsplit(char *str, const char *delimeter)
 {
