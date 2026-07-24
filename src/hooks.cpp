@@ -301,7 +301,7 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 	Hooks::CCMInterface_RecvPkt.tramp.fn(pCMInterface, pNetPacket);
 }
 
-static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufInterfaceInfo, CUtlBuffer* a2)
+static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufInterfaceCall, CUtlBuffer* a2)
 {
 	if (!g_pSteamEngine)
 	{
@@ -312,7 +312,13 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	//We do not initialize with the CSteamEngine because first run CUser is null
 	Hooks::placeVFTHooks();
 
-	const EInterfaceType type = *reinterpret_cast<EInterfaceType*>(pBufInterfaceInfo->mem.base + pBufInterfaceInfo->get);
+	//pBufInterfaceCall
+	//base + 0 : 1 = 1?
+	//base + 1 : 1 = interfaceType
+	//base + 2 : 4 = function Id
+	//arguments follow
+	//then fencepost?
+	const EInterfaceType type = *reinterpret_cast<EInterfaceType*>(pBufInterfaceCall->mem.base + 1);
 	const bool switchFakeAppIds = FakeAppIds::shouldUseRealAppIdForInterface(type);
 
 	if (switchFakeAppIds)
@@ -320,7 +326,7 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 		FakeAppIds::runIPCFrame(false);
 	}
 
-	const uint32_t ret = Hooks::CSteamEngine_RunInterface.tramp.fn(pSteamEngine, pBufInterfaceInfo, a2);
+	const uint32_t ret = Hooks::CSteamEngine_RunInterface.tramp.fn(pSteamEngine, pBufInterfaceCall, a2);
 
 	if (switchFakeAppIds)
 	{
@@ -340,7 +346,7 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 
 			Hooks::CSteamEngine_RunInterface.name.c_str(),
 			pSteamEngine,
-			pBufInterfaceInfo,
+			pBufInterfaceCall,
 			a2,
 			ret,
 			type,
