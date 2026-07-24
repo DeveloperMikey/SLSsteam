@@ -75,6 +75,16 @@ VFTHook<T>::VFTHook() : VFTHook<T>("")
 }
 
 template<typename T>
+bool DetourHook<T>::setup(const char* name, const lm_address_t fn, T hookFn)
+{
+	this->name = name;
+	this->originalFn.address = fn;
+	this->hookFn.fn = hookFn;
+
+	return true;
+}
+
+template<typename T>
 bool DetourHook<T>::setup(const Pattern_t& pattern, T hookFn)
 {
 	this->name = pattern.name;
@@ -690,7 +700,7 @@ static void hkClientApps_RunIPCFrame(void* pClientApps, void* a1, void* a2, void
 
 static bool hkClientRemoteStorage_IsCloudEnabledForApp(void* pClientRemoteStorage, AppId_t appId)
 {
-	const bool enabled = Hooks::IClientRemoteStorage_IsCloudEnabledForApp.originalFn.fn(pClientRemoteStorage, appId);
+	const bool enabled = Hooks::IClientRemoteStorage_IsCloudEnabledForApp.tramp.fn(pClientRemoteStorage, appId);
 	g_pLog->once
 	(
 		"%s(%p, %u) -> %i\n",
@@ -708,21 +718,6 @@ static bool hkClientRemoteStorage_IsCloudEnabledForApp(void* pClientRemoteStorag
 	}
 
 	return enabled;
-}
-
-static void hkClientRemoteStorage_RunIPCFrame(void* pClientRemoteStorage, void* a1, void* a2, void* a3)
-{
-	std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
-	LM_VmtNew(*reinterpret_cast<lm_address_t**>(pClientRemoteStorage), vft.get());
-
-	Hooks::IClientRemoteStorage_IsCloudEnabledForApp.setup(vft, VFTIndexes::IClientRemoteStorage::IsCloudEnabledForApp, hkClientRemoteStorage_IsCloudEnabledForApp);
-	Hooks::IClientRemoteStorage_IsCloudEnabledForApp.place();
-
-	g_pLog->debug("IClientRemoteStorage->vft at %p\n", vft->vtable);
-	
-
-	Hooks::IClientRemoteStorage_RunIPCFrame.remove();
-	Hooks::IClientRemoteStorage_RunIPCFrame.originalFn.fn(pClientRemoteStorage, a1, a2, a3);
 }
 
 static AppId_t hkClientUtils_GetAppId(void* pClientUtils)
@@ -1081,7 +1076,6 @@ namespace Hooks
 
 	DetourHook<IClientAppManager_RunIPCFrame_t> IClientAppManager_RunIPCFrame;
 	DetourHook<IClientApps_RunIPCFrame_t> IClientApps_RunIPCFrame;
-	DetourHook<IClientRemoteStorage_RunIPCFrame_t> IClientRemoteStorage_RunIPCFrame;
 	DetourHook<IClientUtils_RunIPCFrame_t> IClientUtils_RunIPCFrame;
 	DetourHook<IClientUser_RunIPCFrame_t> IClientUser_RunIPCFrame;
 
@@ -1106,6 +1100,8 @@ namespace Hooks
 
 	DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
+	DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
+
 	VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 	VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;
 	VFTHook<IClientAppManager_GetAppUpdateInfo_t> IClientAppManager_GetAppUpdateInfo;
@@ -1114,8 +1110,6 @@ namespace Hooks
 
 	VFTHook<IClientApps_GetDLCDataByIndex_t> IClientApps_GetDLCDataByIndex;
 	VFTHook<IClientApps_GetDLCCount_t> IClientApps_GetDLCCount;
-
-	VFTHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
 
 	VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
 	VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;
@@ -1156,6 +1150,30 @@ bool Hooks::setup()
 		//IClientAppDisableUpdates
 		//IClientBilling
 		IClientUser_GetSteamId = usr.subclasses[0].functions[VFTIndexes::IClientUser::GetSteamID.index];
+		g_pLog->debug("IClientUser::GetSteamID at %p\n", IClientUser_GetSteamId);
+	}
+	{
+		const auto name = std::string("18CUserRemoteStorage");
+		if (!Decompiler::vftables.contains(name))
+		{
+			g_pLog->debug("Failed to get %s VFTable!\n", name.c_str());
+			return false;
+		}
+
+		auto& storage = Decompiler::vftables.at(name);
+		storage.analzye();
+
+		//We detourhook because the vftable seems to get relocated, so at this point in time
+		//the pointers are all wrong and would need manual adjustment which breaks
+		//current assumptions by VFTHook<T>
+		IClientRemoteStorage_IsCloudEnabledForApp.setup
+		(
+			VFTIndexes::IClientRemoteStorage::IsCloudEnabledForApp.getPrintName().c_str(),
+			storage.functions[VFTIndexes::IClientRemoteStorage::IsCloudEnabledForApp.index],
+			hkClientRemoteStorage_IsCloudEnabledForApp
+		);
+
+		IClientRemoteStorage_IsCloudEnabledForApp.place();
 	}
 
 	bool succeeded =
@@ -1163,7 +1181,6 @@ bool Hooks::setup()
 
 		&& IClientApps_RunIPCFrame.setup(Patterns::IClientApps::RunIPCFrame, hkClientApps_RunIPCFrame)
 		&& IClientAppManager_RunIPCFrame.setup(Patterns::IClientAppManager::RunIPCFrame, hkClientAppManager_RunIPCFrame)
-		&& IClientRemoteStorage_RunIPCFrame.setup(Patterns::IClientRemoteStorage::RunIPCFrame, hkClientRemoteStorage_RunIPCFrame)
 		&& IClientUtils_RunIPCFrame.setup(Patterns::IClientUtils::RunIPCFrame, hkClientUtils_RunIPCFrame)
 		&& IClientUser_RunIPCFrame.setup(Patterns::IClientUser::RunIPCFrame, hkClientUser_RunIPCFrame)
 
@@ -1207,7 +1224,6 @@ void Hooks::place()
 
 	IClientApps_RunIPCFrame.place();
 	IClientAppManager_RunIPCFrame.place();
-	IClientRemoteStorage_RunIPCFrame.place();
 	IClientUtils_RunIPCFrame.place();
 	IClientUser_RunIPCFrame.place();
 
@@ -1242,7 +1258,6 @@ void Hooks::remove()
 
 	IClientApps_RunIPCFrame.remove();
 	IClientAppManager_RunIPCFrame.remove();
-	IClientRemoteStorage_RunIPCFrame.remove();
 	IClientUtils_RunIPCFrame.remove();
 	IClientUser_RunIPCFrame.remove();
 

@@ -77,11 +77,6 @@ namespace Patterns
 		extern Pattern_t RunIPCFrame;
 	}
 
-	namespace IClientRemoteStorage
-	{
-		extern Pattern_t RunIPCFrame;
-	}
-
 	namespace IClientUser
 	{
 		extern Pattern_t RunIPCFrame;

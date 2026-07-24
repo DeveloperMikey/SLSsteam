@@ -63,6 +63,7 @@ public:
 	virtual void place();
 	virtual void remove();
 
+	bool setup(const char* name, lm_address_t fn, T hookFn);
 	bool setup(const Pattern_t& pattern, T hookFn);
 	bool setup(const VFTableInfo_t& info, T hookFn);
 };
@@ -90,7 +91,6 @@ namespace Hooks
 
 	typedef void(*IClientAppManager_RunIPCFrame_t)(void*, void*, void*, void*);
 	typedef void(*IClientApps_RunIPCFrame_t)(void*, void*, void*, void*);
-	typedef void(*IClientRemoteStorage_RunIPCFrame_t)(void*, void*, void*, void*);
 	typedef void(*IClientUtils_RunIPCFrame_t)(void*, void*, void*, void*);
 	typedef void(*IClientUser_RunIPCFrame_t)(void*, void*, void*, void*);
 
@@ -115,11 +115,12 @@ namespace Hooks
 
 	typedef bool(*CWebSocketConnection_BBuildAndAsyncSendFrame_t)(void*, uint32_t, void*, uint32_t);
 
+	typedef bool(*IClientRemoteStorage_IsCloudEnabledForApp_t)(void*, AppId_t);
+
 	extern DetourHook<TraceIPC_t> TraceIPC;
 
 	extern DetourHook<IClientAppManager_RunIPCFrame_t> IClientAppManager_RunIPCFrame;
 	extern DetourHook<IClientApps_RunIPCFrame_t> IClientApps_RunIPCFrame;
-	extern DetourHook<IClientRemoteStorage_RunIPCFrame_t> IClientRemoteStorage_RunIPCFrame;
 	extern DetourHook<IClientUtils_RunIPCFrame_t> IClientUtils_RunIPCFrame;
 	extern DetourHook<IClientUser_RunIPCFrame_t> IClientUser_RunIPCFrame;
 
@@ -144,6 +145,8 @@ namespace Hooks
 
 	extern DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
+	extern DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
+
 	typedef bool(*IClientAppManager_BCanRemotePlayTogether_t)(void*, AppId_t);
 	typedef bool(*IClientAppManager_BIsDlcEnabled_t)(void*, AppId_t, AppId_t, void*);
 	typedef bool(*IClientAppManager_GetAppUpdateInfo_t)(void*, AppId_t, uint32_t*);
@@ -153,8 +156,6 @@ namespace Hooks
 	typedef unsigned int(*IClientApps_GetDLCCount_t)(void*, AppId_t);
 
 	typedef bool(*IClientApps_GetDLCDataByIndex_t)(void*, AppId_t, int, AppId_t*, bool*, char*, size_t);
-
-	typedef bool(*IClientRemoteStorage_IsCloudEnabledForApp_t)(void*, AppId_t);
 
 	typedef AppId_t(*IClientUtils_GetAppId_t)(void*);
 	typedef bool(*IClientUtils_GetOfflineMode_t)(void*);
@@ -174,8 +175,6 @@ namespace Hooks
 
 	extern VFTHook<IClientApps_GetDLCDataByIndex_t> IClientApps_GetDLCDataByIndex;
 	extern VFTHook<IClientApps_GetDLCCount_t> IClientApps_GetDLCCount;
-
-	extern VFTHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
 
 	extern VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
 	extern VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;

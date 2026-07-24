@@ -169,16 +169,6 @@ namespace Patterns
 		};
 	}
 
-	namespace IClientRemoteStorage
-	{
-		Pattern_t RunIPCFrame
-		{
-			"IClientRemoteStorage::RunIPCFrame",
-			"55 89 E5 57 56 E8 ? ? ? ? 81 ? ? ? ? ? 53 81 EC ? ? ? ? 8B 45 08 8B 4D 0C 8B 7D 14 89 85 D8 FE FF FF 8B 45 10 89 8D CC FE FF FF",
-			SigFollowMode::None,
-		};
-	}
-
 	namespace IClientUser
 	{
 		Pattern_t RunIPCFrame
