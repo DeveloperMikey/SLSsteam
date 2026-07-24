@@ -137,6 +137,18 @@ namespace Patterns
 			"E8 ? ? ? ? E9 ? ? ? ? ? ? ? ? ? ? 8D 45 ? 89 45 ? EB",
 			SigFollowMode::Relative
 		};
+		Pattern_t m_OffsetUserAppInfo
+		{
+			"CUser::m_UserAppInfo",
+			"05 ? ? ? ? 50 E8 ? ? ? ? 8B 54 24 ? 83 C4 ? 8B 44 24",
+			SigFollowMode::None
+		};
+		Pattern_t m_OffsetUserAppManager
+		{
+			"CUser::m_UserAppmanager",
+			"05 ? ? ? ? 85 D2 0F 44 D6",
+			SigFollowMode::None
+		};
 	}
 
 	namespace CUserAppManager

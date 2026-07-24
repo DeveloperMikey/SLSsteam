@@ -60,6 +60,8 @@ namespace Patterns
 		extern Pattern_t GetSubscribedApps;
 		extern Pattern_t PostCallback;
 		extern Pattern_t UpdateAppOwnershipTicket;
+		extern Pattern_t m_OffsetUserAppInfo;
+		extern Pattern_t m_OffsetUserAppManager;
 	}
 
 	namespace CUserAppManager

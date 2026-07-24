@@ -5,6 +5,20 @@
 #include "../hooks.hpp"
 #include "../patterns.hpp"
 
+#include "libmem/libmem.h"
+
+
+IClientAppManager* CUser::getAppManager()
+{
+	const static lm_address_t offset = *reinterpret_cast<lm_address_t*>(Patterns::CUser::m_OffsetUserAppManager.address + 1);
+	return reinterpret_cast<IClientAppManager*>(this + offset);
+}
+
+IClientApps* CUser::getClientApps()
+{
+	const static lm_address_t offset = *reinterpret_cast<lm_address_t*>(Patterns::CUser::m_OffsetUserAppInfo.address + 1);
+	return reinterpret_cast<IClientApps*>(this + offset);
+}
 
 bool CUser::checkAppOwnership(const AppId_t appId, AppOwnershipInfo_t* pInfo)
 {

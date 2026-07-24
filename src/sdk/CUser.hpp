@@ -1,5 +1,7 @@
 #pragma once
 
+#include "IClientAppManager.hpp"
+#include "IClientApps.hpp"
 #include "steam.hpp"
 
 #include <cstdint>
@@ -77,6 +79,9 @@ struct AppOwnershipInfo_t {
 class CUser
 {
 public:
+	IClientAppManager* getAppManager();
+	IClientApps* getClientApps();
+
 	bool checkAppOwnership(const AppId_t appId, AppOwnershipInfo_t* pInfo);
 	bool isSubscribed(const AppId_t appId);
 
