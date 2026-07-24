@@ -2,6 +2,7 @@
 
 #include "api.hpp"
 #include "config.hpp"
+#include "decompiler.hpp"
 #include "globals.hpp"
 #include "log.hpp"
 #include "memhlp.hpp"
@@ -1138,7 +1139,24 @@ bool Hooks::setup()
 {
 	g_pLog->debug("Hooks::setup()\n");
 
-	IClientUser_GetSteamId = Patterns::IClientUser::GetSteamId.address;
+	{
+		const auto name = std::string("5CUser");
+		if (!Decompiler::vftables.contains(name))
+		{
+			g_pLog->debug("Failed to get %s VFTable!\n", name.c_str());
+			return false;
+		}
+
+		auto& usr = Decompiler::vftables.at(name);
+		usr.analzye();
+		//CUser typeInfo
+		//CBaseUser
+		//IClientUser
+		//IClientMatchmaking
+		//IClientAppDisableUpdates
+		//IClientBilling
+		IClientUser_GetSteamId = usr.subclasses[0].functions[VFTIndexes::IClientUser::GetSteamID.index];
+	}
 
 	bool succeeded =
 		TraceIPC.setup(Patterns::TraceIPC, &hkTraceIPC)

@@ -84,7 +84,6 @@ namespace Patterns
 
 	namespace IClientUser
 	{
-		extern Pattern_t GetSteamId;
 		extern Pattern_t RunIPCFrame;
 	}
 
