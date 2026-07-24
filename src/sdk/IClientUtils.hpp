@@ -9,5 +9,3 @@ public:
 	HSteamPipe getCurrentSteamPipe();
 	AppId_t getAppId();
 };
-
-extern IClientUtils* g_pClientUtils;

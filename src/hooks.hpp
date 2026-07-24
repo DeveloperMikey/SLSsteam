@@ -89,11 +89,6 @@ namespace Hooks
 {
 	typedef void(*TraceIPC_t)(const char*, const char*);
 
-	typedef void(*IClientAppManager_RunIPCFrame_t)(void*, void*, void*, void*);
-	typedef void(*IClientApps_RunIPCFrame_t)(void*, void*, void*, void*);
-	typedef void(*IClientUtils_RunIPCFrame_t)(void*, void*, void*, void*);
-	typedef void(*IClientUser_RunIPCFrame_t)(void*, void*, void*, void*);
-
 	typedef uint32_t(*CAPIJob_SendAndRecv_t)(CAPIJob*, CProtoBufMsgBase*, uint32_t, uint32_t, CProtoBufMsgBase*, EMsg);
 
 	typedef uint32_t(*CAppDataCache_BParseResponseFromMessage_t)(void*, CProtoBufMsgBase*);
@@ -118,11 +113,6 @@ namespace Hooks
 	typedef bool(*IClientRemoteStorage_IsCloudEnabledForApp_t)(void*, AppId_t);
 
 	extern DetourHook<TraceIPC_t> TraceIPC;
-
-	extern DetourHook<IClientAppManager_RunIPCFrame_t> IClientAppManager_RunIPCFrame;
-	extern DetourHook<IClientApps_RunIPCFrame_t> IClientApps_RunIPCFrame;
-	extern DetourHook<IClientUtils_RunIPCFrame_t> IClientUtils_RunIPCFrame;
-	extern DetourHook<IClientUser_RunIPCFrame_t> IClientUser_RunIPCFrame;
 
 	extern DetourHook<CAPIJob_SendAndRecv_t> CAPIJob_SendAndRecv;
 
@@ -200,5 +190,6 @@ namespace Hooks
 	bool createAndPlaceSteamIdHook();
 	bool setup();
 	void place();
+	void placeVFTHooks();
 	void remove();
 }

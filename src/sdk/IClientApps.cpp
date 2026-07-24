@@ -47,5 +47,3 @@ EAppType IClientApps::getAppType(const AppId_t appId)
 {
 	return MemHlp::callVFunc<EAppType(*)(void*, AppId_t)>(VFTIndexes::IClientApps::GetAppType.index, this, appId);
 }
-
-IClientApps* g_pClientApps;

@@ -44,5 +44,3 @@ public:
 	uint32_t uninstallApp(const AppId_t appId);
 	EAppState getAppInstallState(const AppId_t appId);
 };
-
-extern IClientAppManager* g_pClientAppManager;

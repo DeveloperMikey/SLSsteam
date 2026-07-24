@@ -19,5 +19,3 @@ EAppState IClientAppManager::getAppInstallState(const AppId_t appId)
 {
 	return MemHlp::callVFunc<EAppState(*)(void*, AppId_t)>(VFTIndexes::IClientAppManager::GetAppInstallState.index, this, appId);
 }
-
-IClientAppManager* g_pClientAppManager;

@@ -12,7 +12,7 @@
 bool DLC::shouldUnlockDlc(const AppId_t appId)
 {
 	//Don't unlock inside the SteamClient (AppId 0)
-	if (!g_pClientUtils->getAppId())
+	if (!g_pSteamEngine->getUtils()->getAppId())
 	{
 		return false;
 	}

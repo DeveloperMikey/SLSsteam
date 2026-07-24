@@ -1,8 +1,6 @@
 #include "misc.hpp"
 
 #include "../sdk/CNetPacket.hpp"
-#include "../sdk/CProtoBufMsgBase.hpp"
-#include "../sdk/IClientUtils.hpp"
 #include "../sdk/steam.hpp"
 
 #include "../config.hpp"
@@ -11,11 +9,6 @@
 
 bool Misc::shouldFakeOffline()
 {
-	if (!g_pClientUtils)
-	{
-		return false;
-	}
-	
 	const AppId_t appId = FakeAppIds::getRealAppIdForCurrentPipe();
 	if (!appId || !g_config.fakeOffline.get().contains(appId))
 	{

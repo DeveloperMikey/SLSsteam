@@ -1,11 +1,12 @@
 #pragma once
 
-#include "IClientAppManager.hpp"
-#include "IClientApps.hpp"
-#include "IClientUser.hpp"
 #include "steam.hpp"
 
 #include <cstdint>
+
+class IClientAppManager;
+class IClientApps;
+class IClientUser;
 
 
 enum class ECallbackType : uint32_t

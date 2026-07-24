@@ -173,44 +173,8 @@ namespace Patterns
 		};
 	}
 
-	namespace IClientAppManager
-	{
-		Pattern_t RunIPCFrame
-		{
-			"IClientAppManager::RunIPCFrame",
-			"55 89 E5 57 56 E8 ? ? ? ? 81 C6 ? ? ? ? 53 81 EC ? ? ? ? 8B 45 08 8B 4D 0C 8B 7D 14 89 85 30 FC FF FF",
-			SigFollowMode::None,
-		};
-	}
-
-	namespace IClientApps
-	{
-		Pattern_t RunIPCFrame
-		{
-			"IClientApps::RunIPCFrame",
-			"55 89 E5 57 56 E8 ? ? ? ? 81 C6 ? ? ? ? 53 81 EC ? ? ? ? 8B 45 08 8B 4D 0C 8B 7D 14 89 85 18 FF FF FF 8B 45 10 89 8D 28 FF FF FF",
-			SigFollowMode::None,
-		};
-	}
-
-	namespace IClientUser
-	{
-		Pattern_t RunIPCFrame
-		{
-			"IClientUser::RunIPCFrame",
-			"55 89 E5 57 56 E8 ? ? ? ? 81 C6 ? ? ? ? 53 81 EC ? ? ? ? 8B 45 08 8B 4D 0C 8B 7D 14 89 85 E8 FE FF FF 8B 45 10 89 8D F8 FE FF FF",
-			SigFollowMode::None,
-		};
-	}
-
 	namespace IClientUtils
 	{
-		Pattern_t RunIPCFrame
-		{
-			"IClientUtils::RunIPCFrame",
-			"55 89 E5 57 56 E8 ? ? ? ? 81 C6 ? ? ? ? 53 81 EC ? ? ? ? 8B 45 08 8B 7D 0C 89 85 48 FF FF FF",
-			SigFollowMode::None,
-		};
 		Pattern_t Offset_GetPipeIndex
 		{
 			"IClientUtils::m_PipeIndex",

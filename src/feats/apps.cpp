@@ -221,7 +221,14 @@ void Apps::postAppLicensesChanged(const std::unordered_set<AppId_t>& apps)
 
 void Apps::runIPCFrame()
 {
-	if (!g_pClientApps)
+	const auto usr = g_pSteamEngine->getUser();
+	if (!usr)
+	{
+		return;
+	}
+
+	const auto appInfo = usr->getClientApps();
+	if (!appInfo)
 	{
 		return;
 	}
@@ -250,7 +257,7 @@ void Apps::runIPCFrame()
 
 		if (idx + 1 >= MAX_APPS_PER_REQUEST)
 		{
-			g_pClientApps->requestAppInfoUpdate(apps, MAX_APPS_PER_REQUEST);
+			appInfo->requestAppInfoUpdate(apps, MAX_APPS_PER_REQUEST);
 			memset(apps, 0, sizeof(apps));
 		}
 	}
@@ -258,7 +265,7 @@ void Apps::runIPCFrame()
 	const unsigned int idx = i % MAX_APPS_PER_REQUEST;
 	if (apps[0])
 	{
-		g_pClientApps->requestAppInfoUpdate(apps, idx);
+		appInfo->requestAppInfoUpdate(apps, idx);
 	}
 
 	g_config.newApps.clear();
@@ -314,6 +321,8 @@ void Apps::sendAndRecvLastPlayedTimes(const char* name, CPlayer_GetLastPlayedTim
 void Apps::sendGamesPlayed(CNetPacket* pkt)
 {
 	const auto titles = g_config.gameTitles.get();
+	const auto usr = g_pSteamEngine->getUser();
+	const auto appInfo = usr->getClientApps();
 
 	auto msg = pkt->deserializeBody<CMsgClientGamesPlayed>();
 	bool owned = false;
@@ -353,7 +362,7 @@ void Apps::sendGamesPlayed(CNetPacket* pkt)
 		else if (!owned || FakeAppIds::getFakeAppId(gameId))
 		{
 			char name[256] {}; //No clue how long titles can get
-			const int len = g_pClientApps->getAppData(gameId, "common/name", name, sizeof(name));
+			const int len = appInfo->getAppData(gameId, "common/name", name, sizeof(name));
 			if (len > 0)
 			{
 				g_pLog->debug("AppName %s (%i)\n", name, len);

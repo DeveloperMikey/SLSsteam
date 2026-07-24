@@ -1,9 +1,11 @@
 #pragma once
 
-#include "IClientUtils.hpp"
 #include "steam.hpp"
 
 #include <cstdint>
+
+
+class IClientUtils;
 
 
 class CUser;

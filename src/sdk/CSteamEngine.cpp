@@ -1,6 +1,7 @@
 #include "CSteamEngine.hpp"
 
 #include "CUtl.hpp"
+#include "IClientUtils.hpp"
 
 #include "../hooks.hpp"
 #include "../patterns.hpp"

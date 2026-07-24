@@ -70,24 +70,8 @@ namespace Patterns
 		extern Pattern_t BuildDepotDependency;
 	}
 
-	namespace IClientAppManager
-	{
-		extern Pattern_t RunIPCFrame;
-	}
-
-	namespace IClientApps
-	{
-		extern Pattern_t RunIPCFrame;
-	}
-
-	namespace IClientUser
-	{
-		extern Pattern_t RunIPCFrame;
-	}
-
 	namespace IClientUtils
 	{
-		extern Pattern_t RunIPCFrame;
 		extern Pattern_t Offset_GetPipeIndex;
 	}
 
