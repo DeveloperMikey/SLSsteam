@@ -1155,6 +1155,7 @@ void Hooks::placeVFTHooks()
 		return;
 	}
 
+	//I don't think the IPC layer is multithreaded but better safe than sorry
 	static std::mutex mutex;
 	std::lock_guard guard(mutex);
 
