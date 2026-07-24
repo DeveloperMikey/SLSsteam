@@ -5,6 +5,7 @@
 #include <sys/inotify.h>
 #include <unordered_map>
 
+
 typedef void(*FileModifyEvent_t)();
 
 class CFileWatcher

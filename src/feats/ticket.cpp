@@ -19,6 +19,7 @@
 #include <ios>
 #include <sstream>
 
+
 uint32_t Ticket::oneTimeSteamIdSpoof = 0;
 std::map<AppId_t, Ticket::SavedTicket> Ticket::ticketMap = std::map<AppId_t, SavedTicket>();
 std::map<AppId_t, Ticket::SavedTicket> Ticket::encryptedTicketMap = std::map<AppId_t, SavedTicket>();

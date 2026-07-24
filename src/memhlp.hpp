@@ -1,7 +1,9 @@
 #pragma once
 
-#include "libmem/libmem.h"
 #include "log.hpp"
+
+#include "libmem/libmem.h"
+
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>

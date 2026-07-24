@@ -11,6 +11,9 @@ typedef int32_t ENetPacket;
 typedef uint32_t HSteamPipe;
 typedef uint32_t HSteamUser;
 
+
+constexpr uint64_t GAME_TYPE_SHORTCUT = 0x2000000ULL;
+
 constexpr static ENetPacket INVALID_NETPACKET_TYPE = -1;
 constexpr static ENetPacket PROTOBUF_TYPE_MASK = 0x80000000;
 

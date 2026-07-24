@@ -5,6 +5,7 @@
 
 #include <cstdint>
 
+
 using EAppType = EProtoAppType;
 
 enum EAppInfoSection

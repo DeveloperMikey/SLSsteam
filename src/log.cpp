@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <memory>
 
+
 CLog::CLog(const char* path) : path(path)
 {
 	ofstream = std::ofstream(path, std::ios::out);

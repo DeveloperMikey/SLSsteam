@@ -5,10 +5,8 @@
 #include <cstdint>
 
 
-class IClientUtils;
-
-
 class CUser;
+class IClientUtils;
 
 class CSteamEngine
 {

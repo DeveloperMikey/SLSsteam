@@ -12,6 +12,7 @@
 #include <sstream>
 #include <unordered_set>
 
+
 enum class LogLevel : unsigned int
 {
 	//TODO: Add Trace without breaking configs and without using -1 for Once

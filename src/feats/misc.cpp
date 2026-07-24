@@ -7,6 +7,7 @@
 
 #include "fakeappid.hpp"
 
+
 bool Misc::shouldFakeOffline()
 {
 	const AppId_t appId = FakeAppIds::getRealAppIdForCurrentPipe();

@@ -4,6 +4,7 @@
 
 #include <cstdint>
 
+
 enum EAppState : uint32_t
 {
 	k_EAppStateInvalid = 0x0,

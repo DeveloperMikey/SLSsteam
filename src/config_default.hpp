@@ -1,4 +1,6 @@
-static const char* defaultConfig = R"(#Example AppIds Config for those not familiar with YAML:
+#pragma once
+
+constexpr static const char* defaultConfig = R"(#Example AppIds Config for those not familiar with YAML:
 #AppIds:
 #  - 440
 #  - 730

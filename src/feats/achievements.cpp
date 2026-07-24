@@ -20,7 +20,6 @@
 
 std::unordered_map<AppId_t, std::unordered_set<uint64_t>> Achievements::ownerBlacklist;
 
-
 std::string Achievements::getReviewUrl(const AppId_t appId)
 {
 	std::stringstream url;

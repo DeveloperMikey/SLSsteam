@@ -4,10 +4,10 @@
 
 #include <cstdint>
 
+
 class IClientAppManager;
 class IClientApps;
 class IClientUser;
-
 
 enum class ECallbackType : uint32_t
 {

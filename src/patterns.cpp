@@ -5,9 +5,6 @@
 
 #include "libmem/libmem.h"
 
-#include <algorithm>
-#include <memory>
-
 
 Pattern_t::Pattern_t(const char* name, const char* pattern, MemHlp::SigFollowMode followMode, lm_module_t* module)
 	:

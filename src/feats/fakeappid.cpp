@@ -8,6 +8,7 @@
 #include "../sdk/CUser.hpp"
 #include "../sdk/IClientUtils.hpp"
 
+
 AppId_t FakeAppIds::lastAppLaunched;
 
 std::unordered_map<uint32_t, AppId_t> FakeAppIds::fakeAppIdMap = std::unordered_map<AppId_t, AppId_t>();
@@ -213,7 +214,7 @@ void FakeAppIds::sendGamesPlayed(CNetPacket *pkt)
 		const auto game = msg.mutable_games_played(i);
 		const uint64_t gameId = game->game_id();
 
-		if (gameId & 0x2000000ULL)
+		if (gameId & GAME_TYPE_SHORTCUT)
 		{
 			continue;
 		}
