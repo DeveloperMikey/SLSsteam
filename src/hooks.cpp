@@ -307,7 +307,7 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 		g_pSteamEngine = reinterpret_cast<CSteamEngine*>(pSteamEngine);
 	}
 
-	const EInterfaceType type = static_cast<EInterfaceType>(*reinterpret_cast<EInterfaceType*>(pBufInterfaceInfo->mem.base + pBufInterfaceInfo->get) & 0xff);
+	const EInterfaceType type = *reinterpret_cast<EInterfaceType*>(pBufInterfaceInfo->mem.base + pBufInterfaceInfo->get);
 	const bool switchFakeAppIds = FakeAppIds::shouldUseRealAppIdForInterface(type);
 
 	if (switchFakeAppIds)
