@@ -44,7 +44,7 @@ namespace Patterns
 	{
 		extern Pattern_t SetAppIdForCurrentPipe;
 		extern Pattern_t RunInterface;
-
+		extern Pattern_t Offset_ClientUtils;
 		extern Pattern_t Offset_User;
 	}
 
@@ -60,6 +60,7 @@ namespace Patterns
 		extern Pattern_t GetSubscribedApps;
 		extern Pattern_t PostCallback;
 		extern Pattern_t UpdateAppOwnershipTicket;
+		extern Pattern_t m_OffsetClientUser;
 		extern Pattern_t m_OffsetUserAppInfo;
 		extern Pattern_t m_OffsetUserAppManager;
 	}

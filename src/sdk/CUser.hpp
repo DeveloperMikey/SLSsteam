@@ -2,6 +2,7 @@
 
 #include "IClientAppManager.hpp"
 #include "IClientApps.hpp"
+#include "IClientUser.hpp"
 #include "steam.hpp"
 
 #include <cstdint>
@@ -81,6 +82,7 @@ class CUser
 public:
 	IClientAppManager* getAppManager();
 	IClientApps* getClientApps();
+	IClientUser* getClientUser();
 
 	bool checkAppOwnership(const AppId_t appId, AppOwnershipInfo_t* pInfo);
 	bool isSubscribed(const AppId_t appId);
