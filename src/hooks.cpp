@@ -1063,7 +1063,6 @@ bool Hooks::setup()
 		}
 
 		auto& usr = Decompiler::vftables.at(name);
-		usr.analzye();
 		//CUser typeInfo
 		//CBaseUser
 		//IClientUser
@@ -1082,7 +1081,6 @@ bool Hooks::setup()
 		}
 
 		auto& storage = Decompiler::vftables.at(name);
-		storage.analzye();
 
 		//We detourhook because the vftable seems to get relocated, so at this point in time
 		//the pointers are all wrong and would need manual adjustment which breaks

@@ -41,7 +41,6 @@ bool VFTableInfo_t::init()
 
 	auto& vft = Decompiler::vftables[typeName];
 	auto& funcs = vft.functions;
-	vft.analzye();
 
 	if (index >= funcs.size())
 	{

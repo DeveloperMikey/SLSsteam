@@ -658,7 +658,6 @@ std::map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char
 	}
 
 	auto& vft = vftables[interface];
-	vft.analzye();
 
 	g_pLog->debug("Disassembling %s's functions\n", interface);
 

@@ -231,6 +231,13 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 		//Analyse modules before any relocations get applied
 		LM_FindModule("steamclient.so", &g_modSteamClient);
 		Decompiler::parseModule(g_modSteamClient);
+		//This is wasteful, but we have to analyse right away otherwise the offset get turned into
+		//addresses messing up the analysis.
+		//We could workaround it by only loading after a late module has been loaded
+		for(auto& vft : Decompiler::vftables)
+		{
+			vft.second.analzye();
+		}
 
 		load();
 	}
@@ -239,6 +246,13 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 		//Analyse modules before any relocations get applied
 		LM_FindModule("steamui.so", &g_modSteamUI);
 		Decompiler::parseModule(g_modSteamUI);
+		//This is wasteful, but we have to analyse right away otherwise the offset get turned into
+		//addresses messing up the analysis.
+		//We could workaround it by only loading after a late module has been loaded
+		for(auto& vft : Decompiler::vftables)
+		{
+			vft.second.analzye();
+		}
 
 		load();
 	}
