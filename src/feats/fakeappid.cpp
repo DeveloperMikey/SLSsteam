@@ -149,7 +149,6 @@ void FakeAppIds::runIPCFrame(const bool post)
 		return;
 	}
 
-
 	if (post)
 	{
 		appId = fakeAppId;
