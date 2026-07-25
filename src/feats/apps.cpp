@@ -55,7 +55,6 @@ bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info)
 	return unlockApp(appId, info, g_currentSteamId);
 }
 
-
 void Apps::buildDepotDependency(const AppId_t appId, CUtlVector<DepotInfo_t>* depots, CUtlVector<DepotInfo_t>* sharedDepots)
 {
 	g_pLog->debug("Vec Alloc %u, Grow %u, Size %u\n", depots->memory.alloc, depots->memory.growSize, depots->size);
@@ -89,7 +88,6 @@ void Apps::buildDepotDependency(const AppId_t appId, CUtlVector<DepotInfo_t>* de
 		const auto depot = sharedDepots->at(i);
 		g_pLog->debug("Shared Depot %u for %u -> %llu\n", depot->depotId, depot->appId, depot->manifestId);
 	}
-
 }
 
 bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
