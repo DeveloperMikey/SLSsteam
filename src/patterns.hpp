@@ -14,13 +14,13 @@ public:
 	const std::string name;
 	const std::string pattern;
 	const MemHlp::SigFollowMode followMode;
-	std::vector<uint8_t> prologue;
+	std::vector<int16_t> prologue;
 
 	lm_address_t address;
 	lm_module_t* module;
 
 	Pattern_t(const char* name, const char* pattern, MemHlp::SigFollowMode followMode, lm_module_t* module = nullptr);
-	Pattern_t(const char* name, const char* pattern, MemHlp::SigFollowMode followMode, std::vector<uint8_t> prologue, lm_module_t* module = nullptr);
+	Pattern_t(const char* name, const char* pattern, MemHlp::SigFollowMode followMode, std::vector<int16_t> prologue, lm_module_t* module = nullptr);
 	//~CPattern();
 
 	bool find();

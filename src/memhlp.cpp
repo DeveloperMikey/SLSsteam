@@ -115,7 +115,7 @@ lm_address_t MemHlp::searchSignature(const char* name, const char* signature, co
 
 			case SigFollowMode::PrologueUpwards:
 				g_pLog->debug("Searching function prologue of %s from %p\n", name, address);
-				address = MemHlp::findPrologue(address, static_cast<const lm_byte_t*>(extraData), extraDataSize);
+				address = MemHlp::findPrologue(address, static_cast<const int16_t*>(extraData), extraDataSize);
 				break;
 
 			default:
@@ -157,7 +157,7 @@ lm_address_t MemHlp::getJmpTarget(const lm_address_t address)
 	return std::stoul(inst.op_str, nullptr, 16);
 }
 
-lm_address_t MemHlp::findPrologue(const lm_address_t address, const lm_byte_t* prologueBytes, const lm_size_t prologueSize)
+lm_address_t MemHlp::findPrologue(const lm_address_t address, const int16_t* prologueBytes, const lm_size_t prologueSize)
 {
 	constexpr unsigned int scanSize = 0x10000;
 
@@ -166,6 +166,11 @@ lm_address_t MemHlp::findPrologue(const lm_address_t address, const lm_byte_t* p
 		bool found = true;
 		for(unsigned int j = 0u; j < prologueSize; j++)
 		{
+			if (prologueBytes[j] == -1)
+			{
+				continue;
+			}
+
 			if (*reinterpret_cast<lm_byte_t*>(address - i - j) != prologueBytes[j])
 			{
 				found = false;

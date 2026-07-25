@@ -8,11 +8,11 @@
 
 Pattern_t::Pattern_t(const char* name, const char* pattern, MemHlp::SigFollowMode followMode, lm_module_t* module)
 	:
-	Pattern_t(name, pattern, followMode, std::vector<uint8_t>(), module)
+	Pattern_t(name, pattern, followMode, std::vector<int16_t>(), module)
 {
 }
 
-Pattern_t::Pattern_t(const char* name, const char* pattern, MemHlp::SigFollowMode followMode, std::vector<uint8_t> prologue, lm_module_t* module)
+Pattern_t::Pattern_t(const char* name, const char* pattern, MemHlp::SigFollowMode followMode, std::vector<int16_t> prologue, lm_module_t* module)
 	:
 	name(name),
 	pattern(pattern),
@@ -51,8 +51,9 @@ namespace Patterns
 	Pattern_t TraceIPC
 	{
 		"TraceIPC",
-		"E8 ? ? ? ? 83 C4 10 85 FF 74 ? 8B 07 83 EC 04 FF B5 ? ? ? ? FF B5 ? ? ? ? 57 FF 10 83 C4 10 8D 45 ? 83 EC 04 89 F3 6A 04 50 FF 75",
-		SigFollowMode::Relative
+		"0F 45 F8 85 ED",
+		SigFollowMode::PrologueUpwards,
+		std::vector<int16_t> { 0x53, 0x56, 0x57, 0x55 }
 	};
 
 	namespace CAPIJob
@@ -60,8 +61,9 @@ namespace Patterns
 		Pattern_t SendAndRecv
 		{
 			"CAPIJob::SendAndRecv",
-			"E8 ? ? ? ? 88 85 18 FF FF FF",
-			SigFollowMode::Relative
+			"8B 7C 24 ? FF 76 ? FF 76",
+			SigFollowMode::PrologueUpwards,
+			std::vector<int16_t> { 0x53, 0x56, 0x57, 0x55 }
 		};
 	}
 
@@ -70,8 +72,9 @@ namespace Patterns
 		Pattern_t BParseResponseMessage
 		{
 			"CAppDataCache::BParseResponseMessage",
-			"E8 ? ? ? ? 89 C6 83 C4 ? 84 C0 75 ? 31 F6 8B 45 80",
-			SigFollowMode::Relative
+			"8B 77 ? 39 46",
+			SigFollowMode::PrologueUpwards,
+			std::vector<int16_t> { 0x53, 0x56, 0x57, 0xE5, 0x89, 0x55, -1, -1, -1, -1, 05, -1, -1, -1, -1, 0xE8 }
 		};
 	}
 
@@ -80,8 +83,9 @@ namespace Patterns
 		Pattern_t BBuildAndAsyncSendFrame
 		{
 			"CWebSocketConnection::BBuildAndAsyncSendFrame",
-			"E8 ? ? ? ? C6 86 ? ? ? ? ? 8D 86 ? ? ? ? 83 C4 ? 80 BE ? ? ? ? ? 75 ? 80 7D B0 ?",
-			SigFollowMode::Relative
+			"89 C6 85 D2 78",
+			SigFollowMode::PrologueUpwards,
+			std::vector<int16_t> { 0xE8, 0x57, 0xE5, 0x89, 0x55 }
 		};
 	}
 
@@ -90,15 +94,15 @@ namespace Patterns
 		Pattern_t SetAppIdForCurrentPipe
 		{
 			"CSteamEngine::SetAppIdForCurrentPipe",
-			"E8 ? ? ? ? E9 ? ? ? ? ? ? ? ? ? 8B 85 ? ? ? ? 83 EC 08 FF B5",
+			"E8 ? ? ? ? 83 C4 ? 8B 45 ? 85 C0 75 ? 31 FF",
 			SigFollowMode::Relative
 		};
 		Pattern_t RunInterface
 		{
 			"CSteamEngine::RunInterface",
-			"E8 ? ? ? ? 8B 55 C4 83 C4 ? 8B 42 ? 8B 5A ?",
+			"8B 5A ? 29 C3",
 			SigFollowMode::PrologueUpwards,
-			std::vector<uint8_t> { 0x56, 0x57, 0xE5, 0x89, 0x55 }
+			std::vector<int16_t> { 0x56, 0x57, 0xE5, 0x89, 0x55 }
 		};
 		Pattern_t Offset_ClientUtils
 		{
@@ -109,7 +113,7 @@ namespace Patterns
 		Pattern_t Offset_User
 		{
 			"CSteamEngine::m_pUser",
-			"8B 80 ? ? ? ? FF 75 ? 8D 34",
+			"8B 80 ? ? ? ? FF 75 ? ? ? ? 56 FF 75",
 			SigFollowMode::None
 		};
 	}
@@ -119,26 +123,28 @@ namespace Patterns
 		Pattern_t CheckAppOwnership
 		{
 			"CUser::CheckAppOwnership",
-			"E8 ? ? ? ? 88 45 ? 83 C4 10 84 C0 0F 84 ? ? ? ? 8B 45 ? 80 7D ? 00",
-			SigFollowMode::Relative
+			"0F 94 C2 08 51",
+			SigFollowMode::PrologueUpwards,
+			std::vector<int16_t> { 0x53, 0x56, 0x57, 0xE5, 0x89, 0x55, -1, -1, -1, -1, 0x5, -1, -1, -1, -1, 0xE8 }
 		};
 		Pattern_t GetSubscribedApps
 		{
 			"CUser::GetSubscribedApps",
-			"E8 ? ? ? ? 89 C6 83 C4 10 85 C0 0F 84 ? ? ? ? 8B 9D ? ? ? ? 39 D8",
+			"E8 ? ? ? ? 89 C6 83 C4 ? 85 C0 0F 84 ? ? ? ? 8B 9D ? ? ? ? 39 D8",
 			SigFollowMode::Relative
 		};
 		Pattern_t PostCallback
 		{
 			"CUser::PostCallback",
-			"E8 ? ? ? ? 8D 86 ? ? ? ? 83 C4 18 68 F6 01 00 00",
+			"E8 ? ? ? ? 8B 75 ? 89 D8",
 			SigFollowMode::Relative
 		};
 		Pattern_t UpdateAppOwnershipTicket
 		{
 			"CUser::UpdateAppOwnershipTicket",
-			"E8 ? ? ? ? E9 ? ? ? ? ? ? ? ? ? ? 8D 45 ? 89 45 ? EB",
-			SigFollowMode::Relative
+			"52 57 89 DF FF 75",
+			SigFollowMode::PrologueUpwards,
+			std::vector<int16_t> { 0x53, 0x56, 0x57, 0xE5, 0x89, 0x55, -1, -1, -1, -1, 0x5, -1, -1, -1, -1, 0xE8 }
 		};
 		Pattern_t m_OffsetClientUser
 		{
@@ -165,7 +171,7 @@ namespace Patterns
 		Pattern_t BuildDepotDependency
 		{
 			"CUserAppManager::BuildDepotDependency",
-			"E8 ? ? ? ? 88 45 A3 83 C4 ? 84 C0 74 ?",
+			"E8 ? ? ? ? 83 C4 ? 84 C0 74 ? 8B 45 ? 85 C0 89 45",
 			SigFollowMode::Relative
 		};
 	}
