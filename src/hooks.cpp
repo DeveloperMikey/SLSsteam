@@ -336,7 +336,8 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	Apps::runIPCFrame();
 	SLSAPI::runIPCFrame();
 
-	if (g_config.extendedLogging.get())
+	//We check if CUser is a valid pointer yet, otherwise using IClientUtils::GetAppId will crash
+	if (g_config.extendedLogging.get() && g_pSteamEngine->getUser())
 	{
 		const auto utils = g_pSteamEngine->getUtils();
 
@@ -1168,15 +1169,15 @@ void Hooks::placeVFTHooks()
 		return;
 	}
 
-	//I don't think the IPC layer is multithreaded but better safe than sorry
-	static std::mutex mutex;
-	std::lock_guard guard(mutex);
-
 	const auto usr = g_pSteamEngine->getUser();
 	if (!usr)
 	{
 		return;
 	}
+
+	//I don't think the IPC layer is multithreaded but better safe than sorry
+	static std::mutex mutex;
+	std::lock_guard guard(mutex);
 
 	g_pLog->debug("CUser at %p\n", usr);
 

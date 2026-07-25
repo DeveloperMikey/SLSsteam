@@ -42,7 +42,7 @@ AppId_t FakeAppIds::getRealAppIdForCurrentPipe(const bool fallback)
 	const HSteamPipe hPipe = utils->getCurrentSteamPipe();
 	if (fakeAppIdMap.contains(hPipe))
 	{
-		return fakeAppIdMap[hPipe];
+		return fakeAppIdMap.at(hPipe);
 	}
 
 	if (fallback)
@@ -149,7 +149,6 @@ void FakeAppIds::runIPCFrame(const bool post)
 		return;
 	}
 
-	const auto utils = g_pSteamEngine->getUtils();
 
 	if (post)
 	{
@@ -158,7 +157,8 @@ void FakeAppIds::runIPCFrame(const bool post)
 
 	if (g_config.extendedLogging.get())
 	{
-		g_pLog->debug("Setting AppId to %u in pipe %p\n", appId, utils->getCurrentSteamPipe());
+		const auto utils = g_pSteamEngine->getUtils();
+		g_pLog->debug("Setting AppId to %u in pipe %p\n", appId, utils ? utils->getCurrentSteamPipe() : 0);
 	}
 	g_pSteamEngine->setAppIdForCurrentPipe(appId);
 }
