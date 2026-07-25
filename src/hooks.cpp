@@ -834,15 +834,17 @@ static uint32_t hkClientUser_GetSteamId(uint32_t steamId)
 
 	Ticket::SavedTicket ticket = Ticket::getCachedEncryptedTicket(FakeAppIds::getRealAppIdForCurrentPipe());
 
-	if (ticket.steamId)
-	{
-		steamId = ticket.steamId;
-	}
-	else if (Ticket::oneTimeSteamIdSpoof)
+	//One time spoof should take presedence, otherwise SteamStub will fail
+	//for games that use encrypted tickets for online auth when you play on multiple accounts
+	if (Ticket::oneTimeSteamIdSpoof)
 	{
 		//One time spoof should be enough for this type
 		steamId = Ticket::oneTimeSteamIdSpoof;
 		Ticket::oneTimeSteamIdSpoof = 0;
+	}
+	else if (ticket.steamId)
+	{
+		steamId = ticket.steamId;
 	}
 
 	return steamId;
