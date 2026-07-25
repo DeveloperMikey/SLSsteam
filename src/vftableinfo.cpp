@@ -82,6 +82,16 @@ namespace VFTIndexes
 		};
 	}
 
+	namespace CGameInfoDialog
+	{
+		VFTableInfo_t ServerResponded
+		{
+			"15CGameInfoDialog",
+			"ServerResponded",
+			5
+		};
+	}
+
 	namespace CSteamMatchmakingServers
 	{
 		VFTableInfo_t GetServerDetails

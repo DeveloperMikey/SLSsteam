@@ -76,12 +76,6 @@ namespace Patterns
 	}
 
 
-	//steamui.so
-	namespace ISteamMatchmakingPingResponse
-	{
-		extern Pattern_t ServerResponded;
-	}
-
 	extern std::vector<Pattern_t*> patterns;
 	bool init();
 }

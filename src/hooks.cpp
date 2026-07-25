@@ -870,10 +870,20 @@ static bool hkClientUser_RequiresLegacyCDKey(void* pClientUser, AppId_t appId, u
 	return requiresKey;
 }
 
-static void hkSteamMatchmakingPingResponse_ServerResponded(void* pSteamMatchingPingResponse, gameserverdetails_t* details)
+static void hkCGameInfoDialog_ServerResponded(void* pSteamMatchingPingResponse, gameserverdetails_t* details)
 {
 	FakeAppIds::pingResponse(details);
-	Hooks::ISteamMatchmakingPingResponse_ServerResponded.tramp.fn(pSteamMatchingPingResponse, details);
+
+	Hooks::CGameInfoDialog_ServerResponded.tramp.fn(pSteamMatchingPingResponse, details);
+
+	g_pLog->debug
+	(
+		"%s(%p, %p) for %u\n",
+		Hooks::CGameInfoDialog_ServerResponded.name.c_str(),
+		pSteamMatchingPingResponse,
+		details,
+		details ? details->appId : 0
+	);
 }
 
 lm_address_t Hooks::hkNakedGetSteamId;
@@ -1033,7 +1043,7 @@ namespace Hooks
 
 
 	//steamui.so
-	DetourHook<ISteamMatchmakingPingResponse_ServerResponded_t> ISteamMatchmakingPingResponse_ServerResponded;
+	DetourHook<CGameInfoDialog_ServerResponded_t> CGameInfoDialog_ServerResponded;
 
 
 	//Naked
@@ -1114,7 +1124,7 @@ bool Hooks::setup()
 
 		&& CWebSocketConnection_BBuildAndAsyncSendFrame.setup(Patterns::CWebSocketConnection::BBuildAndAsyncSendFrame, &hkWebSocketConnection_BBuildAndAsyncSendFrame)
 
-		&& ISteamMatchmakingPingResponse_ServerResponded.setup(Patterns::ISteamMatchmakingPingResponse::ServerResponded, hkSteamMatchmakingPingResponse_ServerResponded);
+		&& CGameInfoDialog_ServerResponded.setup(VFTIndexes::CGameInfoDialog::ServerResponded, hkCGameInfoDialog_ServerResponded);
 
 	Hooks::place();
 	//This is unnecessary but I'll keep this for now in case I wanna improve error checks
@@ -1149,7 +1159,7 @@ void Hooks::place()
 
 	CWebSocketConnection_BBuildAndAsyncSendFrame.place();
 
-	ISteamMatchmakingPingResponse_ServerResponded.place();
+	CGameInfoDialog_ServerResponded.place();
 }
 
 void Hooks::placeVFTHooks()
@@ -1277,7 +1287,7 @@ void Hooks::remove()
 
 	CWebSocketConnection_BBuildAndAsyncSendFrame.remove();
 
-	ISteamMatchmakingPingResponse_ServerResponded.remove();
+	CGameInfoDialog_ServerResponded.remove();
 
 	//VFT Hooks
 	IClientAppManager_BCanRemotePlayTogether.remove();

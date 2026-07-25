@@ -176,14 +176,13 @@ namespace Hooks
 	extern VFTHook<IClientUser_RequiresLegacyCDKey_t> IClientUser_RequiresLegacyCDKey;
 
 
-	typedef void(*ISteamMatchmakingPingResponse_ServerResponded_t)(void*, gameserverdetails_t*);
-
-
 	//steamui.so
-	extern DetourHook<ISteamMatchmakingPingResponse_ServerResponded_t> ISteamMatchmakingPingResponse_ServerResponded;
+	typedef void(*CGameInfoDialog_ServerResponded_t)(void*, gameserverdetails_t*);
+
+	extern DetourHook<CGameInfoDialog_ServerResponded_t> CGameInfoDialog_ServerResponded;
 
 
-	//Naked
+	//Naked - steamclient.so
 	extern lm_address_t IClientUser_GetSteamId;
 	extern lm_address_t hkNakedGetSteamId;
 
