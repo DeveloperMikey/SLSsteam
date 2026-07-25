@@ -114,10 +114,6 @@ void SLSAPI::runIPCFrame()
 	}
 
 	const auto appManager = usr->getAppManager();
-	if (!appManager)
-	{
-		return;
-	}
 
 	const std::lock_guard guard(executionMutex);
 

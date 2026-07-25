@@ -336,8 +336,7 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	Apps::runIPCFrame();
 	SLSAPI::runIPCFrame();
 
-	//We check if CUser is a valid pointer yet, otherwise using IClientUtils::GetAppId will crash
-	if (g_config.extendedLogging.get() && g_pSteamEngine->getUser())
+	if (g_config.extendedLogging.get())
 	{
 		const auto utils = g_pSteamEngine->getUtils();
 

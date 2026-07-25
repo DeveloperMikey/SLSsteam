@@ -225,13 +225,8 @@ void Apps::runIPCFrame()
 		return;
 	}
 
-	const auto appInfo = usr->getClientApps();
-	if (!appInfo)
-	{
-		return;
-	}
-
 	const std::lock_guard appsChanged(g_config.appsChangedMutex);
+	const auto appInfo = usr->getClientApps();
 
 	if (g_config.removedApps.size())
 	{

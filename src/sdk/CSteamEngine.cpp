@@ -28,6 +28,11 @@ CUser* CSteamEngine::getUser(const uint32_t index)
 
 IClientUtils* CSteamEngine::getUtils()
 {
+	if (!getUser())
+	{
+		return nullptr;
+	}
+
 	const static lm_address_t offset = *reinterpret_cast<lm_address_t*>(Patterns::CSteamEngine::Offset_ClientUtils.address + 2);
 	return reinterpret_cast<IClientUtils*>(this + offset);
 }

@@ -351,7 +351,7 @@ bool CConfig::shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditiona
 			//Might be worth to check for APPTYPE_DLC, but knowing Valve & individual gamedevs
 			//surely not every DLC will be tagged as such
 			char chParent[16] { };
-			const int len = appInfo ? appInfo->getAppData(appId, "parent", chParent, sizeof(chParent)) : 0;
+			const int len = usr ? appInfo->getAppData(appId, "parent", chParent, sizeof(chParent)) : 0;
 			//Do not blindly trust len, nor the str included. Some devs just like to mess with Valve or something (for example appId 221300)
 			if (len > 0 && Utils::isNumber(chParent))
 			{
