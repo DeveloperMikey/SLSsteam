@@ -315,7 +315,8 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	//pBufInterfaceCall
 	//base + 0 : 1 = 1?
 	//base + 1 : 1 = interfaceType
-	//base + 2 : 4 = function Id
+	//base + 2 : 4 = *(this + 4)
+	//base + 6 : 4 = function Id
 	//arguments follow
 	//then fencepost?
 	const EInterfaceType type = *reinterpret_cast<EInterfaceType*>(pBufInterfaceCall->mem.base + 1);
