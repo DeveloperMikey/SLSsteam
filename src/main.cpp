@@ -144,15 +144,8 @@ static void load()
 		return;
 	}
 
-	//This should never happen, but better be safe than sorry in case I refactor someday
-	if (!LM_FindModule("steamclient.so", &g_modSteamClient))
+	if (!g_modSteamClient.base || !g_modSteamUI.base)
 	{
-		unload();
-		return;
-	}
-	if (!LM_FindModule("steamui.so", &g_modSteamUI))
-	{
-		unload();
 		return;
 	}
 
@@ -188,9 +181,6 @@ static void load()
 		}
 	}
 
-	Decompiler::parseModule(g_modSteamClient);
-	Decompiler::parseHeader(g_modSteamUI); //We only need the sections for pattern scanning
-	
 	if(!VFTIndexes::init())
 	{
 		g_pLog->warn("Failed to parse VFTables! Aborting...");
@@ -236,8 +226,20 @@ unsigned int la_version(unsigned int)
 
 unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmid, __attribute__((unused)) uintptr_t *cookie)
 {
-	if (std::string(map->l_name).ends_with("/steamclient.so") || std::string(map->l_name).ends_with("/steamui.so"))
+	if (std::string(map->l_name).ends_with("/steamclient.so"))
 	{
+		//Analyse modules before any relocations get applied
+		LM_FindModule("steamclient.so", &g_modSteamClient);
+		Decompiler::parseModule(g_modSteamClient);
+
+		load();
+	}
+	if (std::string(map->l_name).ends_with("/steamui.so"))
+	{
+		//Analyse modules before any relocations get applied
+		LM_FindModule("steamui.so", &g_modSteamUI);
+		Decompiler::parseModule(g_modSteamUI);
+
 		load();
 	}
 

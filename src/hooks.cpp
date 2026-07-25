@@ -514,7 +514,6 @@ static bool hkUserAppManager_BuildDepotDependency
 	return success;
 }
 
-
 static bool hkClientAppManager_BCanRemotePlayTogether(void* pClientAppManager, AppId_t appId)
 {
 	const bool ret = Hooks::IClientAppManager_BCanRemotePlayTogether.originalFn.fn(pClientAppManager, appId);
