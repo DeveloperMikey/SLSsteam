@@ -828,7 +828,21 @@ static uint32_t hkClientUser_GetSteamId(uint32_t steamId)
 		g_currentSteamId = steamId;
 	}
 
-	Ticket::SavedTicket ticket = Ticket::getCachedEncryptedTicket(FakeAppIds::getRealAppIdForCurrentPipe());
+	const auto utils = g_pSteamEngine->getUtils();
+	if (!utils)
+	{
+		return steamId;
+	}
+
+	//Never spoof inside the Steamclient
+	const AppId_t appId = utils->getAppId();
+	if (!appId)
+	{
+		return steamId;
+	}
+
+	//Use Pipe AppId since getCachedEncryptedTicket handles logic for FakeAppIds itself
+	Ticket::SavedTicket ticket = Ticket::getCachedEncryptedTicket(utils->getAppId());
 
 	//One time spoof should take presedence, otherwise SteamStub will fail
 	//for games that use encrypted tickets for online auth when you play on multiple accounts
