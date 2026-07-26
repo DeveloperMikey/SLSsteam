@@ -67,7 +67,7 @@ class CLog
 		formatted.resize(size);
 		snprintf(formatted.data(), size, msg, args...);
 
-		std::stringstream notifySS;
+		std::ostringstream notifySS;
 
 		switch(lvl)
 		{

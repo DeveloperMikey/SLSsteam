@@ -26,7 +26,7 @@ std::map<AppId_t, Ticket::SavedTicket> Ticket::encryptedTicketMap = std::map<App
 
 std::string Ticket::getTicketDir()
 {
-	std::stringstream ss;
+	std::ostringstream ss;
 	ss << g_config.getDir().c_str() << "/cache";
 
 	const auto dir = ss.str();
@@ -40,7 +40,7 @@ std::string Ticket::getTicketDir()
 
 std::string Ticket::getTicketPath(const AppId_t appId)
 {
-	std::stringstream ss;
+	std::ostringstream ss;
 	ss << getTicketDir().c_str() << "/ticket_" << appId << ".yaml";
 
 	return ss.str();
@@ -135,7 +135,7 @@ void Ticket::getTicketOwnershipExtendedData(const AppId_t appId)
 
 std::string Ticket::getEncryptedTicketPath(const AppId_t appId)
 {
-	std::stringstream ss;
+	std::ostringstream ss;
 	ss << getTicketDir().c_str() << "/encryptedTicket_" << appId << ".yaml";
 
 	return ss.str();
