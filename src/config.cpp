@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <sstream>
 #include <string>
 
 
@@ -101,14 +102,35 @@ CConfig::~CConfig()
 }
 
 
-void CConfig::setError(ELoadError err)
+void CConfig::setError(const ELoadError err, const char* keyName)
 {
-	if (__loadErrors.get() > err)
+	const auto prev = __loadErrors.get();
+	std::ostringstream msg;
+
+	if (!prev.size())
 	{
-		return;
+		msg << "Config loading errors:\n";
+	}
+	else
+	{
+		msg << prev << "\n";
 	}
 
-	__loadErrors = err;
+	switch(err)
+	{
+		case ELoadError::MissingKey:
+			msg << "Missing " << keyName;
+			break;
+	
+		case ELoadError::ParsingException:
+			msg << "Failed to parse " << keyName;
+			break;
+
+		default:
+			break;
+	}
+
+	__loadErrors = msg.str();
 }
 
 bool CConfig::loadSettings(bool firstLoad)
@@ -129,7 +151,7 @@ bool CConfig::loadSettings(bool firstLoad)
 		node = YAML::Node(); //Create empty node and let defaults kick in
 	}
 
-	__loadErrors = ELoadError::None;
+	__loadErrors = std::string("");
 	
 	disableFamilyLock = getSetting<bool>(node, "DisableFamilyShareLock", true);
 	useWhiteList = getSetting<bool>(node, "UseWhitelist", false);
@@ -224,7 +246,7 @@ bool CConfig::loadSettings(bool firstLoad)
 		catch(...)
 		{
 			//g_pLog->warn("Failed to parse IdleStatus!");A
-			setError(ELoadError::ParsingException);
+			setError(ELoadError::ParsingException, "IdleStatus");
 		}
 	}
 
@@ -258,7 +280,7 @@ bool CConfig::loadSettings(bool firstLoad)
 			catch(...)
 			{
 				//g_pLog->notify("Failed to parse DlcData!");
-				setError(ELoadError::ParsingException);
+				setError(ELoadError::ParsingException, "DlcData");
 				break;
 			}
 		}
@@ -268,7 +290,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	else
 	{
 		//g_pLog->notify("Missing DlcData entry in config!");
-		setError(ELoadError::MissingKey);
+		setError(ELoadError::MissingKey, "DlcData");
 	}
 
 	const auto denuvoGamesNode = node["DenuvoGames"];
@@ -295,7 +317,7 @@ bool CConfig::loadSettings(bool firstLoad)
 			catch (...)
 			{
 				//g_pLog->notify("Failed to parse DenuvoGames!");
-				setError(ELoadError::ParsingException);
+				setError(ELoadError::ParsingException, "DenuvoGames");
 			}
 		}
 
@@ -304,20 +326,13 @@ bool CConfig::loadSettings(bool firstLoad)
 	else
 	{
 		//g_pLog->notify("Missing DenuvoGames entry in config!");
-		setError(ELoadError::MissingKey);
+		setError(ELoadError::MissingKey, "DenuvoGames");
 	}
 
-	switch(__loadErrors.get())
+	const auto errors = __loadErrors.get();
+	if (errors.size())
 	{
-		case ELoadError::MissingKey:
-			g_pLog->notify("Issues during config loading encountered! Missing key(s)");
-			break;
-		case ELoadError::ParsingException:
-			g_pLog->notify("Issues during config loading encountered! Parsing error(s)");
-			break;
-
-		default:
-			break;
+		g_pLog->notify(errors.c_str());
 	}
 
 	return true;

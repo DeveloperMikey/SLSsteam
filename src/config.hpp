@@ -43,7 +43,7 @@ public:
 		MissingKey,
 		ParsingException
 	};
-	MTVariable<ELoadError> __loadErrors;
+	MTVariable<std::string> __loadErrors;
 
 	MTVariable<std::unordered_set<AppId_t>> appIds;
 	MTVariable<std::unordered_set<AppId_t>> addedAppIds;
@@ -89,7 +89,7 @@ public:
 	bool createFile() const;
 	bool init();
 
-	void setError(const ELoadError err);
+	void setError(const ELoadError err, const char* keyName);
 	bool loadSettings(const bool firstLoad = false);
 
 	template<typename T>
@@ -98,7 +98,7 @@ public:
 		if (!node[name])
 		{
 			//g_pLog->notifyLong("Missing %s in configfile! Using default", name);
-			setError(ELoadError::MissingKey);
+			setError(ELoadError::MissingKey, name);
 			return defVal;
 		}
 
@@ -109,7 +109,7 @@ public:
 		catch (YAML::BadConversion& er)
 		{
 			//g_pLog->notify("Failed to parse value of %s! Using default\n", name);
-			setError(ELoadError::ParsingException);
+			setError(ELoadError::ParsingException, name);
 			return defVal;
 		}
 	}
@@ -123,7 +123,7 @@ public:
 		if (!node)
 		{
 			//g_pLog->notifyLong("Missing %s in configfile! Using default", name);
-			setError(ELoadError::MissingKey);
+			setError(ELoadError::MissingKey, name);
 			return list;
 		}
 
@@ -143,7 +143,7 @@ public:
 			catch(...)
 			{
 				//g_pLog->notify("Failed to parse %s!", name);
-				setError(ELoadError::ParsingException);
+				setError(ELoadError::ParsingException, name);
 			}
 		}
 
@@ -159,7 +159,7 @@ public:
 		if (!node)
 		{
 			//g_pLog->notifyLong("Missing %s in configfile! Using default", name);
-			setError(ELoadError::MissingKey);
+			setError(ELoadError::MissingKey, name);
 			return map;
 		}
 
@@ -185,7 +185,7 @@ public:
 			catch(...)
 			{
 				//g_pLog->notify("Failed to parse %s!", name);
-				setError(ELoadError::ParsingException);
+				setError(ELoadError::ParsingException, name);
 			}
 		}
 
