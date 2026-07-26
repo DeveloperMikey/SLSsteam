@@ -627,8 +627,6 @@ static unsigned int hkClientApps_GetDLCCount(void* pClientApps, AppId_t appId)
 		count
 	);
 	
-	appId = FakeAppIds::getRealAppIdForCurrentPipe();
-
 	const uint32_t override = DLC::getDlcCount(appId);
 	if (override)
 	{
@@ -640,8 +638,6 @@ static unsigned int hkClientApps_GetDLCCount(void* pClientApps, AppId_t appId)
 
 static bool hkClientApps_GetDLCDataByIndex(void* pClientApps, AppId_t appId, int dlcIndex, AppId_t* pDlcId, bool* pIsAvailable, char* pChDlcName, size_t dlcNameLen)
 {
-	appId = FakeAppIds::getRealAppIdForCurrentPipe();
-
 	//Preserve original call to populate stuff
 	const bool ret = DLC::getDlcDataByIndex(appId, dlcIndex, pDlcId, pIsAvailable, pChDlcName, dlcNameLen)
 		|| Hooks::IClientApps_GetDLCDataByIndex.originalFn.fn(pClientApps, appId, dlcIndex, pDlcId, pIsAvailable, pChDlcName, dlcNameLen);
