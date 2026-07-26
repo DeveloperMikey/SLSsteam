@@ -285,13 +285,13 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 		if (disableFamilyShareLock && type == k_EMsgClientSharedLibraryStopPlaying)
 		{
 			pNetPacket->clearBody();
-			g_pLog->debug("Chocked k_EMsgClientSharedLibraryStopPlaying\n");
+			g_pLog->debug("Choked %s\n", pNetPacket->getProtoBufTypeName().c_str());
 		}
 
 		if (disableFamilyShareLock && type == k_EMsgServiceMethod && header.target_job_name() == "FamilyGroupsClient.NotifyRunningApps#1")
 		{
 			pNetPacket->clearBody();
-			g_pLog->debug("Chocked FamilyGroupsClient.NotifyRunningApps#1\n");
+			g_pLog->debug("Choked %s\n", header.target_job_name().c_str());
 		}
 
 		Misc::recvMsg(pNetPacket);
