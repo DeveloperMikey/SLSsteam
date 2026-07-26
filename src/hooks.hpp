@@ -110,6 +110,8 @@ namespace Hooks
 
 	typedef bool(*CWebSocketConnection_BBuildAndAsyncSendFrame_t)(void*, uint32_t, void*, uint32_t);
 
+	typedef bool(*IClientConfigStoreMap_SetString_t)(void*, uint32_t, const char*, const char*);
+
 	typedef bool(*IClientRemoteStorage_IsCloudEnabledForApp_t)(void*, AppId_t);
 
 	extern DetourHook<TraceIPC_t> TraceIPC;
@@ -135,17 +137,18 @@ namespace Hooks
 
 	extern DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
+	extern DetourHook<IClientConfigStoreMap_SetString_t> IClientConfigStoreMap_SetString;
+
 	extern DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
+
+	typedef unsigned int(*IClientApps_GetDLCCount_t)(void*, AppId_t);
+	typedef bool(*IClientApps_GetDLCDataByIndex_t)(void*, AppId_t, int, AppId_t*, bool*, char*, size_t);
 
 	typedef bool(*IClientAppManager_BCanRemotePlayTogether_t)(void*, AppId_t);
 	typedef bool(*IClientAppManager_BIsDlcEnabled_t)(void*, AppId_t, AppId_t, void*);
 	typedef bool(*IClientAppManager_GetAppUpdateInfo_t)(void*, AppId_t, uint32_t*);
 	typedef void*(*IClientAppManager_LaunchApp_t)(void*, AppId_t*, void*, void*, void*);
 	typedef bool(*IClientAppManager_IsAppDlcInstalled_t)(void*, AppId_t, AppId_t);
-
-	typedef unsigned int(*IClientApps_GetDLCCount_t)(void*, AppId_t);
-
-	typedef bool(*IClientApps_GetDLCDataByIndex_t)(void*, AppId_t, int, AppId_t*, bool*, char*, size_t);
 
 	typedef AppId_t(*IClientUtils_GetAppId_t)(void*);
 	typedef bool(*IClientUtils_GetOfflineMode_t)(void*);
@@ -155,7 +158,6 @@ namespace Hooks
 	typedef uint32_t(*IClientUser_GetAppOwnershipTicketExtendedData_t)(void*, uint32_t, void*, uint32_t, uint32_t*, uint32_t*, uint32_t*, uint32_t*);
 	typedef uint8_t(*IClientUser_IsUserSubscribedAppInTicket_t)(void*, uint32_t, uint32_t, uint32_t, AppId_t);
 	typedef bool(*IClientUser_RequiresLegacyCDKey_t)(void*, AppId_t, uint32_t*);
-
 
 	extern VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 	extern VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;

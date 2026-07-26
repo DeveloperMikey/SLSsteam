@@ -10,6 +10,7 @@
 
 #include "../config.hpp"
 #include "../globals.hpp"
+#include "../utils.hpp"
 
 #include "fakeappid.hpp"
 
@@ -17,9 +18,11 @@
 #include <cstdint>
 #include <mutex>
 #include <sstream>
+#include <string>
 
 
 bool Apps::applistRequested;
+std::unordered_set<AppId_t> Apps::privateApps = std::unordered_set<AppId_t>();
 
 bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info, const uint32_t ownerId)
 {
@@ -318,7 +321,6 @@ void Apps::sendGamesPlayed(CNetPacket* pkt)
 	const auto appInfo = usr->getClientApps();
 
 	auto msg = pkt->deserializeBody<CMsgClientGamesPlayed>();
-	bool owned = false;
 
 	for(int i = 0; i < msg.games_played_size(); i++)
 	{
@@ -338,11 +340,6 @@ void Apps::sendGamesPlayed(CNetPacket* pkt)
 			continue;
 		}
 
-		if(!owned && g_pSteamEngine->getUser(0)->isSubscribed(gameId))
-		{
-			owned = true;
-		}
-
 		if (g_config.disableFamilyLock.get())
 		{
 			game->set_owner_id(1);
@@ -352,10 +349,22 @@ void Apps::sendGamesPlayed(CNetPacket* pkt)
 		{
 			game->set_game_extra_info(titles.at(gameId));
 		}
-		else if (!owned || FakeAppIds::getFakeAppId(gameId))
+		//This probably belongs into FakeAppIds, but the GameTitles does not so it stays here
+		else if (FakeAppIds::getFakeAppId(gameId))
 		{
 			char name[256] {}; //No clue how long titles can get
-			const int len = appInfo->getAppData(gameId, "common/name", name, sizeof(name));
+			int len;
+
+			if (privateApps.contains(gameId))
+			{
+				strcpy(name, "Redacted");
+				len = strlen(name);
+			}
+			else
+			{
+				len = appInfo->getAppData(gameId, "common/name", name, sizeof(name));
+			}
+
 			if (len > 0)
 			{
 				g_pLog->debug("AppName %s (%i)\n", name, len);
@@ -423,5 +432,37 @@ void Apps::sendMsg(CNetPacket *pkt)
 
 		default:
 			break;
+	}
+}
+
+void Apps::setConfigStoreString(const char* key, const char* value)
+{
+	if (!std::string(key).starts_with("WebStorage\\PrivateApps"))
+	{
+		return;
+	}
+
+	g_pLog->debug("%s -> %s\n", key, value);
+
+	auto str = std::string(value);
+	if (str.size() < 3) //List is empty, nope out
+	{
+		return;
+	}
+
+	privateApps.clear();
+	str = str.substr(1, str.size() - 2); //[730,240,440,etc]
+	const auto split = Utils::strsplit(const_cast<char*>(str.c_str()), ",");
+
+	for(const auto& s : split)
+	{
+		if (!Utils::isNumber(s.c_str()))
+		{
+			g_pLog->debug("%s is not a number! Skipping\n", s.c_str());
+		}
+
+		const AppId_t appId = std::stoul(s);
+		privateApps.emplace(appId);
+		g_pLog->debug("Added %u to privateApps\n", appId);
 	}
 }

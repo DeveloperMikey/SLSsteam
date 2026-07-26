@@ -20,6 +20,7 @@ struct DepotInfo_t;
 namespace Apps
 {
 	extern bool applistRequested;
+	extern std::unordered_set<AppId_t> privateApps;
 
 	bool unlockApp(const AppId_t appId, AppOwnershipInfo_t* info, const uint32_t ownerId);
 	bool unlockApp(const AppId_t appId, AppOwnershipInfo_t* info);
@@ -40,4 +41,6 @@ namespace Apps
 	void sendGamesPlayed(CNetPacket* pkt);
 	void sendPICSInfoRequest(CNetPacket* pkt);
 	void sendMsg(CNetPacket* pkt);
+
+	void setConfigStoreString(const char* key, const char* value);
 };

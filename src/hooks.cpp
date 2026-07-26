@@ -899,6 +899,18 @@ static void hkCGameInfoDialog_ServerResponded(void* pSteamMatchingPingResponse, 
 	);
 }
 
+static bool hkClientConfigStoreMap_SetString(void* pConfigStoreMap, uint32_t a1, const char* key, const char* value)
+{
+	const bool success = Hooks::IClientConfigStoreMap_SetString.tramp.fn(pConfigStoreMap, a1, key, value);
+
+	if (success)
+	{
+		Apps::setConfigStoreString(key, value);
+	}
+
+	return success;
+}
+
 lm_address_t Hooks::hkNakedGetSteamId;
 bool Hooks::createAndPlaceSteamIdHook()
 {
@@ -1034,6 +1046,8 @@ namespace Hooks
 
 	DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
+	DetourHook<IClientConfigStoreMap_SetString_t> IClientConfigStoreMap_SetString;
+
 	DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
 
 	VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
@@ -1135,7 +1149,10 @@ bool Hooks::setup()
 
 		&& CWebSocketConnection_BBuildAndAsyncSendFrame.setup(Patterns::CWebSocketConnection::BBuildAndAsyncSendFrame, &hkWebSocketConnection_BBuildAndAsyncSendFrame)
 
-		&& CGameInfoDialog_ServerResponded.setup(VFTIndexes::CGameInfoDialog::ServerResponded, hkCGameInfoDialog_ServerResponded);
+		&& CGameInfoDialog_ServerResponded.setup(VFTIndexes::CGameInfoDialog::ServerResponded, hkCGameInfoDialog_ServerResponded)
+
+		&& IClientConfigStoreMap_SetString.setup(VFTIndexes::IClientConfigStoreMap::SetString, hkClientConfigStoreMap_SetString);
+
 
 	Hooks::place();
 	//This is unnecessary but I'll keep this for now in case I wanna improve error checks
@@ -1171,6 +1188,8 @@ void Hooks::place()
 	CWebSocketConnection_BBuildAndAsyncSendFrame.place();
 
 	CGameInfoDialog_ServerResponded.place();
+
+	IClientConfigStoreMap_SetString.place();
 }
 
 void Hooks::placeVFTHooks()
@@ -1299,6 +1318,8 @@ void Hooks::remove()
 	CWebSocketConnection_BBuildAndAsyncSendFrame.remove();
 
 	CGameInfoDialog_ServerResponded.remove();
+
+	IClientConfigStoreMap_SetString.remove();
 
 	//VFT Hooks
 	IClientAppManager_BCanRemotePlayTogether.remove();
