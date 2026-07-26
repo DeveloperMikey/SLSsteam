@@ -12,9 +12,7 @@
 #include "yaml-cpp/yaml.h"
 
 #include <cstdint>
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <filesystem>
 #include <sstream>
 #include <string>
@@ -22,24 +20,27 @@
 
 std::string CConfig::getDir() const
 {
-	char pathBuf[255];
+	std::ostringstream path;
+
 	const char* configDir = getenv("XDG_CONFIG_HOME"); //Most users should have this set iirc
-	if (configDir != NULL)
+	if (configDir)
 	{
-		sprintf(pathBuf, "%s/SLSsteam", configDir);
+		path << configDir;
 	}
 	else
 	{
 		const char* home = getenv("HOME");
-		sprintf(pathBuf, "%s/.config/SLSsteam", home);
+		path << home << "/.config";
 	}
 
-	return std::string(pathBuf);
+	path << "/SLSsteam";
+
+	return path.str();
 }
 
 std::string CConfig::getPath() const
 {
-	return getDir().append("/config.yaml");
+	return getDir() + "/config.yaml";
 }
 
 bool CConfig::createFile() const
@@ -59,16 +60,15 @@ bool CConfig::createFile() const
 			g_pLog->debug("Created config directory at %s\n", dir.c_str());
 		}
 
-		FILE* file = fopen(path.c_str(), "w");
-		if (!file)
+		std::ofstream config(path, std::ios::app | std::ios::out);
+		if (!config.is_open())
 		{
-			g_pLog->notify("Unable to create config at %s!\n", path.c_str());
+			g_pLog->notify("Unable to create %s!", path.c_str());
 			return false;
 		}
 
-		fputs(defaultConfig, file);
-		fflush(file);
-		fclose(file);
+		config << defaultConfig;
+		config.close();
 	}
 
 	return true;
