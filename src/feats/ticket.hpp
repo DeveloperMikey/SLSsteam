@@ -16,11 +16,11 @@ namespace Ticket
 	class SavedTicket
 	{
 public:
-		uint32_t steamId;
+		CSteamId steamId;
 		std::string ticket;
 	};
 
-	extern uint32_t oneTimeSteamIdSpoof;
+	extern CSteamId oneTimeSteamIdSpoof;
 	extern std::map<AppId_t, SavedTicket> ticketMap;
 	extern std::map<AppId_t, SavedTicket> encryptedTicketMap;
 

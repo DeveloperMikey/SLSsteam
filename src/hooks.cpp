@@ -363,7 +363,8 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	//C2 04 00                                retn    4
 	if (type == k_EIPCInterfaceClientUser && exitCode == EIPCExitCode::Success && fnId == 0xD6FC3200)
 	{
-		if (!g_currentSteamId.accountId)
+		//Universe always set, steamId gets filled in after login
+		if (!g_currentSteamId.isSet())
 		{
 			memcpy(&g_currentSteamId, pBufIPCResult->mem.base + 1, sizeof(CSteamId));
 		}
@@ -782,7 +783,7 @@ static bool hkClientUser_BLoggedOn(void* pClientUser)
 static uint32_t hkClientUser_BUpdateOwnershipTicket(void* pClientUser, AppId_t appId, bool staleOnly)
 {
 	const auto cached = Ticket::getCachedTicket(appId);
-	if (g_pSteamEngine->getUser(0)->isSubscribed(appId) && !cached.steamId)
+	if (g_pSteamEngine->getUser(0)->isSubscribed(appId) && !cached.steamId.isSet())
 	{
 		staleOnly = false;
 		g_pLog->debug("Force re-requesting OwnershipInfo for %u\n", appId);
@@ -883,18 +884,18 @@ static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 
 	//One time spoof should take presedence, otherwise SteamStub will fail
 	//for games that use encrypted tickets for online auth when you play on multiple accounts
-	if (Ticket::oneTimeSteamIdSpoof)
+	if (Ticket::oneTimeSteamIdSpoof.isSet())
 	{
 		//One time spoof should be enough for this type
-		newId.accountId = Ticket::oneTimeSteamIdSpoof;
-		Ticket::oneTimeSteamIdSpoof = 0;
+		newId = Ticket::oneTimeSteamIdSpoof;
+		Ticket::oneTimeSteamIdSpoof.steamId64 = 0;
 	}
-	else if (ticket.steamId)
+	else if (ticket.steamId.isSet())
 	{
-		newId.accountId = ticket.steamId;
+		newId = ticket.steamId;
 	}
 
-	return steamId;
+	return newId;
 }
 
 static bool hkClientUser_RequiresLegacyCDKey(void* pClientUser, AppId_t appId, uint32_t* a2)

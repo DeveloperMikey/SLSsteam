@@ -222,8 +222,46 @@ class CSteamId
 {
 public:
 
-	uint32_t accountId;		//0x0
-	uint8_t accountType;	//0x4 - Maybe universe?
-	uint8_t __pad0x5[0x2];	//0x5
-	uint8_t universe;		//0x7 - Maybe accountType?
-}; //0x8
+	constexpr CSteamId()
+	{
+		steamId64 = 0;
+	}
+
+	constexpr CSteamId(uint64_t id)
+	{
+		steamId64 = id;
+
+		//32 bit accountId passed, fill in rest with defaults
+		if (!steamId.accountType)
+		{
+			steamId.accountType = 1;
+			steamId.universe = 1;
+			steamId.__pad0x5[0] = 0;
+			steamId.__pad0x5[1] = 0x10;
+		}
+	}
+
+	constexpr bool isSet() const
+	{
+		return accountId();
+	}
+
+	constexpr uint32_t accountId() const
+	{
+		return steamId.accountId;
+	}
+
+	struct SteamId_t
+	{
+		uint32_t accountId;		//0x0
+		uint8_t accountType;	//0x4 - Maybe universe?
+		uint8_t __pad0x5[0x2];	//0x5
+		uint8_t universe;		//0x7 - Maybe accountType?
+	}; //0x8
+	
+	union
+	{
+		SteamId_t steamId;
+		uint64_t steamId64;
+	};
+};

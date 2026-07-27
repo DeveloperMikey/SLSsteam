@@ -20,7 +20,7 @@
 #include <sstream>
 
 
-uint32_t Ticket::oneTimeSteamIdSpoof = 0;
+CSteamId Ticket::oneTimeSteamIdSpoof = 0;
 std::map<AppId_t, Ticket::SavedTicket> Ticket::ticketMap = std::map<AppId_t, SavedTicket>();
 std::map<AppId_t, Ticket::SavedTicket> Ticket::encryptedTicketMap = std::map<AppId_t, SavedTicket>();
 
@@ -66,12 +66,11 @@ Ticket::SavedTicket Ticket::getCachedTicket(const AppId_t appId)
 	g_pLog->debug("Reading ticket for %u\n", appId);
 
 	auto node = YAML::LoadFile(path);
-	ticket.steamId = node["steamId"].as<uint32_t>();
+	ticket.steamId = CSteamId(node["steamId"].as<uint64_t>());
 	ticket.ticket = std::string
 	(
 		base64::from_base64(node["ticket"].as<std::string>())
 	);
-	//g_pLog->debug("Ticket: %u, %s\n", ticket.steamId, ticket.ticket.c_str());
 
 	ticketMap[appId] = ticket;
 
@@ -89,7 +88,7 @@ bool Ticket::saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse& re
 	YAML::Emitter node;
 	node << YAML::BeginMap;
 	node << YAML::Key << "steamId";
-	node << YAML::Value << g_currentSteamId.accountId;
+	node << YAML::Value << g_currentSteamId.steamId64;
 	node << YAML::Key << "ticket";
 	node << YAML::Value << base64::to_base64(bytes);
 	node << YAML::EndMap;
@@ -124,8 +123,8 @@ void Ticket::launchApp(const AppId_t appId)
 void Ticket::getTicketOwnershipExtendedData(const AppId_t appId)
 {
 	const SavedTicket cached = Ticket::getCachedTicket(appId);
-	const uint32_t steamId = cached.steamId;
-	if (!steamId)
+	const CSteamId steamId = cached.steamId;
+	if (!steamId.isSet())
 	{
 		return;
 	}
@@ -170,7 +169,7 @@ Ticket::SavedTicket Ticket::getCachedEncryptedTicket(const AppId_t appId)
 	g_pLog->debug("Reading encrypted ticket for %u\n", appId);
 
 	auto node = YAML::LoadFile(path);
-	ticket.steamId = node["steamId"].as<uint32_t>();
+	ticket.steamId = CSteamId(node["steamId"].as<uint64_t>());
 	ticket.ticket = std::string
 	(
 		//Can not get yaml-cpp to properly decode
@@ -181,7 +180,6 @@ Ticket::SavedTicket Ticket::getCachedEncryptedTicket(const AppId_t appId)
 		//)
 		base64::from_base64(node["encryptedTicket"].as<std::string>())
 	);
-	//g_pLog->debug("Ticket: %u, %s\n", ticket.steamId, ticket.ticket.c_str());
 
 	encryptedTicketMap[appId] = ticket;
 
@@ -199,7 +197,7 @@ bool Ticket::saveEncryptedTicketToCache(const CMsgClientRequestEncryptedAppTicke
 	YAML::Emitter node;
 	node << YAML::BeginMap;
 	node << YAML::Key << "steamId";
-	node << YAML::Value << g_currentSteamId.accountId;
+	node << YAML::Value << g_currentSteamId.steamId64;
 	node << YAML::Key << "encryptedTicket";
 	//node << YAML::Value << YAML::EncodeBase64(reinterpret_cast<const unsigned char*>(bytes.c_str()), bytes.size());
 	node << YAML::Value << base64::to_base64(bytes);
@@ -214,7 +212,7 @@ bool Ticket::saveEncryptedTicketToCache(const CMsgClientRequestEncryptedAppTicke
 
 	//TODO: Skip copy
 	SavedTicket ticket {};
-	ticket.steamId = g_currentSteamId.accountId;
+	ticket.steamId = g_currentSteamId;
 	ticket.ticket = bytes;
 	encryptedTicketMap[appId] = ticket;
 	
@@ -232,7 +230,7 @@ void Ticket::recvEncryptedAppTicket(CNetPacket* pkt)
 	}
 
 	const SavedTicket ticket = getCachedEncryptedTicket(msg.app_id());
-	if(!ticket.steamId)
+	if(!ticket.steamId.isSet())
 	{
 		return;
 	}
