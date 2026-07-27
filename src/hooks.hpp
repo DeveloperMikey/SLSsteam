@@ -183,12 +183,6 @@ namespace Hooks
 
 	extern DetourHook<CGameInfoDialog_ServerResponded_t> CGameInfoDialog_ServerResponded;
 
-
-	//Naked - steamclient.so
-	extern lm_address_t IClientUser_GetSteamId;
-	extern lm_address_t hkNakedGetSteamId;
-
-	bool createAndPlaceSteamIdHook();
 	bool setup();
 	void place();
 	void placeVFTHooks();

@@ -29,7 +29,7 @@ bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info, const uint32
 	//Changing the purchased field is enough, but just for nicety in the Steamclient UI we change the owner too
 	info->owner = ownerId;
 	info->realOwner = 0;
-	info->familyShared = ownerId != g_currentSteamId;
+	info->familyShared = ownerId != g_currentSteamId.accountId;
 
 	info->licensePermanent = !info->familyShared;
 	info->retailLicense = false;
@@ -55,7 +55,7 @@ bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info, const uint32
 
 bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info)
 {
-	return unlockApp(appId, info, g_currentSteamId);
+	return unlockApp(appId, info, g_currentSteamId.accountId);
 }
 
 void Apps::buildDepotDependency(const AppId_t appId, CUtlVector<DepotInfo_t>* depots, CUtlVector<DepotInfo_t>* sharedDepots)
@@ -97,7 +97,7 @@ bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
 {
 	//Wait Until GetSubscribedApps gets called once to let Steam request and populate legit data first.
 	//Afterwards modifying should hopefully not affect false positives anymore
-	if (!applistRequested || !pInfo || !g_currentSteamId)
+	if (!applistRequested || !pInfo || !g_currentSteamId.accountId)
 	{
 		return false;
 	}
@@ -105,7 +105,7 @@ bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
 	const uint32_t denuvoOwner = g_config.getDenuvoGameOwner(appId);
 
 	//Do not modify Denuvo enabled Games
-	if (denuvoOwner && denuvoOwner != g_currentSteamId)
+	if (denuvoOwner && denuvoOwner != g_currentSteamId.accountId)
 	{
 		//Would love to log the SteamId, but for users anonymity I won't
 		g_pLog->once("Skipping %u because it's a Denuvo game from someone else\n", appId);

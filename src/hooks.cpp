@@ -301,6 +301,9 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 	Hooks::CCMInterface_RecvPkt.tramp.fn(pCMInterface, pNetPacket);
 }
 
+//I don't like forward declerations, but with the current style & hooks layout it's a necessity
+static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId);
+
 static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufIPCCmd, CUtlBuffer* pBufIPCResult)
 {
 	if (!g_pSteamEngine)
@@ -325,6 +328,7 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	//arguments follow
 	//then fencepost?
 	const EIPCInterface type = *reinterpret_cast<EIPCInterface*>(pBufIPCCmd->mem.base + 1);
+	const uint32_t fnId = *reinterpret_cast<uint32_t*>(pBufIPCCmd->mem.base + 6);
 	const bool switchFakeAppIds = FakeAppIds::shouldUseRealAppIdForInterface(type);
 
 	if (switchFakeAppIds)
@@ -341,6 +345,33 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 		FakeAppIds::runIPCFrame(true);
 	}
 
+	const EIPCExitCode exitCode = *reinterpret_cast<EIPCExitCode*>(pBufIPCResult->mem.base + 0);
+
+	//IClientUser::GetSteamID has been optimized to hell and back
+	//So to hook it we need a naked function hook that requires quite the
+	//complex logic to get the full steamId. So I made an exception for this function,
+	//since it seems to always get called from RunInterface anyway
+	//53                                      push    ebx
+	//8B 54 24 0C                             mov     edx, [esp+4+arg_4]
+	//8B 44 24 08                             mov     eax, [esp+4+arg_0]
+	//8B 9A B2 E8 FF FF                       mov     ebx, [edx-174Eh] //SteamId low
+	//8B 8A AE E8 FF FF                       mov     ecx, [edx-1752h] //SteamId high
+	//89 58 04                                mov     [eax+4], ebx
+	//89 08                                   mov     [eax], ecx
+	//                                        //Optimally inject here, grab eax, copy into g_currentSteamId
+	//5B                                      pop     ebx
+	//C2 04 00                                retn    4
+	if (type == k_EIPCInterfaceClientUser && exitCode == EIPCExitCode::Success && fnId == 0xD6FC3200)
+	{
+		if (!g_currentSteamId.accountId)
+		{
+			memcpy(&g_currentSteamId, pBufIPCResult->mem.base + 1, sizeof(CSteamId));
+		}
+
+		const CSteamId newId = hkClientUser_GetSteamId(g_currentSteamId);
+		memcpy(pBufIPCResult->mem.base + 1, &newId, sizeof(newId));
+	}
+
 	//pBufIPCResult
 	//mem + 0 : 1 = EIPCExitCode
 	//return values follow
@@ -355,14 +386,12 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 
 		g_pLog->debug
 		(
-			"%s(%p, %p, %p) -> %u with type %p for appId %u (%u)\n",
+			"%s -> %u with type %p, fn %p for appId %u (%u)\n",
 
 			Hooks::CSteamEngine_RunInterface.name.c_str(),
-			pSteamEngine,
-			pBufIPCCmd,
-			pBufIPCResult,
 			ret,
 			type,
+			fnId,
 			FakeAppIds::getRealAppIdForCurrentPipe(),
 			utils ? utils->getAppId() : 0
 		);
@@ -832,14 +861,8 @@ static uint8_t hkClientUser_IsUserSubscribedAppInTicket(void* pClientUser, uint3
 	return ticketState;
 }
 
-__attribute__((stdcall))
-static uint32_t hkClientUser_GetSteamId(uint32_t steamId)
+static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 {
-	if (!g_currentSteamId)
-	{
-		g_currentSteamId = steamId;
-	}
-
 	const auto utils = g_pSteamEngine->getUtils();
 	if (!utils)
 	{
@@ -853,6 +876,8 @@ static uint32_t hkClientUser_GetSteamId(uint32_t steamId)
 		return steamId;
 	}
 
+	CSteamId newId = steamId;
+
 	//Use Pipe AppId since getCachedEncryptedTicket handles logic for FakeAppIds itself
 	Ticket::SavedTicket ticket = Ticket::getCachedEncryptedTicket(utils->getAppId());
 
@@ -861,12 +886,12 @@ static uint32_t hkClientUser_GetSteamId(uint32_t steamId)
 	if (Ticket::oneTimeSteamIdSpoof)
 	{
 		//One time spoof should be enough for this type
-		steamId = Ticket::oneTimeSteamIdSpoof;
+		newId.accountId = Ticket::oneTimeSteamIdSpoof;
 		Ticket::oneTimeSteamIdSpoof = 0;
 	}
 	else if (ticket.steamId)
 	{
-		steamId = ticket.steamId;
+		newId.accountId = ticket.steamId;
 	}
 
 	return steamId;
@@ -923,115 +948,6 @@ static bool hkClientConfigStoreMap_SetString(void* pConfigStoreMap, uint32_t a1,
 	return success;
 }
 
-lm_address_t Hooks::hkNakedGetSteamId;
-bool Hooks::createAndPlaceSteamIdHook()
-{
-	hkNakedGetSteamId = LM_AllocMemory(0, LM_PROT_XRW);
-	if (hkNakedGetSteamId == LM_ADDRESS_BAD)
-	{
-		g_pLog->debug("Failed to allocate memory for GetSteamId!\n");
-		return false;
-	}
-
-	g_pLog->debug("Allocated memory for GetSteamId hook at %p\n", hkNakedGetSteamId);
-
-	auto insts = std::vector<lm_inst_t>();
-	lm_address_t readAddr = Hooks::IClientUser_GetSteamId;
-	for(;;)
-	{
-		lm_inst_t inst;
-		if (!LM_Disassemble(readAddr, &inst))
-		{
-			g_pLog->debug("Failed to disassemble function at %p!\n", readAddr);
-			return false;
-		}
-
-		insts.emplace_back(inst);
-		readAddr = inst.address + inst.size;
-
-		if (strcmp(inst.mnemonic, "ret") == 0)
-		{
-			break;
-		}
-	}
-
-	const unsigned int retIdx = insts.size() - 1;
-
-	g_pLog->debug("Ret is instruction number %u\n", retIdx);
-	//TODO: Create InlineHook class for this
-	size_t totalBytes = 0;
-	unsigned int instsToOverwrite = 0;
-	for(int i = retIdx; i >= 0; i--)
-	{
-		lm_inst_t inst = insts.at(i);
-		totalBytes += inst.size;
-		instsToOverwrite++;
-
-		//Need only 5 bytes to place relative jmp
-		if (totalBytes >= 5)
-		{
-			break;
-		}
-	}
-
-	static uint32_t steamId;
-
-	lm_address_t writeAddr = hkNakedGetSteamId;
-	//I really didn't want to use pushad and popad since it's just lazy
-	//But I'm bad at this so this has to do
-	MemHlp::assembleCodeAt(writeAddr, "mov [%p], ecx", &steamId);
-	MemHlp::assembleCodeAt(writeAddr, "pushad", nullptr);
-	MemHlp::assembleCodeAt(writeAddr, "pushfd", nullptr);
-	//MemHlp::assembleCodeAt(writeAddr, "pushfq", nullptr);
-
-	MemHlp::assembleCodeAt(writeAddr, "mov eax, %p", &hkClientUser_GetSteamId);
-	MemHlp::assembleCodeAt(writeAddr, "mov ebx, [%p]", &steamId);
-	MemHlp::assembleCodeAt(writeAddr, "push ebx", steamId);
-	MemHlp::assembleCodeAt(writeAddr, "call eax", nullptr);
-	MemHlp::assembleCodeAt(writeAddr, "mov [%p], eax", &steamId);
-
-	//MemHlp::assembleCodeAt(writeAddr, "popfq", nullptr);
-	MemHlp::assembleCodeAt(writeAddr, "popfd", nullptr);
-	MemHlp::assembleCodeAt(writeAddr, "popad", nullptr);
-	MemHlp::assembleCodeAt(writeAddr, "mov ecx, [%p]", &steamId);
-	
-	//TODO: Dynamically resolve register which holds SteamId
-	//MemHlp::assembleCodeAt(writeAddr, "mov [%p], ecx", &g_currentSteamId);
-
-	//MemHlp::assembleCodeAt(writeAddr, "push eax", nullptr);
-
-	//MemHlp::assembleCodeAt(writeAddr, "mov eax, [%p]", &Ticket::steamIdSpoof);
-	//MemHlp::assembleCodeAt(writeAddr, "test eax, eax", nullptr);
-	//MemHlp::assembleCodeAt(writeAddr, "je %p", 4); //2 bytes
-	//MemHlp::assembleCodeAt(writeAddr, "mov ecx, eax", nullptr); //2 bytes
-	//MemHlp::assembleCodeAt(writeAddr, "mov eax, 0", nullptr); //5 bytes
-	//MemHlp::assembleCodeAt(writeAddr, "mov [%p], eax", &Ticket::steamIdSpoof); //5 bytes
-	//
-	//MemHlp::assembleCodeAt(writeAddr, "pop eax", nullptr);
-
-	//Write the overwritten instructions after our hook code
-	for (unsigned int i = 0; i < instsToOverwrite; i++)
-	{
-		lm_inst_t inst = insts.at(insts.size() - instsToOverwrite + i);
-		memcpy(reinterpret_cast<void*>(writeAddr), inst.bytes, inst.size);
-
-		writeAddr += inst.size;
-		g_pLog->debug("Copied %s %s to tramp\n", inst.mnemonic, inst.op_str);
-	}
-
-	lm_address_t jmpAddr = insts.at(insts.size() - instsToOverwrite).address;
-	g_pLog->debug("Placing jmp at %p\n", jmpAddr);
-
-	//Might be worth to convert to LM_AssembleEx, but whatever
-	lm_prot_t oldProt;
-	LM_ProtMemory(jmpAddr, 5, LM_PROT_XRW, &oldProt);
-	*reinterpret_cast<lm_byte_t*>(jmpAddr) = 0xE9;
-	*reinterpret_cast<lm_address_t*>(jmpAddr + 1) = hkNakedGetSteamId - jmpAddr - 5;
-	LM_ProtMemory(jmpAddr, 5, oldProt, nullptr);
-
-	return true;
-}
-
 namespace Hooks
 {
 	//TODO: Lazily intialize in a different way, or preload glibc
@@ -1083,34 +999,12 @@ namespace Hooks
 
 	//steamui.so
 	DetourHook<CGameInfoDialog_ServerResponded_t> CGameInfoDialog_ServerResponded;
-
-
-	//Naked
-	lm_address_t IClientUser_GetSteamId;
 }
 
 bool Hooks::setup()
 {
 	g_pLog->debug("Hooks::setup()\n");
 
-	{
-		const auto name = std::string("5CUser");
-		if (!Decompiler::vftables.contains(name))
-		{
-			g_pLog->debug("Failed to get %s VFTable!\n", name.c_str());
-			return false;
-		}
-
-		auto& usr = Decompiler::vftables.at(name);
-		//CUser typeInfo
-		//CBaseUser
-		//IClientUser
-		//IClientMatchmaking
-		//IClientAppDisableUpdates
-		//IClientBilling
-		IClientUser_GetSteamId = usr.subclasses[0].functions[VFTIndexes::IClientUser::GetSteamID.index];
-		g_pLog->debug("IClientUser::GetSteamID at %p\n", IClientUser_GetSteamId);
-	}
 	{
 		const auto name = std::string("18CUserRemoteStorage");
 		if (!Decompiler::vftables.contains(name))
@@ -1175,8 +1069,6 @@ bool Hooks::setup()
 
 void Hooks::place()
 {
-	createAndPlaceSteamIdHook();
-
 	//Detours
 	TraceIPC.place();
 
@@ -1355,11 +1247,4 @@ void Hooks::remove()
 	IClientUser_GetAppOwnershipTicketExtendedData.remove();
 	IClientUser_IsUserSubscribedAppInTicket.remove();
 	IClientUser_RequiresLegacyCDKey.remove();
-
-	
-	//TODO: Remove jmp
-	if (hkNakedGetSteamId != LM_ADDRESS_BAD)
-	{
-		LM_FreeMemory(hkNakedGetSteamId, 0);
-	}
 }
