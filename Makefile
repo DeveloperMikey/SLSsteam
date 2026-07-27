@@ -34,25 +34,25 @@ ifeq ($(shell type mold &> /dev/null && echo "found"),found)
 endif
 
 audit-libs:
-	make -j $(JOBS) bin/SLSsteam.so bin/library-inject.so
+	$(MAKE) -j $(JOBS) bin/SLSsteam.so bin/library-inject.so
 
 tools:
-	make -j 2 tools/ticket-grabber/bin/Release/net9.0/linux-x64/publish/ticket-grabber tools/schema-grabber/bin/Release/net9.0/linux-x64/publish/schema-grabber
+	$(MAKE) -j 2 schema-grabber ticket-grabber
 
 bin/SLSsteam.so: $(objs) $(libs)
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) $^ -o bin/SLSsteam.so $(LDFLAGS)
 
-bin/library-inject.so: tools/library-inject/main.cpp tools/library-inject/build.sh
-	sh tools/library-inject/build.sh
+bin/library-inject.so:
 	@mkdir -p bin
-	cp tools/library-inject/library-inject.so bin/library-inject.so
+	$(MAKE) -C tools/library-inject
+	ln tools/library-inject/library-inject.so bin/library-inject.so
 
-tools/ticket-grabber/bin/Release/net9.0/linux-x64/publish/ticket-grabber:
-	sh tools/ticket-grabber/build.sh
+schema-grabber:
+	$(MAKE) -C tools/schema-grabber
 
-tools/schema-grabber/bin/Release/net9.0/linux-x64/publish/schema-grabber:
-	sh tools/schema-grabber/build.sh
+ticket-grabber:
+	$(MAKE) -C tools/ticket-grabber
 
 -include $(deps)
 obj/update.o: src/update.cpp res/version.txt
@@ -71,7 +71,7 @@ obj/%.o : src/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -isysteminclude -MMD -MP -c $< -o $@
 
-clean:
+clean-libs:
 	rm -rvf \
 		"obj/" \
 		"bin/" \
@@ -81,8 +81,15 @@ clean:
 		"tools/schema-grabber/bin" \
 		"tools/schema-grabber/obj"
 
+clean-tools:
+	$(MAKE) -C tools/schema-grabber clean
+	$(MAKE) -C tools/ticket-grabber clean
+
 install:
-	sh setup.sh
+	sh setup.sh install
+
+uninstall:
+	sh setup.sh uninstall
 
 zips: build
 	@mkdir -p zips
@@ -113,8 +120,9 @@ zips-config:
 	7z a -mx9 -m9=lzma2 "zips/SLSsteam - SLSConfig $(DATE).7z" "$(HOME)/.config/SLSsteam/config.yaml"
 
 
+clean: clean-libs clean-tools
 build: audit-libs tools
 rebuild: clean build
 release: rebuild zips
 
-.PHONY: audit-libs tools build clean rebuild zips
+.PHONY: audit-libs build clean clean-libs clean-tools tools rebuild zips
