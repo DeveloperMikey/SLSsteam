@@ -24,6 +24,11 @@ constexpr static const char* urls[] =
 
 bool Updater::init()
 {
+	if (!isEnabled())
+	{
+		return false;
+	}
+
 	std::string data;
 	int res;
 
@@ -120,6 +125,12 @@ std::string Updater::loadFromCache()
 
 bool Updater::verifySafeModeHash()
 {
+	//Don't waste time calculating SHA
+	if (!isEnabled())
+	{
+		return false;
+	}
+
 	const auto path = std::filesystem::path(g_modSteamClient.path);
 
 	try
@@ -147,4 +158,9 @@ bool Updater::verifySafeModeHash()
 	}
 
 	return true;
+}
+
+bool Updater::isEnabled()
+{
+	return g_config.safeMode.get() || g_config.warnHashMissmatch.get();
 }
