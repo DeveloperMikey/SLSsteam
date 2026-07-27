@@ -1163,6 +1163,8 @@ bool Hooks::setup()
 
 		&& CGameInfoDialog_ServerResponded.setup(VFTIndexes::CGameInfoDialog::ServerResponded, hkCGameInfoDialog_ServerResponded)
 
+		//I really do not like hooking the IClient*Map functions because they are very surface level and get skipped over a lot.
+		//But for the current purpose it's enough, so there is no need to add more complexity for no reason
 		&& IClientConfigStoreMap_SetString.setup(VFTIndexes::IClientConfigStoreMap::SetString, hkClientConfigStoreMap_SetString);
 
 
