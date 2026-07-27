@@ -17,14 +17,14 @@ constexpr uint64_t GAME_TYPE_SHORTCUT = 0x2000000ULL;
 constexpr static ENetPacket INVALID_NETPACKET_TYPE = -1;
 constexpr static ENetPacket PROTOBUF_TYPE_MASK = 0x80000000;
 
-enum class EIPCCmd
+enum class EIPCCmd : uint8_t
 {
 	RunInterface = 1,
 	SerializeCallbacks = 2,
 	ConnectPipe = 9
 };
 
-enum class EIPCExitCode
+enum class EIPCExitCode : uint8_t
 {
 	Success = 0xb
 };
@@ -217,3 +217,13 @@ enum EResult
 	k_EResultOfflineAppCacheinvalid = 0x82,
 	k_EResultRetrylater = 0x83,
 };
+
+class CSteamId
+{
+public:
+
+	uint32_t accountId;		//0x0
+	uint8_t accountType;	//0x4 - Maybe universe?
+	uint8_t __pad0x5[0x2];	//0x5
+	uint8_t universe;		//0x7 - Maybe accountType?
+}; //0x8
