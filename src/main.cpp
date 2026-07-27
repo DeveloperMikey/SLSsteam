@@ -204,8 +204,8 @@ static void load()
 
 	if (g_config.notifyInit.get())
 	{
-		const auto now = std::chrono::time_point{std::chrono::system_clock::now()};
-		const auto ymd = std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(now)};
+		const auto now = std::chrono::time_point { std::chrono::system_clock::now() };
+		const auto ymd = std::chrono::year_month_day { std::chrono::floor<std::chrono::days>(now) };
 
 		//Funsy easter egg :)
 		if (static_cast<unsigned int>(ymd.month()) == 2 && static_cast<unsigned int>(ymd.day()) == 22)
