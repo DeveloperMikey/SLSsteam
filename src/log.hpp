@@ -93,7 +93,7 @@ class CLog
 			debug("system(\"%s\")\n", notifySS.str().c_str());
 		}
 
-		const auto lock = std::unique_lock(mutex);
+		const auto lock = std::lock_guard(mutex);
 
 		if (lvl == LogLevel::Once)
 		{

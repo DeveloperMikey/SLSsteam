@@ -8,7 +8,7 @@
 
 CLog::CLog(const char* path) : path(path)
 {
-	ofstream = std::ofstream(path, std::ios::out);
+	ofstream = std::ofstream(path);
 	if (!ofstream.is_open())
 	{
 		throw std::runtime_error("Unable to open logfile!");

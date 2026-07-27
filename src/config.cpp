@@ -60,7 +60,7 @@ bool CConfig::createFile() const
 			g_pLog->debug("Created config directory at %s\n", dir.c_str());
 		}
 
-		std::ofstream config(path, std::ios::app | std::ios::out);
+		auto config = std::ofstream(path);
 		if (!config.is_open())
 		{
 			g_pLog->notify("Unable to create %s!", path.c_str());
