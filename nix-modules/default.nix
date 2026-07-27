@@ -24,7 +24,7 @@ pkgs.pkgsi686Linux.stdenv.mkDerivation {
   '';
 
   buildPhase = ''
-    make bin/SLSsteam.so bin/library-inject.so
+    make audit-libs
   '';
 
   installPhase = ''
