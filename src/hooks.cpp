@@ -319,7 +319,7 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	//base + 6 : 4 = function Id
 	//arguments follow
 	//then fencepost?
-	const EInterfaceType type = *reinterpret_cast<EInterfaceType*>(pBufInterfaceCall->mem.base + 1);
+	const EIPCInterface type = *reinterpret_cast<EIPCInterface*>(pBufInterfaceCall->mem.base + 1);
 	const bool switchFakeAppIds = FakeAppIds::shouldUseRealAppIdForInterface(type);
 
 	if (switchFakeAppIds)

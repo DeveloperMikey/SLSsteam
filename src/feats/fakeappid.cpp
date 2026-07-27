@@ -53,59 +53,59 @@ AppId_t FakeAppIds::getRealAppIdForCurrentPipe(const bool fallback)
 	return 0;
 }
 
-bool FakeAppIds::shouldUseRealAppIdForInterface(const EInterfaceType type)
+bool FakeAppIds::shouldUseRealAppIdForInterface(const EIPCInterface type)
 {
 	switch(type)
 	{
-		//case k_EInterfaceTypeClientUser:
-		//case k_EInterfaceTypeClientGameServerInternal:
-		//case k_EInterfaceTypeClientFriends:
-		case k_EInterfaceTypeClientUtils:
-		case k_EInterfaceTypeClientBilling:
-		//case k_EInterfaceTypeClientMatchmaking:
-		case k_EInterfaceTypeClientApps:
-		case k_EInterfaceTypeClientUserStats:
-		//case k_EInterfaceTypeClientNetworking:
-		case k_EInterfaceTypeClientRemoteStorage:
-		case k_EInterfaceTypeClientDepotBuilder:
-		case k_EInterfaceTypeClientAppManager:
-		case k_EInterfaceTypeClientConfigStore:
-		//case k_EInterfaceTypeClientGameCoordinator:
-		//case k_EInterfaceTypeClientGameServerStats:
-		case k_EInterfaceTypeClientGameStats:
-		case k_EInterfaceTypeClientHTTP:
-		case k_EInterfaceTypeClientScreenshots:
-		case k_EInterfaceTypeClientAudio:
-		case k_EInterfaceTypeClientUnifiedMessages:
-		case k_EInterfaceTypeClientStreamLauncher:
-		case k_EInterfaceTypeClientParentalSettings:
-		case k_EInterfaceTypeClientNetworkDeviceManager:
-		case k_EInterfaceTypeClientMusic:
-		case k_EInterfaceTypeClientRemoteClientManager:
-		case k_EInterfaceTypeClientUGC:
-		case k_EInterfaceTypeClientStreamClient:
-		case k_EInterfaceTypeClientProductBuilder:
-		case k_EInterfaceTypeClientShortcuts:
-		case k_EInterfaceTypeClientGameNotifications:
-		case k_EInterfaceTypeClientVideo:
-		case k_EInterfaceTypeClientInventory:
-		case k_EInterfaceTypeClientVR:
-		case k_EInterfaceTypeClientControllerSerialized:
-		case k_EInterfaceTypeClientAppDisableUpdate:
-		case k_EInterfaceTypeClientSharedConnection:
-		case k_EInterfaceTypeClientShader:
-		//case k_EInterfaceTypeClientNetworkingSocketsSerialized:
-		case k_EInterfaceTypeClientCompat:
-		case k_EInterfaceTypeClientParties:
-		//case k_EInterfaceTypeClientNetworkingUtilsSerialized:
-		case k_EInterfaceTypeClientRemotePlay:
-		//case k_EInterfaceTypeClientGameServerPacketHandler:
-		case k_EInterfaceTypeClientSystemManager:
-		case k_EInterfaceTypeClientSystemPerfManager:
-		case k_EInterfaceTypeClientSystemDockManager:
-		case k_EInterfaceTypeClientSystemAudioManager:
-		case k_EInterfaceTypeClientSystemDisplayManager:
-		case k_EInterfaceTypeClientTimeline:
+		//case k_EIPCInterfaceClientUser:
+		//case k_EIPCInterfaceClientGameServerInternal:
+		//case k_EIPCInterfaceClientFriends:
+		case k_EIPCInterfaceClientUtils:
+		case k_EIPCInterfaceClientBilling:
+		//case k_EIPCInterfaceClientMatchmaking:
+		case k_EIPCInterfaceClientApps:
+		case k_EIPCInterfaceClientUserStats:
+		//case k_EIPCInterfaceClientNetworking:
+		case k_EIPCInterfaceClientRemoteStorage:
+		case k_EIPCInterfaceClientDepotBuilder:
+		case k_EIPCInterfaceClientAppManager:
+		case k_EIPCInterfaceClientConfigStore:
+		//case k_EIPCInterfaceClientGameCoordinator:
+		//case k_EIPCInterfaceClientGameServerStats:
+		case k_EIPCInterfaceClientGameStats:
+		case k_EIPCInterfaceClientHTTP:
+		case k_EIPCInterfaceClientScreenshots:
+		case k_EIPCInterfaceClientAudio:
+		case k_EIPCInterfaceClientUnifiedMessages:
+		case k_EIPCInterfaceClientStreamLauncher:
+		case k_EIPCInterfaceClientParentalSettings:
+		case k_EIPCInterfaceClientNetworkDeviceManager:
+		case k_EIPCInterfaceClientMusic:
+		case k_EIPCInterfaceClientRemoteClientManager:
+		case k_EIPCInterfaceClientUGC:
+		case k_EIPCInterfaceClientStreamClient:
+		case k_EIPCInterfaceClientProductBuilder:
+		case k_EIPCInterfaceClientShortcuts:
+		case k_EIPCInterfaceClientGameNotifications:
+		case k_EIPCInterfaceClientVideo:
+		case k_EIPCInterfaceClientInventory:
+		case k_EIPCInterfaceClientVR:
+		case k_EIPCInterfaceClientControllerSerialized:
+		case k_EIPCInterfaceClientAppDisableUpdate:
+		case k_EIPCInterfaceClientSharedConnection:
+		case k_EIPCInterfaceClientShader:
+		//case k_EIPCInterfaceClientNetworkingSocketsSerialized:
+		case k_EIPCInterfaceClientCompat:
+		case k_EIPCInterfaceClientParties:
+		//case k_EIPCInterfaceClientNetworkingUtilsSerialized:
+		case k_EIPCInterfaceClientRemotePlay:
+		//case k_EIPCInterfaceClientGameServerPacketHandler:
+		case k_EIPCInterfaceClientSystemManager:
+		case k_EIPCInterfaceClientSystemPerfManager:
+		case k_EIPCInterfaceClientSystemDockManager:
+		case k_EIPCInterfaceClientSystemAudioManager:
+		case k_EIPCInterfaceClientSystemDisplayManager:
+		case k_EIPCInterfaceClientTimeline:
 			return true;
 
 		default:
