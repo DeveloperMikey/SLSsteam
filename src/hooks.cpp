@@ -301,7 +301,7 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 	Hooks::CCMInterface_RecvPkt.tramp.fn(pCMInterface, pNetPacket);
 }
 
-static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufIPCCmd, CUtlBuffer* pBufReturn)
+static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufIPCCmd, CUtlBuffer* pBufIPCResult)
 {
 	if (!g_pSteamEngine)
 	{
@@ -334,17 +334,17 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 
 	//g_pLog->debug("In\n%s\n", MemHlp::hexdump(pBufIPCCmd->mem.base, pBufIPCCmd->offset).c_str());
 
-	const uint32_t ret = Hooks::CSteamEngine_RunInterface.tramp.fn(pSteamEngine, pBufIPCCmd, pBufReturn);
+	const uint32_t ret = Hooks::CSteamEngine_RunInterface.tramp.fn(pSteamEngine, pBufIPCCmd, pBufIPCResult);
 
 	if (switchFakeAppIds)
 	{
 		FakeAppIds::runIPCFrame(true);
 	}
 
-	//pBufReturn
+	//pBufIPCResult
 	//mem + 0 : 1 = EIPCExitCode
 	//return values follow
-	//g_pLog->debug("Out\n%s\n", MemHlp::hexdump(a2->mem.base, a2->offset).c_str());
+	//g_pLog->debug("Out\n%s\n", MemHlp::hexdump(pBufIPCResult->mem.base, pBufIPCResult->offset).c_str());
 
 	Apps::runIPCFrame();
 	SLSAPI::runIPCFrame();
@@ -360,7 +360,7 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 			Hooks::CSteamEngine_RunInterface.name.c_str(),
 			pSteamEngine,
 			pBufIPCCmd,
-			pBufReturn,
+			pBufIPCResult,
 			ret,
 			type,
 			FakeAppIds::getRealAppIdForCurrentPipe(),
