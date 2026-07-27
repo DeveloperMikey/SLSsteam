@@ -301,7 +301,7 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 	Hooks::CCMInterface_RecvPkt.tramp.fn(pCMInterface, pNetPacket);
 }
 
-static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufInterfaceCall, CUtlBuffer* a2)
+static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufIPCCmd, CUtlBuffer* pBufReturn)
 {
 	if (!g_pSteamEngine)
 	{
@@ -312,14 +312,19 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	//We do not initialize with the CSteamEngine because first run CUser is null
 	Hooks::placeVFTHooks();
 
-	//pBufInterfaceCall
-	//base + 0 : 1 = 1?
-	//base + 1 : 1 = interfaceType
-	//base + 2 : 4 = *(this + 4)
-	//base + 6 : 4 = function Id
+	//While hooking this function to replace the other hooks might seem attractive
+	//we do not do so. Many calls straight up bypass the IPC layer and go
+	//straight for the original VFT implementations (IClientAppManager comes to mind)
+	//Although it's a great spot to quickly test things
+
+	//pBufIPCCmd
+	//mem + 0 : 1 = EIPCCmd::RunInterface
+	//mem + 1 : 1 = interfaceType
+	//mem + 2 : 4 = *(this + 4)
+	//mem + 6 : 4 = function Id
 	//arguments follow
 	//then fencepost?
-	const EIPCInterface type = *reinterpret_cast<EIPCInterface*>(pBufInterfaceCall->mem.base + 1);
+	const EIPCInterface type = *reinterpret_cast<EIPCInterface*>(pBufIPCCmd->mem.base + 1);
 	const bool switchFakeAppIds = FakeAppIds::shouldUseRealAppIdForInterface(type);
 
 	if (switchFakeAppIds)
@@ -327,12 +332,19 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 		FakeAppIds::runIPCFrame(false);
 	}
 
-	const uint32_t ret = Hooks::CSteamEngine_RunInterface.tramp.fn(pSteamEngine, pBufInterfaceCall, a2);
+	//g_pLog->debug("In\n%s\n", MemHlp::hexdump(pBufIPCCmd->mem.base, pBufIPCCmd->offset).c_str());
+
+	const uint32_t ret = Hooks::CSteamEngine_RunInterface.tramp.fn(pSteamEngine, pBufIPCCmd, pBufReturn);
 
 	if (switchFakeAppIds)
 	{
 		FakeAppIds::runIPCFrame(true);
 	}
+
+	//pBufReturn
+	//mem + 0 : 1 = EIPCExitCode
+	//return values follow
+	//g_pLog->debug("Out\n%s\n", MemHlp::hexdump(a2->mem.base, a2->offset).c_str());
 
 	Apps::runIPCFrame();
 	SLSAPI::runIPCFrame();
@@ -347,8 +359,8 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 
 			Hooks::CSteamEngine_RunInterface.name.c_str(),
 			pSteamEngine,
-			pBufInterfaceCall,
-			a2,
+			pBufIPCCmd,
+			pBufReturn,
 			ret,
 			type,
 			FakeAppIds::getRealAppIdForCurrentPipe(),

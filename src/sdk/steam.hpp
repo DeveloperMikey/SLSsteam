@@ -17,11 +17,16 @@ constexpr uint64_t GAME_TYPE_SHORTCUT = 0x2000000ULL;
 constexpr static ENetPacket INVALID_NETPACKET_TYPE = -1;
 constexpr static ENetPacket PROTOBUF_TYPE_MASK = 0x80000000;
 
-enum EIPCCmd
+enum class EIPCCmd
 {
 	RunInterface = 1,
 	SerializeCallbacks = 2,
 	ConnectPipe = 9
+};
+
+enum class EIPCExitCode
+{
+	Success = 0xb
 };
 
 enum EIPCInterface : uint8_t
