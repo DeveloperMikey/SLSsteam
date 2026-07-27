@@ -783,7 +783,7 @@ static bool hkClientUser_BLoggedOn(void* pClientUser)
 static uint32_t hkClientUser_BUpdateOwnershipTicket(void* pClientUser, AppId_t appId, bool staleOnly)
 {
 	const auto cached = Ticket::getCachedTicket(appId);
-	if (g_pSteamEngine->getUser(0)->isSubscribed(appId) && !cached.steamId.isSet())
+	if (g_pSteamEngine->getUser(0)->isSubscribed(appId) && !cached.isValid())
 	{
 		staleOnly = false;
 		g_pLog->debug("Force re-requesting OwnershipInfo for %u\n", appId);
@@ -890,7 +890,7 @@ static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 		newId = Ticket::oneTimeSteamIdSpoof;
 		Ticket::oneTimeSteamIdSpoof.steamId64 = 0;
 	}
-	else if (ticket.steamId.isSet())
+	else if (ticket.isValid())
 	{
 		newId = ticket.steamId;
 	}

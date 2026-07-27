@@ -111,7 +111,7 @@ bool Ticket::saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse& re
 void Ticket::launchApp(const AppId_t appId)
 {
 	auto ticket = getCachedTicket(appId);
-	if (!ticket.ticket.size())
+	if (!ticket.isValid())
 	{
 		return;
 	}
@@ -123,13 +123,12 @@ void Ticket::launchApp(const AppId_t appId)
 void Ticket::getTicketOwnershipExtendedData(const AppId_t appId)
 {
 	const SavedTicket cached = Ticket::getCachedTicket(appId);
-	const CSteamId steamId = cached.steamId;
-	if (!steamId.isSet())
+	if (!cached.isValid())
 	{
 		return;
 	}
 
-	oneTimeSteamIdSpoof = steamId;
+	oneTimeSteamIdSpoof = cached.steamId;
 }
 
 std::string Ticket::getEncryptedTicketPath(const AppId_t appId)
@@ -230,7 +229,7 @@ void Ticket::recvEncryptedAppTicket(CNetPacket* pkt)
 	}
 
 	const SavedTicket ticket = getCachedEncryptedTicket(msg.app_id());
-	if(!ticket.steamId.isSet())
+	if(!ticket.isValid())
 	{
 		return;
 	}
