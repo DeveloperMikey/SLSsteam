@@ -3,8 +3,8 @@
 #include "../sdk/steam.hpp"
 
 #include <cstdint>
-#include <map>
 #include <string>
+#include <unordered_map>
 
 
 class CMsgClientGetAppOwnershipTicketResponse;
@@ -26,8 +26,8 @@ public:
 	};
 
 	extern CSteamId oneTimeSteamIdSpoof;
-	extern std::map<AppId_t, SavedTicket> ticketMap;
-	extern std::map<AppId_t, SavedTicket> encryptedTicketMap;
+	extern std::unordered_map<AppId_t, SavedTicket> ticketMap;
+	extern std::unordered_map<AppId_t, SavedTicket> encryptedTicketMap;
 
 	std::string getTicketDir();
 
