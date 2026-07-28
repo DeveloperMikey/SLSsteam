@@ -152,12 +152,20 @@ std::string Ticket::getEncryptedTicketPath(const AppId_t appId)
 
 Ticket::SavedTicket Ticket::getCachedEncryptedTicket(const AppId_t appId)
 {
+	const AppId_t realAppId = FakeAppIds::getRealAppIdForCurrentPipe();
+	SavedTicket ticket {};
+
+	if (realAppId != appId)
+	{
+		g_pLog->debug("Returning empty cached encrypted Ticket for %u because it's running as %u\n", realAppId, appId);
+		return ticket;
+	}
+
+
 	if (encryptedTicketMap.contains(appId))
 	{
 		return encryptedTicketMap[appId];
 	}
-
-	SavedTicket ticket {};
 
 	const auto path = getEncryptedTicketPath(appId);
 	if (!std::filesystem::exists(path.c_str()))

@@ -899,6 +899,13 @@ static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 		return newId;
 	}
 
+	//Use pipe AppId, getCachedEncryptedTicket handles FakeAppIds internally
+	const auto ticket = Ticket::getCachedEncryptedTicket(utils->getAppId());
+	if (ticket.isValid())
+	{
+		return ticket.steamId;
+	}
+
 	return steamId;
 }
 
@@ -1216,7 +1223,7 @@ void Hooks::placeVFTHooks()
 		Hooks::IClientUser_BLoggedOn.place();
 		Hooks::IClientUser_BUpdateAppOwnershipTicket.place();
 		Hooks::IClientUser_GetAppOwnershipTicketExtendedData.place();
-		Hooks::IClientUser_GetEncryptedAppTicket.place();
+		//Hooks::IClientUser_GetEncryptedAppTicket.place();
 		Hooks::IClientUser_IsUserSubscribedAppInTicket.place();
 		Hooks::IClientUser_RequiresLegacyCDKey.place();
 
@@ -1287,7 +1294,7 @@ void Hooks::remove()
 	IClientUser_BLoggedOn.remove();
 	IClientUser_BUpdateAppOwnershipTicket.remove();
 	IClientUser_GetAppOwnershipTicketExtendedData.remove();
-	IClientUser_GetEncryptedAppTicket.remove();
+	//IClientUser_GetEncryptedAppTicket.remove();
 	IClientUser_IsUserSubscribedAppInTicket.remove();
 	IClientUser_RequiresLegacyCDKey.remove();
 
