@@ -113,6 +113,9 @@ DisableCloud: yes
 #For owned games use ManifestIds
 DisableUpdates: yes
 
+#Changes your Persona's Name clientsidedly
+FakeName:
+
 #Changes your account's E-Mail clientsided. Leave blank to disable
 FakeEmail: ""
 

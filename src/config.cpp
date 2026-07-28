@@ -161,6 +161,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	warnHashMissmatch = getSetting<bool>(node, "WarnHashMissmatch", false);
 	notifyInit = getSetting<bool>(node, "NotifyInit", true);
 	api = getSetting<bool>(node, "API", true);
+	fakeName = getSetting<std::string>(node, "FakeName", "");
 	fakeEmail = getSetting<std::string>(node, "FakeEmail", "");
 	fakeWalletBalance = getSetting<int32_t>(node, "FakeWalletBalance", 0);
 	disableCloud = getSetting<bool>(node, "DisableCloud", true);
@@ -178,6 +179,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	g_pLog->info("WarnHashMissmatch: %i\n", warnHashMissmatch.get());
 	g_pLog->info("NotifyInit: %i\n", notifyInit.get());
 	g_pLog->info("API: %i\n", api.get());
+	g_pLog->info("FakeName: %s\n", fakeName.get().c_str());
 	g_pLog->info("FakeEmail: %s\n", fakeEmail.get().c_str());
 	g_pLog->info("FakeWalletBalance: %i\n", fakeWalletBalance.get());
 	g_pLog->info("DisableCloud: %i\n", disableCloud.get());
