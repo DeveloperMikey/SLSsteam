@@ -37,6 +37,7 @@ public:
 	bool saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse& resp);
 
 	void launchApp(const AppId_t appId);
+	void getEncryptedAppTicket(const AppId_t appId);
 	void getTicketOwnershipExtendedData(const AppId_t appId);
 
 	std::string getEncryptedTicketPath(const AppId_t appId);

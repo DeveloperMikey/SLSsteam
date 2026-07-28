@@ -245,6 +245,11 @@ namespace VFTIndexes
 			"14IClientUserMap",
 			"GetAppOwnershipTicketExtendedData"
 		};
+		VFTableInfo_t GetEncryptedAppTicket
+		{
+			"14IClientUserMap",
+			"GetEncryptedAppTicket"
+		};
 		VFTableInfo_t GetSteamID
 		{
 			"14IClientUserMap",

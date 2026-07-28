@@ -94,6 +94,7 @@ namespace VFTIndexes
 		extern VFTableInfo_t BLoggedOn;
 		extern VFTableInfo_t BUpdateAppOwnershipTicket;
 		extern VFTableInfo_t GetAppOwnershipTicketExtendedData;
+		extern VFTableInfo_t GetEncryptedAppTicket;
 		extern VFTableInfo_t GetSteamID;
 		extern VFTableInfo_t IsUserSubscribedAppInTicket;
 		extern VFTableInfo_t RequiresLegacyCDKey;
