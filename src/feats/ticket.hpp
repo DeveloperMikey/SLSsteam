@@ -25,7 +25,7 @@ public:
 		}
 	};
 
-	extern CSteamId oneTimeSteamIdSpoof;
+	extern std::unordered_map<AppId_t, CSteamId> oneTimeSteamIdSpoof;
 	extern std::unordered_map<AppId_t, SavedTicket> ticketMap;
 	extern std::unordered_map<AppId_t, SavedTicket> encryptedTicketMap;
 
