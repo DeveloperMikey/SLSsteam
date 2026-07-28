@@ -302,7 +302,7 @@ bool CConfig::loadSettings(bool firstLoad)
 		{
 			try
 			{
-				const uint32_t steamId = steamIdNode.first.as<uint32_t>();
+				const uint64_t steamId = steamIdNode.first.as<uint64_t>();
 				_denuvoGames[steamId] = std::unordered_set<AppId_t>();
 
 				for (auto& appIdNode : steamIdNode.second)

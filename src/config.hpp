@@ -57,7 +57,7 @@ public:
 	MTVariable<std::unordered_map<AppId_t, std::string>> gameTitles;
 	MTVariable<std::unordered_map<AppId_t, uint32_t>> subscriptionTimestamps;
 
-	MTVariable<std::unordered_map<uint32_t, std::unordered_set<AppId_t>>> denuvoGames;
+	MTVariable<std::unordered_map<uint64_t, std::unordered_set<AppId_t>>> denuvoGames;
 
 	MTVariable<bool> disableFamilyLock;
 	MTVariable<bool> useWhiteList;
