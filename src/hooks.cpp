@@ -782,7 +782,7 @@ static uint32_t hkClientUser_GetAppOwnershipTicketExtendedData
 	uint32_t* pSigSize
 )
 {
-	const uint32_t ret = Hooks::IClientUser_GetAppOwnershipTicketExtendedData.originalFn.fn
+	const uint32_t size = Hooks::IClientUser_GetAppOwnershipTicketExtendedData.originalFn.fn
 	(
 		pClientUser,
 		appId,
@@ -794,11 +794,14 @@ static uint32_t hkClientUser_GetAppOwnershipTicketExtendedData
 		pSigSize
    );
 
-	g_pLog->once("%s(%u)->%u\n", Hooks::IClientUser_GetAppOwnershipTicketExtendedData.name.c_str(), appId, ret);
+	g_pLog->once("%s(%u)->%u\n", Hooks::IClientUser_GetAppOwnershipTicketExtendedData.name.c_str(), appId, size);
 
-	Ticket::getTicketOwnershipExtendedData(appId);
+	if (size)
+	{
+		Ticket::getTicketOwnershipExtendedData(appId);
+	}
 
-	return ret;
+	return size;
 }
 
 static bool hkClientUser_GetEncryptedAppTicket(void* pClientUser, void* pTicket, uint32_t ticketSize, uint32_t* pTicketSize)
