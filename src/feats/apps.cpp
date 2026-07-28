@@ -102,10 +102,10 @@ bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
 		return false;
 	}
 
-	const uint32_t denuvoOwner = g_config.getDenuvoGameOwner(appId);
+	const CSteamId denuvoOwner = g_config.getDenuvoGameOwner(appId);
 
 	//Do not modify Denuvo enabled Games
-	if (denuvoOwner && denuvoOwner != g_currentSteamId.steamId64)
+	if (denuvoOwner.isSet() && denuvoOwner.steamId64 != g_currentSteamId.steamId64)
 	{
 		//Would love to log the SteamId, but for users anonymity I won't
 		g_pLog->once("Skipping %u because it's a Denuvo game from someone else\n", appId);

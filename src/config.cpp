@@ -392,18 +392,18 @@ bool CConfig::shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditiona
 	return exclude;
 }
 
-uint32_t CConfig::getDenuvoGameOwner(const AppId_t appId)
+CSteamId CConfig::getDenuvoGameOwner(const AppId_t appId)
 {
 	for(const auto& tpl : denuvoGames.get())
 	{
 		if (tpl.second.contains(appId))
 		{
 			//g_pLog->once("%u is DenuvoGame\n", appId);
-			return tpl.first;
+			return CSteamId(tpl.first);
 		}
 	}
 
-	return 0;
+	return CSteamId();
 }
 
 CConfig g_config = CConfig();

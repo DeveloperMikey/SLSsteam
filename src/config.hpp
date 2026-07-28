@@ -197,7 +197,7 @@ public:
 	bool addAdditionalAppId(const AppId_t appId);
 
 	bool shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditionalApps = false);
-	uint32_t getDenuvoGameOwner(const AppId_t appId);
+	CSteamId getDenuvoGameOwner(const AppId_t appId);
 };
 
 extern CConfig g_config;
