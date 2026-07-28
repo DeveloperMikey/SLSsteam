@@ -725,41 +725,6 @@ static bool hkClientRemoteStorage_IsCloudEnabledForApp(void* pClientRemoteStorag
 	return enabled;
 }
 
-static AppId_t hkClientUtils_GetAppId(void* pClientUtils)
-{
-	AppId_t appId = Hooks::IClientUtils_GetAppId.originalFn.fn(pClientUtils);
-
-	g_pLog->debug
-	(
-		"%s(%p) -> %u\n",
-
-		Hooks::IClientUtils_GetAppId.name.c_str(),
-		pClientUtils,
-		appId
-	);
-
-	const AppId_t real = FakeAppIds::getRealAppIdForCurrentPipe(false);
-	if(real)
-	{
-		g_pLog->debug("Overwriting appId with %u\n", real);
-		return real;
-	}
-
-	return appId;
-}
-
-static bool hkClientUtils_GetOfflineMode(void* pClientUtils)
-{
-	const bool ret = Hooks::IClientUtils_GetOfflineMode.originalFn.fn(pClientUtils);
-
-	if (Misc::shouldFakeOffline())
-	{
-		return true;
-	}
-
-	return ret;
-}
-
 static bool hkClientUser_BLoggedOn(void* pClientUser)
 {
 	const bool ret = Hooks::IClientUser_BLoggedOn.originalFn.fn(pClientUser);
@@ -921,6 +886,41 @@ static bool hkClientUser_RequiresLegacyCDKey(void* pClientUser, AppId_t appId, u
 	return requiresKey;
 }
 
+static AppId_t hkClientUtils_GetAppId(void* pClientUtils)
+{
+	AppId_t appId = Hooks::IClientUtils_GetAppId.originalFn.fn(pClientUtils);
+
+	g_pLog->debug
+	(
+		"%s(%p) -> %u\n",
+
+		Hooks::IClientUtils_GetAppId.name.c_str(),
+		pClientUtils,
+		appId
+	);
+
+	const AppId_t real = FakeAppIds::getRealAppIdForCurrentPipe(false);
+	if(real)
+	{
+		g_pLog->debug("Overwriting appId with %u\n", real);
+		return real;
+	}
+
+	return appId;
+}
+
+static bool hkClientUtils_GetOfflineMode(void* pClientUtils)
+{
+	const bool ret = Hooks::IClientUtils_GetOfflineMode.originalFn.fn(pClientUtils);
+
+	if (Misc::shouldFakeOffline())
+	{
+		return true;
+	}
+
+	return ret;
+}
+
 static void hkCGameInfoDialog_ServerResponded(void* pSteamMatchingPingResponse, gameserverdetails_t* details)
 {
 	FakeAppIds::pingResponse(details);
@@ -988,14 +988,14 @@ namespace Hooks
 	VFTHook<IClientApps_GetDLCDataByIndex_t> IClientApps_GetDLCDataByIndex;
 	VFTHook<IClientApps_GetDLCCount_t> IClientApps_GetDLCCount;
 
-	VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
-	VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;
-
 	VFTHook<IClientUser_BLoggedOn_t> IClientUser_BLoggedOn;
 	VFTHook<IClientUser_BUpdateAppOwnershipTicket_t> IClientUser_BUpdateAppOwnershipTicket;
 	VFTHook<IClientUser_GetAppOwnershipTicketExtendedData_t> IClientUser_GetAppOwnershipTicketExtendedData;
 	VFTHook<IClientUser_IsUserSubscribedAppInTicket_t> IClientUser_IsUserSubscribedAppInTicket;
 	VFTHook<IClientUser_RequiresLegacyCDKey_t> IClientUser_RequiresLegacyCDKey;
+
+	VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
+	VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;
 
 
 	//steamui.so
@@ -1240,12 +1240,13 @@ void Hooks::remove()
 
 	IClientRemoteStorage_IsCloudEnabledForApp.remove();
 
-	IClientUtils_GetAppId.remove();
-	IClientUtils_GetOfflineMode.remove();
-
 	IClientUser_BLoggedOn.remove();
 	IClientUser_BUpdateAppOwnershipTicket.remove();
 	IClientUser_GetAppOwnershipTicketExtendedData.remove();
 	IClientUser_IsUserSubscribedAppInTicket.remove();
 	IClientUser_RequiresLegacyCDKey.remove();
+
+	IClientUtils_GetAppId.remove();
+	IClientUtils_GetOfflineMode.remove();
+
 }

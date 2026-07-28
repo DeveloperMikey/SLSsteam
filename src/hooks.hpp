@@ -150,14 +150,14 @@ namespace Hooks
 	typedef void*(*IClientAppManager_LaunchApp_t)(void*, AppId_t*, void*, void*, void*);
 	typedef bool(*IClientAppManager_IsAppDlcInstalled_t)(void*, AppId_t, AppId_t);
 
-	typedef AppId_t(*IClientUtils_GetAppId_t)(void*);
-	typedef bool(*IClientUtils_GetOfflineMode_t)(void*);
-
 	typedef bool(*IClientUser_BLoggedOn_t)(void*);
 	typedef uint32_t(*IClientUser_BUpdateAppOwnershipTicket_t)(void*, AppId_t, bool);
 	typedef uint32_t(*IClientUser_GetAppOwnershipTicketExtendedData_t)(void*, uint32_t, void*, uint32_t, uint32_t*, uint32_t*, uint32_t*, uint32_t*);
 	typedef uint8_t(*IClientUser_IsUserSubscribedAppInTicket_t)(void*, uint32_t, uint32_t, uint32_t, AppId_t);
 	typedef bool(*IClientUser_RequiresLegacyCDKey_t)(void*, AppId_t, uint32_t*);
+
+	typedef AppId_t(*IClientUtils_GetAppId_t)(void*);
+	typedef bool(*IClientUtils_GetOfflineMode_t)(void*);
 
 	extern VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 	extern VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;
@@ -168,14 +168,14 @@ namespace Hooks
 	extern VFTHook<IClientApps_GetDLCDataByIndex_t> IClientApps_GetDLCDataByIndex;
 	extern VFTHook<IClientApps_GetDLCCount_t> IClientApps_GetDLCCount;
 
-	extern VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
-	extern VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;
-
 	extern VFTHook<IClientUser_BLoggedOn_t> IClientUser_BLoggedOn;
 	extern VFTHook<IClientUser_BUpdateAppOwnershipTicket_t> IClientUser_BUpdateAppOwnershipTicket;
 	extern VFTHook<IClientUser_GetAppOwnershipTicketExtendedData_t> IClientUser_GetAppOwnershipTicketExtendedData;
 	extern VFTHook<IClientUser_IsUserSubscribedAppInTicket_t> IClientUser_IsUserSubscribedAppInTicket;
 	extern VFTHook<IClientUser_RequiresLegacyCDKey_t> IClientUser_RequiresLegacyCDKey;
+
+	extern VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
+	extern VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;
 
 
 	//steamui.so
