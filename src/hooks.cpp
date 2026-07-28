@@ -748,7 +748,7 @@ static bool hkClientUser_BLoggedOn(void* pClientUser)
 static uint32_t hkClientUser_BUpdateOwnershipTicket(void* pClientUser, AppId_t appId, bool staleOnly)
 {
 	const auto cached = Ticket::getCachedTicket(appId);
-	if (g_pSteamEngine->getUser(0)->isSubscribed(appId) && !cached.isValid())
+	if (g_pSteamEngine->getUser(0)->isSubscribed(appId) && !cached)
 	{
 		staleOnly = false;
 		g_pLog->debug("Force re-requesting OwnershipInfo for %u\n", appId);
@@ -879,9 +879,9 @@ static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 		}
 
 		const auto cached = Ticket::getCachedTicket(realAppId);
-		if (cached.isValid())
+		if (cached)
 		{
-			return cached.steamId;
+			return cached->steamId;
 		}
 
 		g_pLog->once
@@ -901,9 +901,9 @@ static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 
 	//Use pipe AppId, getCachedEncryptedTicket handles FakeAppIds internally
 	const auto ticket = Ticket::getCachedEncryptedTicket(utils->getAppId());
-	if (ticket.isValid())
+	if (ticket)
 	{
-		return ticket.steamId;
+		return ticket->steamId;
 	}
 
 	return steamId;

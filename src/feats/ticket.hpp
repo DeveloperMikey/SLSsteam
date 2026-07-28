@@ -33,7 +33,7 @@ public:
 
 	//TODO: Fill with error checks
 	std::string getTicketPath(const AppId_t appId);
-	SavedTicket getCachedTicket(const AppId_t appId);
+	SavedTicket* getCachedTicket(const AppId_t appId);
 	bool saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse& resp);
 
 	void launchApp(const AppId_t appId);
@@ -41,7 +41,7 @@ public:
 	void getTicketOwnershipExtendedData(const AppId_t appId);
 
 	std::string getEncryptedTicketPath(const AppId_t appId);
-	SavedTicket getCachedEncryptedTicket(const AppId_t appId);
+	SavedTicket* getCachedEncryptedTicket(const AppId_t appId);
 	bool saveEncryptedTicketToCache(const CMsgClientRequestEncryptedAppTicketResponse& resp);
 
 	void recvEncryptedAppTicket(CNetPacket* pkt);
