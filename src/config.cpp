@@ -225,6 +225,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	appTokens = getMap<AppId_t, uint64_t>(node, "AppTokens");
 	gameTitles = getMap<AppId_t, std::string>(node, "GameTitles");
 	subscriptionTimestamps = getMap<AppId_t, uint32_t>(node, "SubscriptionTimestamps");
+	steamIdOverride = getMap<AppId_t, uint64_t>(node, "SteamIdOverride");
 
 	//Do not warn for these (yet?)
 	const auto idleStatusNode = node["IdleStatus"];
