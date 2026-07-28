@@ -95,6 +95,12 @@ class CLog
 
 		const auto lock = std::lock_guard(mutex);
 
+		//Prevent crashes from queued operations
+		if (!ofstream.is_open())
+		{
+			return;
+		}
+
 		if (lvl == LogLevel::Once)
 		{
 			for(const auto& oldMsg : msgHist)
