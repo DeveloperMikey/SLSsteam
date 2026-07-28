@@ -236,7 +236,7 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 		//We could workaround it by only loading after a late module has been loaded
 		for(auto& vft : Decompiler::vftables)
 		{
-			vft.second.analzye();
+			vft.second.analyze();
 		}
 
 		load();
@@ -251,7 +251,7 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 		//We could workaround it by only loading after a late module has been loaded
 		for(auto& vft : Decompiler::vftables)
 		{
-			vft.second.analzye();
+			vft.second.analyze();
 		}
 
 		load();
