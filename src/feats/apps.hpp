@@ -3,6 +3,7 @@
 #include "../sdk/steam.hpp"
 
 #include <cstdint>
+#include <mutex>
 #include <unordered_set>
 
 
@@ -21,6 +22,9 @@ namespace Apps
 {
 	extern bool applistRequested;
 	extern std::unordered_set<AppId_t> privateApps;
+
+	extern std::mutex pendingLicenseChangesMutex;
+	extern std::unordered_set<AppId_t> pendingLicenseChanges;
 
 	bool unlockApp(const AppId_t appId, AppOwnershipInfo_t* info, const CSteamId& ownerId);
 	bool unlockApp(const AppId_t appId, AppOwnershipInfo_t* info);

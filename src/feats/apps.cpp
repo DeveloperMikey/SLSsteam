@@ -24,6 +24,9 @@
 bool Apps::applistRequested;
 std::unordered_set<AppId_t> Apps::privateApps = std::unordered_set<AppId_t>();
 
+std::mutex Apps::pendingLicenseChangesMutex;
+std::unordered_set<AppId_t> Apps::pendingLicenseChanges = std::unordered_set<AppId_t>();
+
 bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info, const CSteamId& ownerId)
 {
 	//Changing the purchased field is enough, but just for nicety in the Steamclient UI we change the owner too
@@ -164,11 +167,20 @@ void Apps::getSubscribedApps(AppId_t* appList, const size_t size, uint32_t& coun
 
 void Apps::parseProductInfoFromResponse(CMsgClientPICSProductInfoResponse* msg)
 {
+	std::lock_guard lock(pendingLicenseChangesMutex);
+
 	auto set = std::unordered_set<AppId_t>();
 	for(const auto& app : msg->apps())
 	{
+		if (!pendingLicenseChanges.contains(app.appid()))
+		{
+			continue;
+		}
+
 		set.emplace(app.appid());
+		pendingLicenseChanges.erase(app.appid());
 	}
+
 	postAppLicensesChanged(set);
 }
 
@@ -191,6 +203,7 @@ void Apps::postAppLicensesChanged(const std::unordered_set<AppId_t>& apps)
 	for(unsigned int i = 0; i < apps.size(); i++)
 	{
 		unsigned int idx = i % AppLicensesChanged_t::MAX_APPS_PER_CALLBACK;
+
 		cb.apps[idx] = *std::next(apps.begin(), i);
 		cb.count = idx + 1;
 		cb.appsAdded |= 1llu << idx;
@@ -239,6 +252,13 @@ void Apps::runIPCFrame()
 
 	const auto added = g_config.newApps;
 
+	if (!added.size())
+	{
+		return;
+	}
+
+	const std::lock_guard pendingLicensesLock(pendingLicenseChangesMutex);
+
 	//Max batch of 15, otherwise not all apps will get a response which means they won't get added
 	constexpr unsigned int MAX_APPS_PER_REQUEST = 15;
 	AppId_t apps[MAX_APPS_PER_REQUEST] { };
@@ -247,7 +267,9 @@ void Apps::runIPCFrame()
 	for(; i < added.size(); i++)
 	{
 		const unsigned int idx = i % MAX_APPS_PER_REQUEST;
-		apps[idx] = *std::next(added.begin(), i);
+		const AppId_t appId = *std::next(added.begin(), i);
+
+		apps[idx] = appId;
 
 		g_pLog->debug("AppInfoRequest %u -> %u from (%i)\n", idx, apps[idx], i);
 
@@ -256,6 +278,8 @@ void Apps::runIPCFrame()
 			appInfo->requestAppInfoUpdate(apps, MAX_APPS_PER_REQUEST);
 			memset(apps, 0, sizeof(apps));
 		}
+
+		pendingLicenseChanges.emplace(appId);
 	}
 
 	const unsigned int idx = i % MAX_APPS_PER_REQUEST;
