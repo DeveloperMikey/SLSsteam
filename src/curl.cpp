@@ -77,7 +77,7 @@ int Curl::getString(const char* url, std::string& out)
 	g_pLog->debug("Child PID %i\n", pid);
 
 	std::ostringstream bufSS;
-	char buf[128];
+	char buf[8192];
 	int numRead;
 
 	while((numRead = read(pipefd[0], buf, sizeof(buf))) > 0)
