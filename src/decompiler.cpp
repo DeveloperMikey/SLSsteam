@@ -605,7 +605,7 @@ void Decompiler::__parseFunction
 			continue;
 		}
 
-		if (!leaOffset)
+		if (leaOffset == LM_ADDRESS_BAD)
 		{
 			continue;
 		}
