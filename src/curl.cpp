@@ -43,6 +43,9 @@ int Curl::getString(const char* url, std::string& out)
 	const pid_t pid = fork();
 	if (pid == -1)
 	{
+		close(pipefd[0]);
+		close(pipefd[1]);
+
 		g_pLog->debug("Failed to fork!\n");
 		return 1;
 	}
@@ -81,6 +84,8 @@ int Curl::getString(const char* url, std::string& out)
 	{
 		bufSS << std::string(buf, numRead);
 	}
+
+	close(pipefd[0]);
 
 	int status;
 	if(waitpid(pid, &status, 0) == -1)
