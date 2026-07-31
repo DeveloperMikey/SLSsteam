@@ -745,7 +745,7 @@ static bool hkClientUser_BLoggedOn(void* pClientUser)
 	return ret;
 }
 
-static uint32_t hkClientUser_BUpdateOwnershipTicket(void* pClientUser, AppId_t appId, bool staleOnly)
+static uint32_t hkClientUser_BUpdateAppOwnershipTicket(void* pClientUser, AppId_t appId, bool staleOnly)
 {
 	const auto cached = Ticket::getCachedTicket(appId);
 	if (g_pSteamEngine->getUser(0)->isSubscribed(appId) && !cached)
@@ -1238,7 +1238,7 @@ void Hooks::placeVFTHooks()
 		LM_VmtNew(*reinterpret_cast<lm_address_t**>(clientUser), vft.get());
 
 		Hooks::IClientUser_BLoggedOn.setup(vft, VFTIndexes::IClientUser::BLoggedOn, &hkClientUser_BLoggedOn);
-		Hooks::IClientUser_BUpdateAppOwnershipTicket.setup(vft, VFTIndexes::IClientUser::BUpdateAppOwnershipTicket, hkClientUser_BUpdateOwnershipTicket);
+		Hooks::IClientUser_BUpdateAppOwnershipTicket.setup(vft, VFTIndexes::IClientUser::BUpdateAppOwnershipTicket, hkClientUser_BUpdateAppOwnershipTicket);
 		Hooks::IClientUser_GetAppOwnershipTicketExtendedData.setup(vft, VFTIndexes::IClientUser::GetAppOwnershipTicketExtendedData, hkClientUser_GetAppOwnershipTicketExtendedData);
 		//GetEncryptedAppTicket is just a wrapper for CUser::GetEncryptedAppTicket. But there is no need to go deeper
 		//since we load the encrypted ticket in the Networking layer. We just need this function to spoof our steamId once
