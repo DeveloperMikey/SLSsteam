@@ -82,12 +82,15 @@ static void onFileChange()
 
 bool CConfig::init()
 {
-	if(createFile())
+	if(!createFile())
 	{
-		watcher = new CFileWatcher(onFileChange);
-		watcher->addFile(getPath().c_str());
-		watcher->start();
+		g_pLog->debug("Config creation failed!\n");
+		return false;
 	}
+
+	watcher = new CFileWatcher(onFileChange);
+	watcher->addFile(getPath().c_str());
+	watcher->start();
 
 	loadSettings(true);
 	return true;
