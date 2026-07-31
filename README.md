@@ -42,7 +42,7 @@ Others:
 Please do not seek out Projects listed here!
 If you decide to ignore the aforementioned warning you do so on your own risk!🚨
 
-OnetapBeta by Hammer Steam: Resells Steamless & SLSsteam. Intellectually went far enough to rename SLSsteam to deckloader2, that's about as far as their skill extends.
+OnetapBeta & Hammer Decky by Hammer Steam: Resells Steamless & SLSsteam for a bogus price, completely breaking licensing agreements and leeching off the communities hard work while putting in 0 effort themself.
 
 ## Support
 
