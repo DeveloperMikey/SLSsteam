@@ -29,7 +29,7 @@ void Misc::recvMsg(CNetPacket *pkt)
 		case k_EMsgClientPersonaState:
 		{
 			const auto name = g_config.fakeName.get();
-			if (!name.size())
+			if (name.size() < 1)
 			{
 				return;
 			}
