@@ -20,12 +20,15 @@ public:
 	//Body[CNetPacket->size - headerSize - sizeof(CNetPacketBody)]
 };
 
+//Biggest message I have observed was around 600kb. We just set
+//a limit so we don't accidentally fill the whole buffer with 1 message
 constexpr static unsigned int MAX_PACKET_SIZE = 1024 * 1024 * 1; //1MB
+//Theoretical max
 constexpr static unsigned int MAX_PACKETS = 8;
 
 //TODO: Move into anonymous namespace or something, so these don't clutter the global namespace
 extern uint8_t g_packetsArray[MAX_PACKET_SIZE * MAX_PACKETS];
-extern uint32_t g_packetsArrayIndex;
+extern uintptr_t g_packetsArrayOffset;
 
 extern std::mutex g_packetSerializeMutex;
 
@@ -83,8 +86,15 @@ public:
 			return;
 		}
 
+		const uintptr_t remainingSize = sizeof(g_packetsArray) - g_packetsArrayOffset;
+		if (newSize >= remainingSize)
+		{
+			g_pLog->debug("New packet size doesn't fit in end of buffer, (needed %u, has %u). Starting anew\n", newSize, remainingSize);
+			g_packetsArrayOffset = 0;
+		}
+
 		const std::lock_guard lock(g_packetSerializeMutex);
-		uint8_t* mem = &g_packetsArray[g_packetsArrayIndex * MAX_PACKET_SIZE];
+		uint8_t* mem = &g_packetsArray[g_packetsArrayOffset];
 
 		if (header)
 		{
@@ -113,13 +123,9 @@ public:
 		//If I understand correctly Steam cleans up for us, that's why we crash when we free the oldBody ourself
 		//However the body we allocate doesn't get freed, so we just reuse a buffer for it
 
-		g_pLog->debug("Serialized %p into PACKETS_ARRAY at %u with size %u\n", getType(), g_packetsArrayIndex, newSize);
+		g_pLog->debug("Serialized %p into PACKETS_ARRAY at %u with size %u\n", getType(), g_packetsArrayOffset, newSize);
 
-		g_packetsArrayIndex++;
-		if (g_packetsArrayIndex >= MAX_PACKETS)
-		{
-			g_packetsArrayIndex = 0;
-		}
+		g_packetsArrayOffset += size;
 	}
 
 	template<typename T>
