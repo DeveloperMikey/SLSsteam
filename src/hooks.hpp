@@ -110,7 +110,7 @@ namespace Hooks
 
 	typedef bool(*CWebSocketConnection_BBuildAndAsyncSendFrame_t)(void*, uint32_t, void*, uint32_t);
 
-	typedef bool(*IClientConfigStoreMap_SetString_t)(void*, uint32_t, const char*, const char*);
+	typedef bool(*IClientConfigStore_SetString_t)(void*, uint32_t, const char*, const char*);
 
 	typedef bool(*IClientRemoteStorage_IsCloudEnabledForApp_t)(void*, AppId_t);
 
@@ -137,7 +137,7 @@ namespace Hooks
 
 	extern DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
-	extern DetourHook<IClientConfigStoreMap_SetString_t> IClientConfigStoreMap_SetString;
+	extern DetourHook<IClientConfigStore_SetString_t> IClientConfigStore_SetString;
 
 	extern DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
 

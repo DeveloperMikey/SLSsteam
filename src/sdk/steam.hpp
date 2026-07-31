@@ -82,6 +82,19 @@ enum EIPCInterface : uint8_t
 	k_EIPCInterfaceClientTimeline = 0x3d
 };
 
+enum class ERemoteStorageSyncState
+{
+	Disabled = 0x0,
+	Unknown = 0x1,
+	Synchronized = 0x2,
+	InProgress = 0x3,
+	ChangesInCloud = 0x4,
+	ChangesLocally = 0x5,
+	ChangesInNloudAndLocally = 0x6,
+	ConflictingChanges = 0x7,
+	NotInitialized = 0x8,
+};
+
 enum EResult
 {
 	k_EResultNoResult = 0x0,

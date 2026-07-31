@@ -983,9 +983,21 @@ static void hkCGameInfoDialog_ServerResponded(void* pSteamMatchingPingResponse, 
 	);
 }
 
-static bool hkClientConfigStoreMap_SetString(void* pConfigStoreMap, uint32_t a1, const char* key, const char* value)
+static bool hkClientConfigStore_SetString(void* pClientConfigStore, uint32_t store, const char* key, const char* value)
 {
-	const bool success = Hooks::IClientConfigStoreMap_SetString.tramp.fn(pConfigStoreMap, a1, key, value);
+	const bool success = Hooks::IClientConfigStore_SetString.tramp.fn(pClientConfigStore, store, key, value);
+
+	//g_pLog->debug
+	//(
+	//	"%s(%p, %u, %s, %s) -> %u\n",
+
+	//	Hooks::IClientConfigStore_SetString.name.c_str(),
+	//	pClientConfigStore,
+	//	store,
+	//	key,
+	//	value,
+	//	success
+	//);
 
 	if (success)
 	{
@@ -1021,7 +1033,7 @@ namespace Hooks
 
 	DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
-	DetourHook<IClientConfigStoreMap_SetString_t> IClientConfigStoreMap_SetString;
+	DetourHook<IClientConfigStore_SetString_t> IClientConfigStore_SetString;
 
 	DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
 
@@ -1054,6 +1066,24 @@ bool Hooks::setup()
 	g_pLog->debug("Hooks::setup()\n");
 
 	{
+		const auto name = std::string("12CConfigStore");
+		if (!Decompiler::vftables.contains(name))
+		{
+			g_pLog->debug("Failed to get %s VFTable!\n", name.c_str());
+			return false;
+		}
+
+		auto& store = Decompiler::vftables.at(name);
+
+		IClientConfigStore_SetString.setup
+		(
+			VFTIndexes::IClientConfigStoreMap::SetString.getPrintName().c_str(),
+			store.functions[VFTIndexes::IClientConfigStoreMap::SetString.index],
+			hkClientConfigStore_SetString
+		);
+	}
+
+	{
 		const auto name = std::string("18CUserRemoteStorage");
 		if (!Decompiler::vftables.contains(name))
 		{
@@ -1072,8 +1102,6 @@ bool Hooks::setup()
 			storage.functions[VFTIndexes::IClientRemoteStorage::IsCloudEnabledForApp.index],
 			hkClientRemoteStorage_IsCloudEnabledForApp
 		);
-
-		IClientRemoteStorage_IsCloudEnabledForApp.place();
 	}
 
 	bool succeeded =
@@ -1103,11 +1131,7 @@ bool Hooks::setup()
 
 		&& CWebSocketConnection_BBuildAndAsyncSendFrame.setup(Patterns::CWebSocketConnection::BBuildAndAsyncSendFrame, hkWebSocketConnection_BBuildAndAsyncSendFrame)
 
-		&& CGameInfoDialog_ServerResponded.setup(VFTIndexes::CGameInfoDialog::ServerResponded, hkCGameInfoDialog_ServerResponded)
-
-		//I really do not like hooking the IClient*Map functions because they are very surface level and get skipped over a lot.
-		//But for the current purpose it's enough, so there is no need to add more complexity for no reason
-		&& IClientConfigStoreMap_SetString.setup(VFTIndexes::IClientConfigStoreMap::SetString, hkClientConfigStoreMap_SetString);
+		&& CGameInfoDialog_ServerResponded.setup(VFTIndexes::CGameInfoDialog::ServerResponded, hkCGameInfoDialog_ServerResponded);
 
 
 	Hooks::place();
@@ -1143,7 +1167,9 @@ void Hooks::place()
 
 	CGameInfoDialog_ServerResponded.place();
 
-	IClientConfigStoreMap_SetString.place();
+	IClientConfigStore_SetString.place();
+
+	IClientRemoteStorage_IsCloudEnabledForApp.place();
 }
 
 void Hooks::placeVFTHooks()
@@ -1277,7 +1303,9 @@ void Hooks::remove()
 
 	CGameInfoDialog_ServerResponded.remove();
 
-	IClientConfigStoreMap_SetString.remove();
+	IClientConfigStore_SetString.remove();
+
+	IClientRemoteStorage_IsCloudEnabledForApp.remove();
 
 	//VFT Hooks
 	IClientAppManager_BCanRemotePlayTogether.remove();
@@ -1288,8 +1316,6 @@ void Hooks::remove()
 
 	IClientApps_GetDLCDataByIndex.remove();
 	IClientApps_GetDLCCount.remove();
-
-	IClientRemoteStorage_IsCloudEnabledForApp.remove();
 
 	IClientUser_BLoggedOn.remove();
 	IClientUser_BUpdateAppOwnershipTicket.remove();
