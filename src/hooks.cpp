@@ -539,7 +539,7 @@ static uint32_t hkUser_GetSubscribedApps(void* pClientUser, AppId_t* pAppList, u
 
 static bool hkUserAppManager_BuildDepotDependency
 (
-	void* a0,
+	void* pClientAppManager,
 	AppId_t appId,
 	void* a2,
 	CUtlVector<DepotInfo_t>* depots,
@@ -549,8 +549,8 @@ static bool hkUserAppManager_BuildDepotDependency
 	bool* a7
 )
 {
-	const bool success = Hooks::CUserAppManager_BuildDepotDependency.tramp.fn(a0, appId, a2, depots, sharedDepots, a5, pBuildId, a7);
-	g_pLog->debug("%s(%p, %u) -> %i\n", Hooks::CUserAppManager_BuildDepotDependency.name.c_str(), a0, appId, success);
+	const bool success = Hooks::CUserAppManager_BuildDepotDependency.tramp.fn(pClientAppManager, appId, a2, depots, sharedDepots, a5, pBuildId, a7);
+	g_pLog->debug("%s(%p, %u) -> %i\n", Hooks::CUserAppManager_BuildDepotDependency.name.c_str(), pClientAppManager, appId, success);
 
 	Apps::buildDepotDependency(appId, depots, sharedDepots);
 
