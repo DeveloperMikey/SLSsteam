@@ -68,7 +68,6 @@ public:
 		return static_cast<EMsg>(getType() & ~PROTOBUF_TYPE_MASK);
 	}
 
-	void serializeHeader(const CMsgProtoBufHeader& header);
 	CMsgProtoBufHeader deserializeHeader() const;
 
 	template<typename T>
