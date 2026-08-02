@@ -275,6 +275,7 @@ namespace SchemaGrabber
         protected void OnDisconnected(SteamClient.DisconnectedCallback cb)
         {
             Console.WriteLine("Disconnected from Steam! Exiting...");
+            finished = true;
         }
 
         protected void OnLoggedOn(SteamUser.LoggedOnCallback cb)
@@ -285,6 +286,7 @@ namespace SchemaGrabber
         protected void OnLoggedOff(SteamUser.LoggedOffCallback cb)
         {
             Console.WriteLine($"Logged out from {Username}");
+            finished = true;
         }
 
         protected async void OnAccountInfo(SteamUser.AccountInfoCallback cb)

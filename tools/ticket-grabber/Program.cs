@@ -185,6 +185,7 @@ namespace TicketGrabber
         protected void OnDisconnected(SteamClient.DisconnectedCallback cb)
         {
             Console.WriteLine("Disconnected from Steam! Exiting...");
+			finished = true;
         }
 
         protected void OnLoggedOn(SteamUser.LoggedOnCallback cb)
@@ -195,6 +196,7 @@ namespace TicketGrabber
         protected void OnLoggedOff(SteamUser.LoggedOffCallback cb)
         {
             Console.WriteLine($"Logged out from {Username}");
+			finished = true;
         }
 
         protected void OnAccountInfo(SteamUser.AccountInfoCallback cb)
