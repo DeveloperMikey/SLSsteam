@@ -43,7 +43,7 @@ namespace Patterns
 	namespace CSteamEngine
 	{
 		extern Pattern_t SetAppIdForCurrentPipe;
-		extern Pattern_t RunInterface;
+		extern Pattern_t ProcessIPCFrame;
 		extern Pattern_t Offset_ClientUtils;
 		extern Pattern_t Offset_User;
 	}

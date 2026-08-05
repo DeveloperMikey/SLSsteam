@@ -305,7 +305,7 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 //I don't like forward declerations, but with the current style & hooks layout it's a necessity
 static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId);
 
-static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufIPCCmd, CUtlBuffer* pBufIPCResult)
+static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pipe, CUtlBuffer* pBufIn, CUtlBuffer* pBufOut)
 {
 	if (!g_pSteamEngine)
 	{
@@ -313,84 +313,85 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 		g_pLog->debug("g_pSteamEngine at %p\n", g_pSteamEngine);
 	}
 
-	//We do not initialize with the CSteamEngine because first run CUser is null
-	Hooks::placeVFTHooks();
+	uint32_t ret;
 
-	//While hooking this function to replace the other hooks might seem attractive
-	//we do not do so. Many calls straight up bypass the IPC layer and go
-	//straight for the original VFT implementations (IClientAppManager comes to mind)
-	//Although it's a great spot to quickly test things
+	//pBufIn
+	//mem + 0 : 1 = IPCCommand
 
-	//pBufIPCCmd
-	//mem + 0 : 1 = EIPCCmd::RunInterface
-	//mem + 1 : 1 = interfaceType
-	//mem + 2 : 4 = *(this + 4)
-	//mem + 6 : 4 = function Id
-	//arguments follow
-	//then fencepost?
-	const EIPCInterface type = *reinterpret_cast<EIPCInterface*>(pBufIPCCmd->mem.base + 1);
-	const uint32_t fnId = *reinterpret_cast<uint32_t*>(pBufIPCCmd->mem.base + 6);
+	const EIPCCmd cmd = *reinterpret_cast<EIPCCmd*>(pBufIn->mem.base + 0);
 
-	FakeAppIds::runIPCFrame(false, type);
-
-	//g_pLog->debug("In\n%s\n", MemHlp::hexdump(pBufIPCCmd->mem.base, pBufIPCCmd->offset).c_str());
-
-	const uint32_t ret = Hooks::CSteamEngine_RunInterface.tramp.fn(pSteamEngine, pBufIPCCmd, pBufIPCResult);
-
-	FakeAppIds::runIPCFrame(true, type);
-
-	const EIPCExitCode exitCode = *reinterpret_cast<EIPCExitCode*>(pBufIPCResult->mem.base + 0);
-
-	//IClientUser::GetSteamID has been optimized to hell and back
-	//So to hook it we need a naked function hook that requires quite the
-	//complex logic to get the full steamId. So I made an exception for this function,
-	//since it seems to always get called from RunInterface anyway
-	//53                                      push    ebx
-	//8B 54 24 0C                             mov     edx, [esp+4+arg_4]
-	//8B 44 24 08                             mov     eax, [esp+4+arg_0]
-	//8B 9A B2 E8 FF FF                       mov     ebx, [edx-174Eh] //SteamId low
-	//8B 8A AE E8 FF FF                       mov     ecx, [edx-1752h] //SteamId high
-	//89 58 04                                mov     [eax+4], ebx
-	//89 08                                   mov     [eax], ecx
-	//                                        //Optimally inject here, grab eax, copy into g_currentSteamId
-	//5B                                      pop     ebx
-	//C2 04 00                                retn    4
-	if (type == k_EIPCInterfaceClientUser && exitCode == EIPCExitCode::Success && fnId == 0xD6FC3200)
+	if (cmd == EIPCCmd::RunInterface)
 	{
-		//Universe always set, steamId gets filled in after login
-		if (!g_currentSteamId.isSet())
+		//We do not initialize with the CSteamEngine because first run CUser is null
+		Hooks::placeVFTHooks();
+
+		//While hooking this function to replace the other hooks might seem attractive
+		//we do not do so. Many calls straight up bypass the IPC layer and go
+		//straight for the original VFT implementations (IClientAppManager comes to mind)
+		//Although it's a great spot to quickly test things
+
+		//pBufIn
+		//mem + 1 : 1 = interfaceType
+		//mem + 2 : 4 = *(InterfaceMapBase_this + 4)
+		//mem + 6 : 4 = function Id
+		//arguments follow
+		//then fencepost?
+		
+		const EIPCInterface interface = *reinterpret_cast<EIPCInterface*>(pBufIn->mem.base + 1);
+		const uint32_t function = *reinterpret_cast<uint32_t*>(pBufIn->mem.base + 6);
+
+		FakeAppIds::runIPCFrame(false, interface);
+
+		ret = Hooks::CSteamEngine_ProcessIPCFrame.tramp.fn(pSteamEngine, pipe, pBufIn, pBufOut);
+
+		//g_pLog->debug("In\n%s\n", MemHlp::hexdump(pBufIn->mem.base, pBufIn->offset).c_str());
+
+		FakeAppIds::runIPCFrame(true, interface);
+
+		//pBufOut
+		//mem + 0 : 1 = EIPCExitCode
+		//return values follow
+		const EIPCExitCode exitCode = *reinterpret_cast<EIPCExitCode*>(pBufOut->mem.base + 0);
+
+		//IClientUser::GetSteamID has been optimized to hell and back
+		//So to hook it we need a naked function hook that requires quite the
+		//complex logic to get the full steamId. So I made an exception for this function,
+		//since it seems to always get called from RunInterface anyway
+		//53                                      push    ebx
+		//8B 54 24 0C                             mov     edx, [esp+4+arg_4]
+		//8B 44 24 08                             mov     eax, [esp+4+arg_0]
+		//8B 9A B2 E8 FF FF                       mov     ebx, [edx-174Eh] //SteamId low
+		//8B 8A AE E8 FF FF                       mov     ecx, [edx-1752h] //SteamId high
+		//89 58 04                                mov     [eax+4], ebx
+		//89 08                                   mov     [eax], ecx
+		//                                        //Optimally inject here, grab eax, copy into g_currentSteamId
+		//5B                                      pop     ebx
+		//C2 04 00                                retn    4
+		if (interface == k_EIPCInterfaceClientUser && exitCode == EIPCExitCode::Success && function == 0xD6FC3200)
 		{
-			memcpy(&g_currentSteamId, pBufIPCResult->mem.base + 1, sizeof(CSteamId));
+			//Universe always set, steamId gets filled in after login
+			CSteamId* id = reinterpret_cast<CSteamId*>(pBufOut->mem.base + 1);
+
+			if (!g_currentSteamId.isSet() && id->isSet())
+			{
+				g_currentSteamId = CSteamId(id->steamId64);
+			}
+
+			*id = hkClientUser_GetSteamId(g_currentSteamId);
 		}
 
-		const CSteamId newId = hkClientUser_GetSteamId(g_currentSteamId);
-		memcpy(pBufIPCResult->mem.base + 1, &newId, sizeof(newId));
+		//g_pLog->debug("Out\n%s\n", MemHlp::hexdump(pBufOut->mem.base, pBufOut->offset).c_str());
+
+		Apps::runIPCFrame();
+		SLSAPI::runIPCFrame();
 	}
-
-	//pBufIPCResult
-	//mem + 0 : 1 = EIPCExitCode
-	//return values follow
-	//g_pLog->debug("Out\n%s\n", MemHlp::hexdump(pBufIPCResult->mem.base, pBufIPCResult->offset).c_str());
-
-	Apps::runIPCFrame();
-	SLSAPI::runIPCFrame();
-
-	if (g_config.extendedLogging.get())
+	else
 	{
-		const auto utils = g_pSteamEngine->getUtils();
-
-		g_pLog->debug
-		(
-			"%s -> %u with type %p, fn %p for appId %u (%u)\n",
-
-			Hooks::CSteamEngine_RunInterface.name.c_str(),
-			ret,
-			type,
-			fnId,
-			FakeAppIds::getRealAppIdForCurrentPipe(),
-			utils ? utils->getAppId() : 0
-		);
+		ret = Hooks::CSteamEngine_ProcessIPCFrame.tramp.fn(pSteamEngine, pipe, pBufIn, pBufOut);
 	}
+
+	//g_pLog->debug("In\n%s\n", MemHlp::hexdump(pBufIn->mem.base, pBufIn->offset).c_str());
+	//g_pLog->debug("Out\n%s\n", MemHlp::hexdump(pBufOut->mem.base, pBufOut->offset).c_str());
 
 	return ret;
 }
@@ -1062,7 +1063,7 @@ namespace Hooks
 	DetourHook<CSteamMatchmakingServers_GetServerDetails_t> CSteamMatchmakingServers_GetServerDetails;
 	DetourHook<CSteamMatchmakingServers_RequestInternetServerList_t> CSteamMatchmakingServers_RequestInternetServerList;
 
-	DetourHook<CSteamEngine_RunInterface_t> CSteamEngine_RunInterface;
+	DetourHook<CSteamEngine_ProcessIPCFrame_t> CSteamEngine_ProcessIPCFrame;
 	DetourHook<CSteamEngine_SetAppIdForCurrentPipe_t> CSteamEngine_SetAppIdForCurrentPipe;
 
 	DetourHook<CUser_CheckAppOwnership_t> CUser_CheckAppOwnership;
@@ -1187,7 +1188,7 @@ bool Hooks::setup()
 
 		&& CUserAppManager_BuildDepotDependency.setup(Patterns::CUserAppManager::BuildDepotDependency, hkUserAppManager_BuildDepotDependency)
 
-		&& CSteamEngine_RunInterface.setup(Patterns::CSteamEngine::RunInterface, hkSteamEngine_RunInterface)
+		&& CSteamEngine_ProcessIPCFrame.setup(Patterns::CSteamEngine::ProcessIPCFrame, hkSteamEngine_ProcessIPCFrame)
 		&& CSteamEngine_SetAppIdForCurrentPipe.setup(Patterns::CSteamEngine::SetAppIdForCurrentPipe, hkSteamEngine_SetAppIdForCurrentPipe)
 
 		&& CWebSocketConnection_BBuildAndAsyncSendFrame.setup(Patterns::CWebSocketConnection::BBuildAndAsyncSendFrame, hkWebSocketConnection_BBuildAndAsyncSendFrame)
@@ -1213,7 +1214,7 @@ void Hooks::place()
 
 	CCMInterface_RecvPkt.place();
 
-	CSteamEngine_RunInterface.place();
+	CSteamEngine_ProcessIPCFrame.place();
 	CSteamEngine_SetAppIdForCurrentPipe.place();
 
 	CSteamMatchmakingServers_GetServerDetails.place();
@@ -1352,7 +1353,7 @@ void Hooks::remove()
 
 	CCMInterface_RecvPkt.remove();
 
-	CSteamEngine_RunInterface.remove();
+	CSteamEngine_ProcessIPCFrame.remove();
 	CSteamEngine_SetAppIdForCurrentPipe.remove();
 
 	CSteamMatchmakingServers_GetServerDetails.remove();

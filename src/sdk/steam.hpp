@@ -21,6 +21,7 @@ enum class EIPCCmd : uint8_t
 {
 	RunInterface = 1,
 	SerializeCallbacks = 2,
+	CreateGlobalUser = 3, //Also used to connect to global user
 	ConnectPipe = 9
 };
 

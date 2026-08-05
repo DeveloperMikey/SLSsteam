@@ -97,12 +97,12 @@ namespace Patterns
 			"E8 ? ? ? ? 83 C4 ? 8B 45 ? 85 C0 75 ? 31 FF",
 			SigFollowMode::Relative
 		};
-		Pattern_t RunInterface
+		Pattern_t ProcessIPCFrame
 		{
-			"CSteamEngine::RunInterface",
-			"8B 5A ? 29 C3",
+			"CSteamEngine::ProcessIPCFrame",
+			"5E C3 FF 74 24",
 			SigFollowMode::PrologueUpwards,
-			std::vector<int16_t> { 0x56, 0x57, 0xE5, 0x89, 0x55 }
+			std::vector<int16_t> { 0xC3, 0x81, -1, -1, -1, -1, 0xE8, 0x53, 0x56 }
 		};
 		Pattern_t Offset_ClientUtils
 		{
