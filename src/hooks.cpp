@@ -323,7 +323,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pip
 
 	if (log)
 	{
-		g_pLog->debug("ProcessIPCFrame cmd %p\n", cmd);
+		g_pLog->debug("ProcessIPCFrame %p -> %p\n", pipe, cmd);
 	}
 
 	if (cmd == EIPCCmd::RunInterface)
