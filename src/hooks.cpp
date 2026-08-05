@@ -387,7 +387,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pip
 		//                                        //Optimally inject here, grab eax, copy into g_currentSteamId
 		//5B                                      pop     ebx
 		//C2 04 00                                retn    4
-		if (interface == k_EIPCInterfaceClientUser && exitCode == EIPCExitCode::Success && function == 0xD6FC3200)
+		if (interface == EIPCInterface::User && exitCode == EIPCExitCode::Success && function == 0xD6FC3200)
 		{
 			//Universe always set, steamId gets filled in after login
 			CSteamId* id = reinterpret_cast<CSteamId*>(pBufOut->mem.base + 1);
