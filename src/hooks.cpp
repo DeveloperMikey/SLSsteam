@@ -314,11 +314,17 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pip
 	}
 
 	uint32_t ret;
+	const bool log = g_config.extendedLogging.get();
 
 	//pBufIn
 	//mem + 0 : 1 = IPCCommand
 
 	const EIPCCmd cmd = *reinterpret_cast<EIPCCmd*>(pBufIn->mem.base + 0);
+
+	if (log)
+	{
+		g_pLog->debug("ProcessIPCFrame cmd %p\n", cmd);
+	}
 
 	if (cmd == EIPCCmd::RunInterface)
 	{
@@ -339,6 +345,20 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pip
 		
 		const EIPCInterface interface = *reinterpret_cast<EIPCInterface*>(pBufIn->mem.base + 1);
 		const uint32_t function = *reinterpret_cast<uint32_t*>(pBufIn->mem.base + 6);
+
+		if (log)
+		{
+			const auto utils = g_pSteamEngine->getUtils();
+			g_pLog->debug
+			(
+				"RunInterface %p %p for %u (%u)\n",
+
+				interface,
+				function,
+				FakeAppIds::getRealAppIdForCurrentPipe(),
+				utils ? utils->getAppId() : 0
+			);
+		}
 
 		FakeAppIds::runIPCFrame(false, interface);
 
