@@ -196,7 +196,7 @@ namespace VFTIndexes
 	//	};
 	//}
 
-	namespace IClientConfigStoreMap
+	namespace IClientConfigStore
 	{
 		VFTableInfo_t SetString
 		{

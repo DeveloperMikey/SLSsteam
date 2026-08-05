@@ -1126,8 +1126,8 @@ bool Hooks::setup()
 
 		IClientConfigStore_SetString.setup
 		(
-			VFTIndexes::IClientConfigStoreMap::SetString.getPrintName().c_str(),
-			store.functions[VFTIndexes::IClientConfigStoreMap::SetString.index],
+			VFTIndexes::IClientConfigStore::SetString.getPrintName().c_str(),
+			store.functions[VFTIndexes::IClientConfigStore::SetString.index],
 			hkClientConfigStore_SetString
 		);
 	}

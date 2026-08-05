@@ -68,7 +68,7 @@ namespace VFTIndexes
 		extern VFTableInfo_t UninstallApp;
 	}
 
-	namespace IClientConfigStoreMap
+	namespace IClientConfigStore
 	{
 		extern VFTableInfo_t SetString;
 	}
