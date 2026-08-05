@@ -26,7 +26,7 @@ namespace FakeAppIds
 	//General functionality
 	void launchApp(const AppId_t appId);
 	void setAppIdForCurrentPipe(AppId_t& appId);
-	void runIPCFrame(const bool post);
+	void runIPCFrame(const bool post, const EIPCInterface interface);
 
 	//Serverbrowser
 	void getServerDetails(const uint32_t handle, gameserverdetails_t& details);

@@ -330,21 +330,14 @@ static uint32_t hkSteamEngine_RunInterface(void* pSteamEngine, CUtlBuffer* pBufI
 	//then fencepost?
 	const EIPCInterface type = *reinterpret_cast<EIPCInterface*>(pBufIPCCmd->mem.base + 1);
 	const uint32_t fnId = *reinterpret_cast<uint32_t*>(pBufIPCCmd->mem.base + 6);
-	const bool switchFakeAppIds = FakeAppIds::shouldUseRealAppIdForInterface(type);
 
-	if (switchFakeAppIds)
-	{
-		FakeAppIds::runIPCFrame(false);
-	}
+	FakeAppIds::runIPCFrame(false, type);
 
 	//g_pLog->debug("In\n%s\n", MemHlp::hexdump(pBufIPCCmd->mem.base, pBufIPCCmd->offset).c_str());
 
 	const uint32_t ret = Hooks::CSteamEngine_RunInterface.tramp.fn(pSteamEngine, pBufIPCCmd, pBufIPCResult);
 
-	if (switchFakeAppIds)
-	{
-		FakeAppIds::runIPCFrame(true);
-	}
+	FakeAppIds::runIPCFrame(true, type);
 
 	const EIPCExitCode exitCode = *reinterpret_cast<EIPCExitCode*>(pBufIPCResult->mem.base + 0);
 
