@@ -338,7 +338,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pip
 
 		//pBufIn
 		//mem + 1 : 1 = interfaceType
-		//mem + 2 : 4 = *(InterfaceMapBase_this + 4)
+		//mem + 2 : 4 = hSteamUser
 		//mem + 6 : 4 = function Id
 		//arguments follow
 		//then fencepost?
