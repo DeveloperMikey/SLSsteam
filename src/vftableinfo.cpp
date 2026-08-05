@@ -205,6 +205,15 @@ namespace VFTIndexes
 		};
 	}
 
+	namespace IClientFriends
+	{
+		VFTableInfo_t GetFriendGamePlayed
+		{
+			"17IClientFriendsMap",
+			"GetFriendGamePlayed"
+		};
+	}
+
 	namespace IClientRemoteStorage
 	{
 		VFTableInfo_t IsCloudEnabledForApp

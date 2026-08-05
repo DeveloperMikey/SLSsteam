@@ -23,6 +23,7 @@ class CUtlVector;
 struct AppOwnershipInfo_t;
 struct DepotInfo_t;
 struct gameserverdetails_t;
+struct GamePlayed_t;
 
 struct Pattern_t;
 struct VFTableInfo_t;
@@ -113,6 +114,8 @@ namespace Hooks
 
 	typedef bool(*IClientConfigStore_SetString_t)(void*, uint32_t, const char*, const char*);
 
+	typedef uint32_t(*IClientFriends_GetFriendGamePlayed_t)(void*, uint64_t, GamePlayed_t*);
+
 	typedef bool(*IClientRemoteStorage_IsCloudEnabledForApp_t)(void*, AppId_t);
 
 	extern DetourHook<TraceIPC_t> TraceIPC;
@@ -140,6 +143,8 @@ namespace Hooks
 	extern DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
 	extern DetourHook<IClientConfigStore_SetString_t> IClientConfigStore_SetString;
+
+	extern DetourHook<IClientFriends_GetFriendGamePlayed_t> IClientFriends_GetFriendGamePlayed;
 
 	extern DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
 

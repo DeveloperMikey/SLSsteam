@@ -19,6 +19,7 @@
 #include "sdk/CUtl.hpp"
 #include "sdk/IClientAppManager.hpp"
 #include "sdk/IClientApps.hpp"
+#include "sdk/IClientFriends.hpp"
 #include "sdk/IClientUser.hpp"
 #include "sdk/IClientUtils.hpp"
 #include "sdk/steam.hpp"
@@ -730,6 +731,24 @@ static bool hkClientApps_GetDLCDataByIndex(void* pClientApps, AppId_t appId, int
 	return ret;
 }
 
+static uint32_t hkClientFriends_GetFriendGamePlayed(void* pClientFriends, uint64_t steamId, GamePlayed_t* gamePlayed)
+{
+	const uint32_t ret = Hooks::IClientFriends_GetFriendGamePlayed.tramp.fn(pClientFriends, steamId, gamePlayed);
+
+	const AppId_t realAppId = FakeAppIds::getRealAppIdForCurrentPipe();
+	const AppId_t fakeAppId = FakeAppIds::getFakeAppId(realAppId);
+
+	if (fakeAppId && fakeAppId == gamePlayed->appId)
+	{
+		g_pLog->debug("Set friend GamePlayed from %u to %u\n", gamePlayed->appId, realAppId);
+		gamePlayed->appId = realAppId;
+	}
+
+	//We do not log this function, it's basically useless since we don't want any SteamIds in the logs
+	
+	return ret;
+}
+
 static bool hkClientRemoteStorage_IsCloudEnabledForApp(void* pClientRemoteStorage, AppId_t appId)
 {
 	const bool enabled = Hooks::IClientRemoteStorage_IsCloudEnabledForApp.tramp.fn(pClientRemoteStorage, appId);
@@ -1063,6 +1082,8 @@ namespace Hooks
 
 	DetourHook<IClientConfigStore_SetString_t> IClientConfigStore_SetString;
 
+	DetourHook<IClientFriends_GetFriendGamePlayed_t> IClientFriends_GetFriendGamePlayed;
+
 	DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
 
 	VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
@@ -1108,6 +1129,24 @@ bool Hooks::setup()
 			VFTIndexes::IClientConfigStoreMap::SetString.getPrintName().c_str(),
 			store.functions[VFTIndexes::IClientConfigStoreMap::SetString.index],
 			hkClientConfigStore_SetString
+		);
+	}
+
+	{
+		const auto name = std::string("12CUserFriends");
+		if (!Decompiler::vftables.contains(name))
+		{
+			g_pLog->debug("Failed to get %s VFTable!\n", name.c_str());
+			return false;
+		}
+
+		auto& friends = Decompiler::vftables.at(name);
+
+		IClientFriends_GetFriendGamePlayed.setup
+		(
+			VFTIndexes::IClientFriends::GetFriendGamePlayed.getPrintName().c_str(),
+			friends.functions[VFTIndexes::IClientFriends::GetFriendGamePlayed.index],
+			hkClientFriends_GetFriendGamePlayed
 		);
 	}
 
@@ -1198,6 +1237,8 @@ void Hooks::place()
 	CGameInfoDialog_ServerResponded.place();
 
 	IClientConfigStore_SetString.place();
+
+	IClientFriends_GetFriendGamePlayed.place();
 
 	IClientRemoteStorage_IsCloudEnabledForApp.place();
 }
@@ -1335,6 +1376,8 @@ void Hooks::remove()
 	CGameInfoDialog_ServerResponded.remove();
 
 	IClientConfigStore_SetString.remove();
+
+	IClientFriends_GetFriendGamePlayed.remove();
 
 	IClientRemoteStorage_IsCloudEnabledForApp.remove();
 

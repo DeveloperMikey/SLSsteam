@@ -73,6 +73,11 @@ namespace VFTIndexes
 		extern VFTableInfo_t SetString;
 	}
 
+	namespace IClientFriends
+	{
+		extern VFTableInfo_t GetFriendGamePlayed;
+	}
+
 	namespace IClientEngine
 	{
 		extern VFTableInfo_t GetClientUser;
