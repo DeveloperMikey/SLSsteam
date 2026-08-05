@@ -105,6 +105,7 @@ namespace Hooks
 
 	typedef uint32_t(*CUser_CheckAppOwnership_t)(void*, AppId_t, AppOwnershipInfo_t*);
 	typedef uint32_t(*CUser_GetSubscribedApps_t)(void*, AppId_t*, uint32_t, uint8_t);
+	typedef uint32_t(*CUser_PostCallbackToAppId_t)(void*, AppId_t, uint32_t, void*, uint32_t);
 
 	typedef bool(*CUserAppManager_BuildDepotDependency_t)(void*, AppId_t, void*, CUtlVector<DepotInfo_t>*, CUtlVector<DepotInfo_t>*, void*, uint32_t*, bool*);
 
@@ -132,6 +133,7 @@ namespace Hooks
 
 	extern DetourHook<CUser_CheckAppOwnership_t> CUser_CheckAppOwnership;
 	extern DetourHook<CUser_GetSubscribedApps_t> CUser_GetSubscribedApps;
+	extern DetourHook<CUser_PostCallbackToAppId_t> CUser_PostCallbackToAppId;
 
 	extern DetourHook<CUserAppManager_BuildDepotDependency_t> CUserAppManager_BuildDepotDependency;
 

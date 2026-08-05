@@ -139,6 +139,13 @@ namespace Patterns
 			"E8 ? ? ? ? 8B 75 ? 89 D8",
 			SigFollowMode::Relative
 		};
+		Pattern_t PostCallbackToAppId
+		{
+			"CUser::PostCallbackToAppId",
+			"84 C0 0F 45 F8 89 F8",
+			MemHlp::SigFollowMode::PrologueUpwards,
+			std::vector<int16_t> { 0xE8, 0x53, 0x56, 0x57, 0x55 }
+		};
 		Pattern_t UpdateAppOwnershipTicket
 		{
 			"CUser::UpdateAppOwnershipTicket",

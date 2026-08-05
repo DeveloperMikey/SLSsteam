@@ -537,6 +537,33 @@ static uint32_t hkUser_GetSubscribedApps(void* pClientUser, AppId_t* pAppList, u
 	return count;
 }
 
+static uint32_t hkUser_PostCallbackToAppId(void* pUser, AppId_t appId, uint32_t type, void* pCallback, uint32_t callbackSize)
+{
+	const AppId_t fakeAppId = FakeAppIds::getFakeAppId(appId);
+	if (fakeAppId)
+	{
+		g_pLog->debug("Rerouting callback from %u to %u\n", appId, fakeAppId);
+		appId = fakeAppId;
+	}
+
+	const uint32_t ret = Hooks::CUser_PostCallbackToAppId.tramp.fn(pUser, appId, type, pCallback, callbackSize);
+
+	g_pLog->debug
+	(
+		"%s(%p, %u, %u, %p, %u) -> %u\n",
+
+		Hooks::CUser_PostCallbackToAppId.name.c_str(),
+		pUser,
+		appId,
+		type,
+		pCallback,
+		callbackSize,
+		ret
+	);
+
+	return ret;
+}
+
 static bool hkUserAppManager_BuildDepotDependency
 (
 	void* pClientAppManager,
@@ -1028,6 +1055,7 @@ namespace Hooks
 
 	DetourHook<CUser_CheckAppOwnership_t> CUser_CheckAppOwnership;
 	DetourHook<CUser_GetSubscribedApps_t> CUser_GetSubscribedApps;
+	DetourHook<CUser_PostCallbackToAppId_t> CUser_PostCallbackToAppId;
 
 	DetourHook<CUserAppManager_BuildDepotDependency_t> CUserAppManager_BuildDepotDependency;
 
@@ -1123,6 +1151,7 @@ bool Hooks::setup()
 
 		&& CUser_CheckAppOwnership.setup(Patterns::CUser::CheckAppOwnership, hkUser_CheckAppOwnership)
 		&& CUser_GetSubscribedApps.setup(Patterns::CUser::GetSubscribedApps, hkUser_GetSubscribedApps)
+		&& CUser_PostCallbackToAppId.setup(Patterns::CUser::PostCallbackToAppId, hkUser_PostCallbackToAppId)
 
 		&& CUserAppManager_BuildDepotDependency.setup(Patterns::CUserAppManager::BuildDepotDependency, hkUserAppManager_BuildDepotDependency)
 
@@ -1160,6 +1189,7 @@ void Hooks::place()
 
 	CUser_CheckAppOwnership.place();
 	CUser_GetSubscribedApps.place();
+	CUser_PostCallbackToAppId.place();
 
 	CUserAppManager_BuildDepotDependency.place();
 
@@ -1296,6 +1326,7 @@ void Hooks::remove()
 
 	CUser_CheckAppOwnership.remove();
 	CUser_GetSubscribedApps.remove();
+	CUser_PostCallbackToAppId.remove();
 
 	CUserAppManager_BuildDepotDependency.remove();
 
