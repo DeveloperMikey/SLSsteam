@@ -251,10 +251,11 @@ public:
 		//32 bit accountId passed, fill in rest with defaults
 		if (!steamId.accountType)
 		{
-			steamId.accountType = 1;
-			steamId.universe = 1;
-			steamId.__pad0x5[0] = 0;
-			steamId.__pad0x5[1] = 0x10;
+			steamId64 |= 0x0110000100000000;
+			//steamId.accountType = 1;
+			//steamId.universe = 1;
+			//steamId.__pad0x5[0] = 0;
+			//steamId.__pad0x5[1] = 0x10;
 		}
 	}
 
