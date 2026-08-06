@@ -442,8 +442,9 @@ static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(void* pWebSocketConnec
 {
 	if (type == 2)
 	{
-		//Freeing pData royally fucks up memory, proly a use after free scenario
-		//So we copy the packet into fresh memory, modify that, etc
+		//Freeing pData royally fucks up memory since
+		//it gets freed sometime after the function returns
+		//(going up the callstack around 5 times)
 		CNetPacket packet {};
 		packet.body = reinterpret_cast<CNetPacketBody*>(Steam::Plat_Alloc(dataSize));
 
