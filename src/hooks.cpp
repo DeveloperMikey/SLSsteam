@@ -442,20 +442,27 @@ static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(void* pWebSocketConnec
 {
 	if (type == 2)
 	{
+		//Freeing pData royally fucks up memory, proly a use after free scenario
+		//So we copy the packet into fresh memory, modify that, etc
 		CNetPacket packet {};
-		packet.body = reinterpret_cast<CNetPacketBody*>(pData);
-		packet.size = dataSize;
+		packet.body = reinterpret_cast<CNetPacketBody*>(Steam::Plat_Alloc(dataSize));
 
-		g_pLog->debug("SendPkt %s -> %p\n", packet.getProtoBufTypeName().c_str(), packet.getType());
-
-		if (packet.isValid() && packet.isProtoBuf())
+		if (packet.body)
 		{
-			Apps::sendMsg(&packet);
-			FakeAppIds::sendMsg(&packet);
+			memcpy(packet.body, pData, dataSize);
+			packet.size = dataSize;
 
-			//Do not free ourself since Steam does so. We reuse our CNetPacket buffer
-			pData = packet.body;
-			dataSize = packet.size;
+			g_pLog->debug("SendPkt %s -> %p\n", packet.getProtoBufTypeName().c_str(), packet.getType());
+
+			if (packet.isValid() && packet.isProtoBuf())
+			{
+				Apps::sendMsg(&packet);
+				FakeAppIds::sendMsg(&packet);
+			}
+
+			const bool success = Hooks::CWebSocketConnection_BBuildAndAsyncSendFrame.tramp.fn(pWebSocketConnection, type, packet.body, packet.size);
+			Steam::Plat_Free(packet.body);
+			return success;
 		}
 	}
 
