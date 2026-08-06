@@ -323,7 +323,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pip
 
 	if (log)
 	{
-		g_pLog->debug("ProcessIPCFrame %p -> %p\n", pipe, cmd);
+		g_pLog->debug("ProcessIPCFrame %p -> %s\n", pipe, EIPCCmd_ToString(cmd).c_str());
 	}
 
 	if (cmd == EIPCCmd::RunInterface)
@@ -351,9 +351,9 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pip
 			const auto utils = g_pSteamEngine->getUtils();
 			g_pLog->debug
 			(
-				"RunInterface %p %p for %u (%u)\n",
+				"RunInterface %s %p for %u (%u)\n",
 
-				interface,
+				EIPCInterface_ToString(interface).c_str(),
 				function,
 				FakeAppIds::getRealAppIdForCurrentPipe(),
 				utils ? utils->getAppId() : 0
