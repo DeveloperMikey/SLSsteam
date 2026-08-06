@@ -32,14 +32,15 @@ namespace MemHlp
 		}
 
 		const size_t size = snprintf(nullptr, 0, fmt, args...) + 1;
-		char* code = reinterpret_cast<char*>(malloc(size));
-		snprintf(code, size, fmt, args...);
+		std::string code;
+		code.resize(size);
+		snprintf(code.data(), size, fmt, args...);
 
 		static lm_inst_t inst;
 		//TODO: Potentially replace with LM_AssembleEx and only allocate memory as needed
 		bool success = false;
 
-		if (!LM_Assemble(code, &inst))
+		if (!LM_Assemble(code.c_str(), &inst))
 		{
 			g_pLog->debug("Failed to assemble %s!\n", code);
 		}
@@ -54,7 +55,6 @@ namespace MemHlp
 			success = true;
 		}
 
-		free(code);
 		return success;
 	}
 
