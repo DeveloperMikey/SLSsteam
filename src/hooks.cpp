@@ -181,8 +181,6 @@ void VFTHook<T>::setup(std::shared_ptr<lm_vmt_t> vft, const VFTableInfo_t& info,
 __attribute__((hot))
 static void hkTraceIPC(const char* iface, const char* fn)
 {
-	Hooks::TraceIPC.tramp.fn(iface, fn);
-
 	if (g_config.extendedLogging.get())
 	{
 		g_pLog->debug
@@ -194,6 +192,8 @@ static void hkTraceIPC(const char* iface, const char* fn)
 			fn
 		);
 	}
+
+	Hooks::TraceIPC.tramp.fn(iface, fn);
 }
 
 static uint32_t hkAPIJob_SendAndRecv(CAPIJob* pAPIJob, CProtoBufMsgBase* send, uint32_t a2, uint32_t timeOut, CProtoBufMsgBase* recv, EMsg targetType)
