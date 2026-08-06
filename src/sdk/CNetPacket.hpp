@@ -31,14 +31,14 @@ public:
 	
 	constexpr bool isValid() const
 	{
-		return body && size >= 8 && body->type != INVALID_NETPACKET_TYPE;
+		return body && size > sizeof(CNetPacketBody) && body->type != INVALID_NETPACKET_TYPE;
 	}
 	
 	constexpr ENetPacket getType() const
 	{
 		if (!body)
 		{
-			return 0;
+			return INVALID_NETPACKET_TYPE;
 		}
 
 		return body->type;
@@ -48,6 +48,11 @@ public:
 
 	constexpr bool isProtoBuf() const
 	{
+		if (getType() == INVALID_NETPACKET_TYPE)
+		{
+			return INVALID_NETPACKET_TYPE;
+		}
+
 		return getType() & PROTOBUF_TYPE_MASK;
 	}
 
