@@ -1,3 +1,5 @@
+#include "sdk/steam.hpp"
+
 #include "api.hpp"
 #include "config.hpp"
 #include "decompiler.hpp"
@@ -144,7 +146,7 @@ static void load()
 		return;
 	}
 
-	if (!g_modSteamClient.base || !g_modSteamUI.base)
+	if (!g_modSteamClient.base || !g_modSteamUI.base || !g_modTier0.base)
 	{
 		return;
 	}
@@ -179,6 +181,12 @@ static void load()
 		{
 			g_pLog->warn("steamclient.so hash missmatch! Please update :)");
 		}
+	}
+
+	if (!Steam::init())
+	{
+		g_pLog->warn("Failed to find steam exports!\n");
+		return;
 	}
 
 	if(!VFTIndexes::init())
@@ -253,6 +261,12 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 		{
 			vft.second.analyze();
 		}
+
+		load();
+	}
+	if (std::string(map->l_name).ends_with("/libtier0_s.so"))
+	{
+		LM_FindModule("libtier0_s.so", &g_modTier0);
 
 		load();
 	}

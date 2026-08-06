@@ -18,7 +18,6 @@ constexpr uint64_t GAME_TYPE_SHORTCUT = 0x2000000ULL;
 constexpr static ENetPacket INVALID_NETPACKET_TYPE = -1;
 constexpr static ENetPacket PROTOBUF_TYPE_MASK = 0x80000000;
 
-
 enum class EIPCCmd : uint8_t
 {
 	RunInterface = 1,
@@ -289,3 +288,30 @@ public:
 		uint64_t steamId64;
 	};
 };
+
+namespace Steam
+{
+	typedef void*(*Plat_Alloc_t)(int);
+	typedef void(*Plat_Free_t)(void*);
+	typedef void*(*Plat_Realloc_t)(void*, int);
+
+	extern Plat_Alloc_t Plat_Alloc;
+	extern Plat_Free_t Plat_Free;
+	extern Plat_Realloc_t Plat_Realloc;
+
+	template<typename T>
+	T* alloc(int size)
+	{
+		return reinterpret_cast<T*>(Plat_Alloc(size));
+	}
+
+	void free(void* mem);
+
+	template<typename T>
+	T* realloc(void* mem, int size)
+	{
+		return reinterpret_cast<T*>(Plat_Realloc(mem, size));
+	}
+
+	bool init();
+}
