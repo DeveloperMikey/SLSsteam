@@ -58,8 +58,8 @@ public:
 	int32_t put;						//0x10
 	int32_t offset;						//0x14
 	uint32_t flags;						//0x18
-	CUtlBuffer_Function1_t fn1C;							//0x1C
+	CUtlBuffer_Function1_t fn1C;		//0x1C
 	int32_t field20;					//0x20
-	CUtlBuffer_Resize_t resize;	//0x24
+	CUtlBuffer_Resize_t resize;			//0x24
 	int32_t field28;					//0x28
 }; //0x2C
