@@ -9,6 +9,7 @@ class IClientUser
 {
 public:
 
+	bool loggedOn();
 	uint32_t getAppOwnershipTicketExtendeData
 	(
 		const AppId_t appId,

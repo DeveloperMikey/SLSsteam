@@ -80,6 +80,8 @@ public:
 			return;
 		}
 
+		auto newBdyHdr = reinterpret_cast<CNetPacketBody*>(mem);
+
 		if (header)
 		{
 			if (!header->SerializeToArray(mem + headerOffset, headerSize))
@@ -88,8 +90,6 @@ public:
 				goto failed;
 			}
 
-			auto newBdyHdr = reinterpret_cast<CNetPacketBody*>(mem);
-			newBdyHdr->type = body->type;
 			newBdyHdr->headerSize = headerSize;
 		}
 		else
@@ -103,7 +103,11 @@ public:
 			goto failed;
 		}
 
-		Steam::Plat_Free(body);
+		if (body)
+		{
+			newBdyHdr->type = body->type;
+			Steam::Plat_Free(body);
+		}
 
 		body = reinterpret_cast<CNetPacketBody*>(mem);
 		size = newSize;

@@ -3,6 +3,11 @@
 #include "../hooks.hpp"
 
 
+bool IClientUser::loggedOn()
+{
+	return Hooks::IClientUser_BLoggedOn.originalFn.fn(this);
+}
+
 uint32_t IClientUser::getAppOwnershipTicketExtendeData
 (
 	const AppId_t appId,

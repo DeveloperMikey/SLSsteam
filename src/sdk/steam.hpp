@@ -274,6 +274,16 @@ public:
 		return steamId.accountId;
 	}
 
+	constexpr uint32_t accountType() const
+	{
+		return steamId.accountType;
+	}
+
+	constexpr uint32_t universe() const
+	{
+		return steamId.universe;
+	}
+
 	struct SteamId_t
 	{
 		uint32_t accountId;		//0x0

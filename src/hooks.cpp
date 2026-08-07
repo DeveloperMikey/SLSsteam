@@ -11,12 +11,14 @@
 
 #include "sdk/CAPIJob.hpp"
 #include "sdk/CClientUnifiedServiceTransport.hpp"
+#include "sdk/CCMInterface.hpp"
 #include "sdk/CNetPacket.hpp"
 #include "sdk/CProtoBufMsgBase.hpp"
 #include "sdk/CSteamEngine.hpp"
 #include "sdk/CSteamMatchmakingServers.hpp"
 #include "sdk/CUser.hpp"
 #include "sdk/CUtl.hpp"
+#include "sdk/CWebSocketConnection.hpp"
 #include "sdk/IClientAppManager.hpp"
 #include "sdk/IClientApps.hpp"
 #include "sdk/IClientFriends.hpp"
@@ -274,13 +276,19 @@ static uint32_t hkClientUnifiedServiceTransport_SendAndRecvMsg(CClientUnifiedSer
 
 static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 {
-	g_pLog->debug("RecvPkt %s -> %p\n", pNetPacket->getProtoBufTypeName().c_str(), pNetPacket->getType());
+	g_pLog->debug("RecvPkt with CMInterface at %p %s -> %p\n", pCMInterface, pNetPacket->getProtoBufTypeName().c_str(), pNetPacket->getType());
 
 	if (pNetPacket->isValid() && pNetPacket->isProtoBuf())
 	{
 		const uint32_t type = pNetPacket->getProtoBufType();
-		const auto header = pNetPacket->deserializeHeader();
 
+		//Short observation reveals only one CMInterface, but just to be sure
+		if (!g_pCMInterface && type == k_EMsgClientLogOnResponse)
+		{
+			g_pCMInterface = reinterpret_cast<CCMInterface*>(pCMInterface);
+		}
+
+		const auto header = pNetPacket->deserializeHeader();
 		const bool disableFamilyShareLock = g_config.disableFamilyLock.get();
 
 		if (disableFamilyShareLock && type == k_EMsgClientSharedLibraryStopPlaying)
@@ -453,16 +461,22 @@ static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(void* pWebSocketConnec
 			memcpy(packet.body, pData, dataSize);
 			packet.size = dataSize;
 
-			g_pLog->debug("SendPkt %s -> %p\n", packet.getProtoBufTypeName().c_str(), packet.getType());
+			g_pLog->debug("SendPkt with CWebSocketConnection at %p %s -> %p\n", pWebSocketConnection, packet.getProtoBufTypeName().c_str(), packet.getType());
 
 			if (packet.isValid() && packet.isProtoBuf())
 			{
+				//Multiple sockets in use, we grab the main one
+				if (!g_pWebSocketConnection && packet.getProtoBufType() == k_EMsgClientLogon)
+				{
+					g_pWebSocketConnection = reinterpret_cast<CWebSocketConnection*>(pWebSocketConnection);
+				}
+
 				Apps::sendMsg(&packet);
 				FakeAppIds::sendMsg(&packet);
 			}
 
 			const bool success = Hooks::CWebSocketConnection_BBuildAndAsyncSendFrame.tramp.fn(pWebSocketConnection, type, packet.body, packet.size);
-			Steam::Plat_Free(packet.body);
+			packet.free();
 			return success;
 		}
 	}
