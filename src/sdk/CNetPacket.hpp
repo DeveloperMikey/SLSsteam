@@ -28,6 +28,7 @@ public:
 	uint32_t size;					//0x8
 	int32_t refs;					//0xC
 	CNetPacketBody* originalBody;	//0x10
+	uint8_t __pad0x10[0xC];			//0x14
 	
 	constexpr bool isValid() const
 	{
@@ -80,7 +81,7 @@ public:
 			return;
 		}
 
-		auto newBdyHdr = reinterpret_cast<CNetPacketBody*>(mem);
+		auto newBdy = reinterpret_cast<CNetPacketBody*>(mem);
 
 		if (header)
 		{
@@ -90,7 +91,7 @@ public:
 				goto failed;
 			}
 
-			newBdyHdr->headerSize = headerSize;
+			newBdy->headerSize = headerSize;
 		}
 		else
 		{
@@ -105,7 +106,7 @@ public:
 
 		if (body)
 		{
-			newBdyHdr->type = body->type;
+			newBdy->type = body->type;
 			Steam::Plat_Free(body);
 		}
 
@@ -137,4 +138,4 @@ public:
 	}
 
 	void free();
-}; //0x14
+}; //0x20
