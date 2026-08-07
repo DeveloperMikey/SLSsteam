@@ -234,7 +234,9 @@ unsigned int la_version(unsigned int)
 
 unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmid, __attribute__((unused)) uintptr_t *cookie)
 {
-	if (std::string(map->l_name).ends_with("/steamclient.so"))
+	const std::string name = map->l_name;
+
+	if (name.ends_with("/steamclient.so"))
 	{
 		//Analyse modules before any relocations get applied
 		LM_FindModule("steamclient.so", &g_modSteamClient);
@@ -249,7 +251,7 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 
 		load();
 	}
-	if (std::string(map->l_name).ends_with("/steamui.so"))
+	if (name.ends_with("/steamui.so"))
 	{
 		//Analyse modules before any relocations get applied
 		LM_FindModule("steamui.so", &g_modSteamUI);
@@ -264,7 +266,7 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 
 		load();
 	}
-	if (std::string(map->l_name).ends_with("/libtier0_s.so"))
+	if (name.ends_with("/libtier0_s.so"))
 	{
 		LM_FindModule("libtier0_s.so", &g_modTier0);
 
