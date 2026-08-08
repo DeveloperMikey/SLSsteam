@@ -8,8 +8,13 @@
 #include "../sdk/CUser.hpp"
 #include "../sdk/IClientUtils.hpp"
 
+#include <algorithm>
+#include <cstdio>
+#include <fstream>
+#include <iterator>
+#include <regex>
+#include <string>
 
-AppId_t FakeAppIds::lastAppLaunched;
 
 std::unordered_map<HSteamPipe, AppId_t> FakeAppIds::fakeAppIdMap = std::unordered_map<HSteamPipe, AppId_t>();
 std::unordered_map<uint32_t, AppId_t> FakeAppIds::fakeAppIdMapServer = std::unordered_map<uint32_t, AppId_t>();
@@ -31,6 +36,59 @@ AppId_t FakeAppIds::getFakeAppId(const AppId_t appId)
 	return 0;
 }
 
+AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
+{
+	if (fakeAppIdMap.contains(pipe))
+	{
+		return fakeAppIdMap.at(pipe);
+	}
+
+	const auto serverPipe = g_pSteamEngine->getServerPipe(pipe);
+	if (!serverPipe)
+	{
+		g_pLog->debug("ServerPipe for %p is null!\n", pipe);
+		return 0;
+	}
+
+	std::ostringstream pathSS;
+	pathSS << "/proc/" << serverPipe->pid << "/environ";
+
+	const auto path = pathSS.str();
+	auto ifstream = std::ifstream(path);
+
+	if (!ifstream.is_open())
+	{
+		g_pLog->debug("Failed to open %s to get %p's appId!\n", path.c_str());
+		return 0;
+	}
+
+	std::string environ;
+	std::copy(std::istreambuf_iterator(ifstream), std::istreambuf_iterator<char>(), std::back_inserter(environ));
+
+	auto reAppId = std::regex("SteamAppId=[0-9]+");
+	std::smatch appIdMatch;
+
+	AppId_t appId = 0;
+
+	if (std::regex_search(environ, appIdMatch, reAppId))
+	{
+		reAppId = std::regex("[0-9]+");
+		environ = appIdMatch.str();
+		std::regex_search(environ, appIdMatch, reAppId);
+
+		appId = std::stoul(appIdMatch.str());
+	}
+	else
+	{
+		g_pLog->debug("No SteamAppId in %s! Using 0\n", path.c_str());
+	}
+
+	fakeAppIdMap[pipe] = appId;
+
+	g_pLog->debug("AppId for %p is %u\n", pipe, appId);
+	return appId;
+}
+
 AppId_t FakeAppIds::getRealAppIdForCurrentPipe(const bool fallback)
 {
 	const auto utils = g_pSteamEngine->getUtils();
@@ -39,10 +97,10 @@ AppId_t FakeAppIds::getRealAppIdForCurrentPipe(const bool fallback)
 		return 0;
 	}
 
-	const HSteamPipe hPipe = utils->getCurrentSteamPipe();
-	if (fakeAppIdMap.contains(hPipe))
+	const AppId_t appId = getRealAppIdFromEnv(utils->getCurrentSteamPipe());
+	if (appId)
 	{
-		return fakeAppIdMap.at(hPipe);
+		return appId;
 	}
 
 	if (fallback)
@@ -113,18 +171,17 @@ bool FakeAppIds::shouldUseRealAppIdForInterface(const EIPCInterface type)
 	}
 }
 
-void FakeAppIds::launchApp(const AppId_t appId)
+void FakeAppIds::closePipe(const HSteamPipe pipe)
 {
-	lastAppLaunched = appId;
+	if (fakeAppIdMap.contains(pipe))
+	{
+		g_pLog->debug("Deleting fake appId mapping %u for %p\n", fakeAppIdMap.at(pipe), pipe);
+		fakeAppIdMap.erase(pipe);
+	}
 }
 
 void FakeAppIds::setAppIdForCurrentPipe(AppId_t& appId)
 {
-	const auto utils = g_pSteamEngine->getUtils();
-
-	fakeAppIdMap[utils->getCurrentSteamPipe()] = lastAppLaunched;
-	g_pLog->debug("fakeAppIdMap[%p] = %u\n", utils->getCurrentSteamPipe(), lastAppLaunched);
-
 	//Do not change Steam Client itself (AppId 0)
 	if (!appId)
 	{

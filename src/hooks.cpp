@@ -321,7 +321,7 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 //I don't like forward declerations, but with the current style & hooks layout it's a necessity
 static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId);
 
-static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pipe, CUtlBuffer* pBufIn, CUtlBuffer* pBufOut)
+static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe hPipe, CUtlBuffer* pBufIn, CUtlBuffer* pBufOut)
 {
 	if (!g_pSteamEngine)
 	{
@@ -339,7 +339,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pip
 
 	if (log)
 	{
-		g_pLog->debug("ProcessIPCFrame %p -> %s\n", pipe, EIPCCmd_ToString(cmd).c_str());
+		g_pLog->debug("ProcessIPCFrame %p -> %s\n", hPipe, EIPCCmd_ToString(cmd).c_str());
 	}
 
 	if (cmd == EIPCCmd::RunInterface)
@@ -378,7 +378,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pip
 
 		FakeAppIds::runIPCFrame(false, interface);
 
-		ret = Hooks::CSteamEngine_ProcessIPCFrame.tramp.fn(pSteamEngine, pipe, pBufIn, pBufOut);
+		ret = Hooks::CSteamEngine_ProcessIPCFrame.tramp.fn(pSteamEngine, hPipe, pBufIn, pBufOut);
 
 		//g_pLog->debug("In\n%s\n", MemHlp::hexdump(pBufIn->mem.base, pBufIn->offset).c_str());
 
@@ -423,7 +423,12 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe pip
 	}
 	else
 	{
-		ret = Hooks::CSteamEngine_ProcessIPCFrame.tramp.fn(pSteamEngine, pipe, pBufIn, pBufOut);
+		ret = Hooks::CSteamEngine_ProcessIPCFrame.tramp.fn(pSteamEngine, hPipe, pBufIn, pBufOut);
+	}
+
+	if (cmd == EIPCCmd::ClosePipe)
+	{
+		FakeAppIds::closePipe(hPipe);
 	}
 
 	//g_pLog->debug("In\n%s\n", MemHlp::hexdump(pBufIn->mem.base, pBufIn->offset).c_str());
@@ -660,7 +665,6 @@ static void* hkClientAppManager_LaunchApp(void* pClientAppManager, AppId_t* pApp
 			a4
 		);
 
-		FakeAppIds::launchApp(*pAppId);
 		Ticket::launchApp(*pAppId);
 	}
 

@@ -7,7 +7,14 @@
 #include "../patterns.hpp"
 
 #include "libmem/libmem.h"
+#include "steam.hpp"
 
+
+CServerPipe* CSteamEngine::getServerPipe(const HSteamPipe pipe)
+{
+	const static auto fn = reinterpret_cast<CServerPipe*(*)(void*, HSteamPipe)>(Patterns::CSteamEngine::GetServerPipe.address);
+	return fn(this, pipe);
+}
 
 CUser* CSteamEngine::getUser(const uint32_t index)
 {
@@ -24,7 +31,6 @@ CUser* CSteamEngine::getUser(const uint32_t index)
 	//const auto ppUser = ppUserMap + index * 8;
 	//return *reinterpret_cast<CUser**>(ppUser + 4);
 }
-
 
 IClientUtils* CSteamEngine::getUtils()
 {
