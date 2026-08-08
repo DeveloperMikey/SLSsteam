@@ -21,6 +21,10 @@ JOBS := $(shell nproc)
 #DATE := $(shell date "+%Y%m%d%H%M%S")
 DATE := $(shell cat res/version.txt)
 
+ifeq ($(shell echo $$DEBUG),1)
+	CXXFLAGS += -D "DEBUG"
+endif
+
 ifeq ($(shell echo $$NATIVE),1)
 	CXXFLAGS += -march=native
 endif

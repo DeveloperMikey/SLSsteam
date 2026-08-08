@@ -129,6 +129,7 @@ public:
 	CLog(const char* path);
 	~CLog();
 
+	#ifdef DEBUG
 	template<typename ...Args>
 	constexpr void once(const char* msg, Args... args)
 	{
@@ -140,6 +141,17 @@ public:
 	{
 		__log(LogLevel::Debug, msg, args...);
 	}
+	#else
+	template<typename ...Args>
+	constexpr void once(__attribute__((unused)) const char* msg, __attribute__((unused)) Args... args)
+	{
+	}
+
+	template<typename ...Args>
+	constexpr void debug(__attribute__((unused)) const char* msg, __attribute__((unused)) Args... args)
+	{
+	}
+	#endif
 
 	template<typename ...Args>
 	constexpr void info(const char* msg, Args... args)
