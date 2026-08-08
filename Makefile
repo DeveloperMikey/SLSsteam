@@ -129,4 +129,18 @@ build: audit-libs tools
 rebuild: clean build
 release: rebuild zips
 
-.PHONY: audit-libs build clean clean-libs clean-tools tools rebuild zips
+.PHONY: \
+	audit-libs \
+	tools \
+	schema-grabber \
+	ticket-grabber \
+	clean-libs \
+	clean-tools \
+	install \
+	uninstall \
+	zips \
+	zips-config \
+	clean \
+	build \
+	rebuild \
+	release
