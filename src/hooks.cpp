@@ -454,7 +454,7 @@ static AppId_t hkSteamEngine_SetAppIdForCurrentPipe(void* pSteamEngine, AppId_t 
 
 static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(void* pWebSocketConnection, uint32_t type, void* pData, uint32_t dataSize)
 {
-	if (type == 2)
+	if (type == k_EWebSocketConnectionSendRaw)
 	{
 		//Freeing pData royally fucks up memory since
 		//it gets freed sometime after the function returns
