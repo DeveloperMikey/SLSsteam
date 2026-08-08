@@ -1,7 +1,6 @@
 #include "apps.hpp"
 
 #include "../sdk/CNetPacket.hpp"
-#include "../sdk/CProtoBufMsgBase.hpp"
 #include "../sdk/CSteamEngine.hpp"
 #include "../sdk/CUser.hpp"
 #include "../sdk/CUtl.hpp"

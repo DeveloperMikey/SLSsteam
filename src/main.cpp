@@ -20,7 +20,6 @@
 #include <filesystem>
 #include <link.h>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <sys/mman.h>
 #include <sys/types.h>

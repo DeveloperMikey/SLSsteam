@@ -1,14 +1,5 @@
 #include "hooks.hpp"
 
-#include "api.hpp"
-#include "config.hpp"
-#include "decompiler.hpp"
-#include "globals.hpp"
-#include "log.hpp"
-#include "memhlp.hpp"
-#include "patterns.hpp"
-#include "vftableinfo.hpp"
-
 #include "sdk/CAPIJob.hpp"
 #include "sdk/CClientUnifiedServiceTransport.hpp"
 #include "sdk/CCMInterface.hpp"
@@ -20,9 +11,7 @@
 #include "sdk/CUtl.hpp"
 #include "sdk/CWebSocketConnection.hpp"
 #include "sdk/IClientAppManager.hpp"
-#include "sdk/IClientApps.hpp"
 #include "sdk/IClientFriends.hpp"
-#include "sdk/IClientUser.hpp"
 #include "sdk/IClientUtils.hpp"
 #include "sdk/steam.hpp"
 
@@ -32,6 +21,15 @@
 #include "feats/misc.hpp"
 #include "feats/fakeappid.hpp"
 #include "feats/ticket.hpp"
+
+#include "api.hpp"
+#include "config.hpp"
+#include "decompiler.hpp"
+#include "globals.hpp"
+#include "log.hpp"
+#include "memhlp.hpp"
+#include "patterns.hpp"
+#include "vftableinfo.hpp"
 
 #include "libmem/libmem.h"
 

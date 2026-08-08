@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+
 enum EWebSocketConnectionSendType : uint32_t
 {
 	k_EWebSocketConnectionSendRaw = 2

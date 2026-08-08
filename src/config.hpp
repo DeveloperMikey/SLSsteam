@@ -10,7 +10,6 @@
 #include "yaml-cpp/yaml.h"
 
 #include <cstdint>
-#include <cstdio>
 #include <mutex>
 #include <pthread.h>
 #include <string>
