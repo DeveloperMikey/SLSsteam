@@ -113,6 +113,7 @@ void Ticket::launchApp(const AppId_t appId)
 		return;
 	}
 
+	//Replacing this call with an injected GetAppOwnershipTicketResponse is possible, but breaks in offline mode so we don't do that
 	g_pSteamEngine->getUser(0)->updateAppOwnershipTicket(appId, reinterpret_cast<void*>(ticket->ticket.data()), ticket->ticket.size());
 	g_pLog->once("Force loaded AppOwnershipTicket for %i\n", appId);
 }
