@@ -13,6 +13,7 @@ public:
 	//Set type with ProtoBuf mask
 	//Set refs to 1 (not doing this will debugbreak() in a failed assert)
 	void recvPkt(CNetPacket* pkt);
+	void recvPktHk(CNetPacket* pkt);
 };
 
 extern CCMInterface* g_pCMInterface;
