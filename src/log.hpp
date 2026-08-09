@@ -12,31 +12,20 @@
 #include <sstream>
 #include <unordered_set>
 
-#ifdef TRACE
-#define LOG_TRACE(fmt, ...) g_pLog->log(k_ELogLevelTrace, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
-#else
-#define LOG_TRACE(fmt, ...) ((void)0)
-#endif
+#define LOG_TRACE(fmt, ...) g_pLog->trace(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_ONCE(fmt, ...) g_pLog->once(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(fmt, ...) g_pLog->debug(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG_ONCE(fmt, ...) g_pLog->debugOnce(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
 
-#ifdef DEBUG
-#define LOG_ONCE(fmt, ...) g_pLog->log(k_ELogLevelOnce, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
-#define LOG_DEBUG(fmt, ...) g_pLog->log(k_ELogLevelDebug, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
-#define LOG_DEBUG_ONCE(fmt, ...) g_pLog->log(k_ELogLevelDebug | k_ELogLevelOnce, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
-#else
-#define LOG_ONCE(fmt, ...) ((void)0)
-#define LOG_DEBUG(fmt, ...) ((void)0)
-#define LOG_DEBUG_ONCE(fmt, ...) ((void)0)
-#endif
+#define LOG_WARN(fmt, ...) g_pLog->warn(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...) g_pLog->error(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...) g_pLog->info(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_NOTIFY(fmt, ...) g_pLog->notify(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_NOTIFYLONG(fmt, ...) g_pLog->notifyLong(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_NOTIFYWARN(fmt, ...) g_pLog->notifyWarn(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_NOTIFYERROR(fmt, ...) g_pLog->notifyError(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
 
-#define LOG_WARN(fmt, ...) g_pLog->log(k_ELogLevelWarn, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...) g_pLog->log(k_ELogLevelError, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
-#define LOG_INFO(fmt, ...) g_pLog->log(k_ELogLevelInfo, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
-#define LOG_NOTIFY(fmt, ...) g_pLog->log(k_ELogLevelNotifyShort, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
-#define LOG_NOTIFYLONG(fmt, ...) g_pLog->log(k_ELogLevelNotifyLong, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
-#define LOG_NOTIFYWARN(fmt, ...) g_pLog->log(k_ELogLevelNotifyWarn, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
-#define LOG_NOTIFYERROR(fmt, ...) g_pLog->log(k_ELogLevelNotifyError, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
-
-#define LOG_CUSTOM(lvl, fmt, ...) g_pLog->log(lvl, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_CUSTOM(lvl, fmt, ...) g_pLog->custom(lvl, __FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
 
 
 enum ELogLevel : unsigned int
@@ -65,7 +54,7 @@ class CLog
 public:
 	template<typename ...Args>
 	__attribute__((hot))
-	void log(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, Args... args)
+	void __log(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, Args... args)
 	{
 		if (flags < getMinLevel())
 		{
@@ -106,7 +95,7 @@ public:
 		if (shouldNotify() && notifySS.str().size() > 0)
 		{
 			system(notifySS.str().c_str());
-			log(k_ELogLevelDebug, file, function, line, "system(\"%s\")\n", notifySS.str().c_str());
+			debug(file, function, line, "system(\"%s\")\n", notifySS.str().c_str());
 		}
 
 		std::ostringstream prefixSS;
@@ -159,6 +148,119 @@ public:
 
 	CLog(const char* path);
 	~CLog();
+
+	#ifdef TRACE
+	template<typename ...Args>
+	constexpr void trace(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelTrace, file, function, line, msg, args...);
+	}
+	#else
+	template<typename ...Args>
+	constexpr void trace
+	(
+		__attribute__((unused)) const char* file,
+		__attribute__((unused)) const char* function,
+		__attribute__((unused)) const int line,
+		__attribute__((unused)) const char* msg,
+		__attribute__((unused)) Args... args
+	)
+	{
+	}
+	#endif
+
+	#ifdef DEBUG
+	template<typename ...Args>
+	constexpr void once(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelOnce, file, function, line, msg, args...);
+	}
+	template<typename ...Args>
+	constexpr void debug(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelDebug, file, function, line, msg, args...);
+	}
+	template<typename ...Args>
+	constexpr void debugOnce(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelDebug | k_ELogLevelOnce, file, function, line, msg, args...);
+	}
+	#else
+	template<typename ...Args>
+	constexpr void once
+	(
+		__attribute__((unused)) const char* file,
+		__attribute__((unused)) const char* function,
+		__attribute__((unused)) const int line,
+		__attribute__((unused)) const char* msg,
+		__attribute__((unused)) Args... args
+	)
+	{
+	}
+	template<typename ...Args>
+	constexpr void debug
+	(
+		__attribute__((unused)) const char* file,
+		__attribute__((unused)) const char* function,
+		__attribute__((unused)) const int line,
+		__attribute__((unused)) const char* msg,
+		__attribute__((unused)) Args... args
+	)
+	{
+	}
+	template<typename ...Args>
+	constexpr void debugOnce
+	(
+		__attribute__((unused)) const char* file,
+		__attribute__((unused)) const char* function,
+		__attribute__((unused)) const int line,
+		__attribute__((unused)) const char* msg,
+		__attribute__((unused)) Args... args
+	)
+	{
+	}
+	#endif
+
+	template<typename ...Args>
+	constexpr void warn(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelWarn, file, function, line, msg, args...);
+	}
+	template<typename ...Args>
+	constexpr void error(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelError, file, function, line, msg, args...);
+	}
+	template<typename ...Args>
+	constexpr void info(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelInfo, file, function, line, msg, args...);
+	}
+	template<typename ...Args>
+	constexpr void notify(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelNotifyShort, file, function, line, msg, args...);
+	}
+	template<typename ...Args>
+	constexpr void notifyLong(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelNotifyLong, file, function, line, msg, args...);
+	}
+	template<typename ...Args>
+	constexpr void notifyWarn(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelNotifyWarn, file, function, line, msg, args...);
+	}
+	template<typename ...Args>
+	constexpr void notifyError(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelNotifyError, file, function, line, msg, args...);
+	}
+	template<typename ...Args>
+	constexpr void custom(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(flags, file, function, line, msg, args...);
+	}
 
 	//Do not include config.hpp in this header, otherwise things will break :) (proly due to recursive inclusion)
 	static ELogLevel getMinLevel();
