@@ -132,6 +132,8 @@ FakeWalletBalance: 0
 #NotifyLong = 4
 #Warn = 5
 #None = 6
+#LogLevels below info are stripped from release versions
+#If you want to use them use a debug version
 LogLevel: 2
 
 #Dump all used IClientInterfaceMaps
