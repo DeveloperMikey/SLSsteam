@@ -113,7 +113,7 @@ void CConfig::setError(const ELoadError err, const char* keyName)
 
 	if (!prev.size())
 	{
-		msg << "Config loading errors:\n";
+		msg << "Config loading issues encountered:\n";
 	}
 	else
 	{
@@ -339,7 +339,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	const auto errors = __loadErrors.get();
 	if (errors.size())
 	{
-		LOG_NOTIFY(errors.c_str());
+		LOG_NOTIFYWARN(errors.c_str());
 	}
 
 	return true;

@@ -34,20 +34,15 @@ std::string ELogLevel_ToString(const unsigned int lvlFlags)
 				return "Notify";
 			case k_ELogLevelNotifyLong:
 				return "Notify Long";
-			case k_ELogLevelNotifyWarn:
-				return "Notify Warn";
-			case k_ELogLevelNotifyError:
-				return "Notify Error";
 
 			default:
 				return "Unknown";
 		}
 	};
 
-	constexpr unsigned int numLogLevels = 11;
 	std::ostringstream lvlStr;
 
-	for(int i = numLogLevels; i >= 0; i--)
+	for(int i = ELogLevelCount; i >= 0; i--)
 	{
 		const unsigned int flag = 1 << i;
 
@@ -65,6 +60,52 @@ std::string ELogLevel_ToString(const unsigned int lvlFlags)
 	return lvlStr.str();
 }
 
+
+std::string CLog::buildNotification(const unsigned int flags, const char* msg)
+{
+	const bool notifyShort = flags & k_ELogLevelNotifyShort;
+	const bool notifyLong = flags & k_ELogLevelNotifyLong;
+
+	if (!notifyShort && !notifyLong)
+	{
+		return "";
+	}
+	const bool warn = flags & k_ELogLevelWarn;
+	const bool error = flags & k_ELogLevelError;
+	std::ostringstream notifySS;
+
+	notifySS << "notify-send ";
+
+	if (flags & k_ELogLevelNotifyLong)
+	{
+		notifySS << "-t 30000";
+	}
+	else if (flags & k_ELogLevelNotifyShort)
+	{
+		notifySS << "-t 10000";
+	}
+
+	notifySS << " -u ";
+
+	if (error)
+	{
+		notifySS << "\"critical\" \"SLSsteam\" \"Error:\n";
+	}
+	else if (warn)
+	{
+		notifySS << "\"normal\" \"SLSsteam\" \"Warning:\n";
+	}
+	else
+	{
+		notifySS << "\"normal\" \"SLSsteam\" \"";
+	}
+
+	//Leading quote is added by error/warn/none if statement above
+	notifySS << msg << "\"";
+
+	return notifySS.str();
+}
+
 void CLog::__log(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
 {
 	if (flags < getMinLevel())
@@ -77,36 +118,14 @@ void CLog::__log(const unsigned int flags, const char* file, const char* functio
 	formatted.resize(size);
 	vsnprintf(formatted.data(), size, msg, vArgs);
 
-	std::ostringstream notifySS;
-	//Notifications do not end with a newline, so we append one
-	//Default statement sets false for normal logging
-	bool appendNewLine = true;
+	//Notifications do not get a newline ending, so we add our own
+	//Use built string to check further down
+	const auto notification = buildNotification(flags, formatted.c_str());
 
-	switch(flags)
+	if (shouldNotify() && notification.size() > 0)
 	{
-		//TODO: Fix possible breakage when there's only one " in formatted
-		case k_ELogLevelNotifyShort:
-			notifySS << "notify-send -t 10000 -u \"normal\" \"SLSsteam\" \"" << formatted.c_str() << "\"";
-			break;
-		case k_ELogLevelNotifyLong:
-			notifySS << "notify-send -t 30000 -u \"normal\" \"SLSsteam\" \"" << formatted.c_str() << "\"";
-			break;
-		case k_ELogLevelNotifyWarn:
-			notifySS << "notify-send -u \"critical\" \"SLSsteam - Warning\" \"" << formatted.c_str() << "\"";
-			break;
-		case k_ELogLevelNotifyError:
-			notifySS << "notify-send -u \"critical\" \"SLSsteam - Error\" \"" << formatted.c_str() << "\"";
-			break;
-
-		default:
-			appendNewLine = false;
-			break;
-	}
-
-	if (shouldNotify() && notifySS.str().size() > 0)
-	{
-		system(notifySS.str().c_str());
-		debug(file, function, line, "system(\"%s\")\n", notifySS.str().c_str());
+		system(notification.c_str());
+		debug(file, function, line, "system(\"%s\")\n", notification.c_str());
 	}
 
 	std::ostringstream prefixSS;
@@ -147,7 +166,7 @@ void CLog::__log(const unsigned int flags, const char* file, const char* functio
 	//Padding makes things nicer, but basically unreadable
 	ofstream << prefix << " " << formatted.c_str();
 
-	if (appendNewLine)
+	if (notification.size() > 0)
 	{
 		ofstream << "\n";
 	}
@@ -172,13 +191,6 @@ CLog::~CLog()
 		ofstream.close();
 	}
 }
-
-//Dirty workaround for not being able to access g_config from __log
-ELogLevel CLog::getMinLevel()
-{
-	return static_cast<ELogLevel>(1 << g_config.logLevel.get());
-}
-
 
 #ifdef TRACE
 void CLog::trace(const char* file, const char* function, const int line, const char* msg, ...)
@@ -312,14 +324,15 @@ void CLog::notifyWarn(const char* file, const char* function, const int line, co
 {
 	va_list vArgs;
 	va_start(vArgs, msg);
-	__log(k_ELogLevelNotifyWarn, file, function, line, msg, vArgs);
+	__log(k_ELogLevelNotifyLong | k_ELogLevelWarn, file, function, line, msg, vArgs);
 	va_end(vArgs);
 }
 void CLog::notifyError(const char* file, const char* function, const int line, const char* msg, ...)
 {
 	va_list vArgs;
 	va_start(vArgs, msg);
-	__log(k_ELogLevelNotifyError, file, function, line, msg, vArgs);
+	//Notify type doesn't really matter, since critical stays until clicked
+	__log(k_ELogLevelNotifyLong | k_ELogLevelError, file, function, line, msg, vArgs);
 	va_end(vArgs);
 }
 void CLog::custom(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, ...)
@@ -328,6 +341,12 @@ void CLog::custom(const unsigned int flags, const char* file, const char* functi
 	va_start(vArgs, msg);
 	__log(flags, file, function, line, msg, vArgs);
 	va_end(vArgs);
+}
+
+//Dirty workaround for not being able to access g_config from __log
+ELogLevel CLog::getMinLevel()
+{
+	return static_cast<ELogLevel>(g_config.logLevel.get());
 }
 
 bool CLog::shouldNotify()

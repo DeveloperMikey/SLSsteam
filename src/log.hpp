@@ -24,6 +24,7 @@
 
 #define LOG_CUSTOM(lvl, fmt, ...) g_pLog->custom(lvl, __FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
 
+constexpr unsigned int ELogLevelCount = 8;
 
 enum ELogLevel : unsigned int
 {
@@ -35,9 +36,7 @@ enum ELogLevel : unsigned int
 	k_ELogLevelInfo = 1 << 5, //Log for users/external tools
 	k_ELogLevelNotifyShort = 1 << 6,
 	k_ELogLevelNotifyLong = 1 << 7,
-	k_ELogLevelNotifyWarn = 1 << 8,
-	k_ELogLevelNotifyError = 1 << 9,
-	k_ELogLevelNone = 1 << 10
+	k_ELogLevelNone = 1 << 8
 };
 
 std::string ELogLevel_ToString(unsigned int lvlFlags);
@@ -48,6 +47,7 @@ class CLog
 	std::unordered_set<std::string> msgHist {};
 	std::shared_mutex mutex;
 
+	std::string buildNotification(const unsigned int flags, const char* msg);
 	void __log(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs);
 
 public:

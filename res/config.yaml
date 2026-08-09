@@ -123,20 +123,20 @@ FakeEmail: ""
 FakeWalletBalance: 0
 
 #Log levels:
-#Trace = 0 #Tracing
-#Once = 1 #Only log once
-#Debug = 2 #Debugging statements
-#Warn = 3 #Something went wrong but it's not terrible
-#Error = 4 #Something went wrong and it's terrible/can't be recovered from. Function failed
-#Info = 5 #Log for users/external tools
-#NotifyShort = 6
-#NotifyLong = 7
-#NotifyWarn = 8
-#NotifyError = 9
-#None = 10
+#Trace = 1 #Tracing
+#Once = 2 #Only log once
+#Debug = 4 #Debugging statements
+#Warn = 8 #Something went wrong but it's not terrible
+#Error = 16 #Something went wrong and it's terrible/can't be recovered from. Function failed
+#Info = 32 #Log for users/external tools
+#NotifyShort = 64
+#NotifyLong = 128
+#None = 256
 #LogLevels below Warn are stripped from release versions
 #If you want to use them use a debug version
-LogLevel: 3
+#LogLevels are bitwise flags, so for example to only
+#show Long error notifications use 16 | 128 which is 144
+LogLevel: 8
 
 #Dump all used IClientInterfaceMaps
 DumpClientInterfaces: no
