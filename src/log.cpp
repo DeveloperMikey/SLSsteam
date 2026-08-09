@@ -41,7 +41,7 @@ std::string ELogLevel_ToString(const unsigned int lvlFlags)
 	constexpr unsigned int numLogLevels = 11;
 	std::ostringstream lvlStr;
 
-	for(unsigned int i = 0; i < numLogLevels; i++)
+	for(int i = numLogLevels; i >= 0; i--)
 	{
 		const unsigned int flag = 1 << i;
 
