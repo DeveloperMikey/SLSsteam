@@ -60,7 +60,7 @@ bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info)
 	return unlockApp(appId, info, g_currentSteamId);
 }
 
-void Apps::buildDepotDependency(const AppId_t appId, CUtlVector<DepotInfo_t>* depots, CUtlVector<DepotInfo_t>* sharedDepots)
+void Apps::buildDepotDependency(CUtlVector<DepotInfo_t>* depots, CUtlVector<DepotInfo_t>* sharedDepots)
 {
 	LOG_DEBUG("Vec Alloc %u, Grow %u, Size %u\n", depots->memory.alloc, depots->memory.growSize, depots->size);
 

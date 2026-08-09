@@ -651,7 +651,7 @@ static bool hkUserAppManager_BuildDepotDependency
 
 	LOG_DEBUG("%s(%p, %u) -> %i\n", Hooks::CUserAppManager_BuildDepotDependency.name.c_str(), pClientAppManager, appId, success);
 
-	Apps::buildDepotDependency(appId, depots, sharedDepots);
+	Apps::buildDepotDependency(depots, sharedDepots);
 
 	return success;
 }
