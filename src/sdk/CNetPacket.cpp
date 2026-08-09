@@ -27,7 +27,7 @@ CMsgProtoBufHeader CNetPacket::deserializeHeader() const
 	CMsgProtoBufHeader header;
 	if (!header.ParseFromArray(mem, body->headerSize))
 	{
-		LOG_DEBUG("Failed to parse header!\n");
+		LOG_ERROR("Failed to parse header!\n");
 	}
 
 	return header;

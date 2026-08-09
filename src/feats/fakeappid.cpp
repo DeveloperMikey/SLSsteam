@@ -190,7 +190,7 @@ void FakeAppIds::setAppIdForCurrentPipe(AppId_t& appId)
 	const AppId_t newAppId = getFakeAppId(appId);
 	if (newAppId)
 	{
-		LOG_ONCE("Changing AppId of %u\n", appId);
+		LOG_DEBUG("Changing AppId of %u\n", appId);
 		appId = newAppId;
 	}
 }

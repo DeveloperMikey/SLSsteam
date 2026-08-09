@@ -27,13 +27,13 @@ void* watchLoop(void* args)
 		size = read(watcher->notifyFd, buf, sizeof(buf));
 		if (!size)
 		{
-			LOG_DEBUG("Failed to read from FileWatcher %i! (size = 0)\n", watcher->notifyFd);
+			LOG_ERROR("Failed to read from FileWatcher %i! (size = 0)\n", watcher->notifyFd);
 			break;
 		}
 
 		if (size == -1)
 		{
-			LOG_DEBUG("Failed to read from FileWatcher %i (%s)!\n", watcher->notifyFd, strerror(errno));
+			LOG_ERROR("Failed to read from FileWatcher %i (%s)!\n", watcher->notifyFd, strerror(errno));
 			break;
 		}
 

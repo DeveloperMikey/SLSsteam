@@ -11,6 +11,7 @@ CLog::CLog(const char* path) : path(path)
 	ofstream = std::ofstream(path);
 	if (!ofstream.is_open())
 	{
+		//We don't want to boot without a logfile
 		throw std::runtime_error("Unable to open logfile!");
 	}
 }

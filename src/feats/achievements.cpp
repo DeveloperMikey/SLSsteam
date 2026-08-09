@@ -53,7 +53,7 @@ std::unordered_set<uint64_t> Achievements::getReviewersForGame(const AppId_t app
 		ownerBlacklist[appId] = std::unordered_set<uint64_t>();
 	}
 
-	LOG_TRACE("Downloaded reviewers %s\n", reviews.c_str());
+	LOG_DEBUG("Downloaded reviewers %s\n", reviews.c_str());
 
 	std::regex steamIdFieldsRe("\"steamid\":\"[0-9]+\"");
 
@@ -78,7 +78,7 @@ std::unordered_set<uint64_t> Achievements::getReviewersForGame(const AppId_t app
 		uint64_t steamId = std::stoull(steamIdMatch.str().c_str());
 		if (ownerBlacklist[appId].contains(steamId))
 		{
-			LOG_TRACE("Skipping %llu for %u because it has failed before\n", steamId, appId);
+			LOG_DEBUG("Skipping %llu for %u because it has failed before\n", steamId, appId);
 			continue;
 		}
 
@@ -98,7 +98,7 @@ uint32_t Achievements::tryGetPlayerStats
 	const uint64_t steamId
 )
 {
-	LOG_TRACE("CPlayer_GetUserStats_Request->set_steamid(%llu)\n", steamId);
+	LOG_DEBUG("CPlayer_GetUserStats_Request->set_steamid(%llu)\n", steamId);
 	send->set_steamid(steamId);
 	uint32_t res = serviceTransport->sendAndRecvMsg(serviceName, send, recv);
 
@@ -176,7 +176,7 @@ uint32_t Achievements::tryGetUserStats(CAPIJob* job, CProtoBufMsgBase* send, con
 {
 	const auto sendBdy = send->getBody<CMsgClientGetUserStats>();
 
-	LOG_TRACE("CMsgClientGetUserStats->set_steam_id_for_user(%llu)\n", steamId);
+	LOG_DEBUG("CMsgClientGetUserStats->set_steam_id_for_user(%llu)\n", steamId);
 	sendBdy->set_steam_id_for_user(steamId);
 
 	const uint32_t ret = job->sendAndRecv(send, timeOut, recv, targetType);

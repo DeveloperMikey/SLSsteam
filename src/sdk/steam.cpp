@@ -163,6 +163,7 @@ bool Steam::init()
 
 	if (!Plat_Alloc | !Plat_Free | !Plat_Realloc)
 	{
+		LOG_ERROR("Didn't find all of Steam's platform allocators!\n");
 		return false;
 	}
 

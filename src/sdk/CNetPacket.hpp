@@ -77,7 +77,7 @@ public:
 
 		if (!mem)
 		{
-			LOG_DEBUG("Failed to allocate new packet body with size %u!\n", newSize);
+			LOG_ERROR("Failed to allocate new packet body with size %u!\n", newSize);
 			return;
 		}
 
@@ -87,7 +87,7 @@ public:
 		{
 			if (!header->SerializeToArray(mem + headerOffset, headerSize))
 			{
-				LOG_DEBUG("Failed to serialize header!\n");
+				LOG_ERROR("Failed to serialize header!\n");
 				goto failed;
 			}
 
@@ -100,7 +100,7 @@ public:
 
 		if (!msg.SerializeToArray(mem + msgOffset, msg.ByteSizeLong()))
 		{
-			LOG_DEBUG("Failed to serialize %p!\n", getType());
+			LOG_ERROR("Failed to serialize %p!\n", getType());
 			goto failed;
 		}
 

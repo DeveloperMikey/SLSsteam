@@ -114,8 +114,11 @@ class CLog
 			case LogLevel::NotifyLong:
 				notifySS << "notify-send -t 30000 -u \"normal\" \"SLSsteam\" \"" << formatted.c_str() << "\"";
 				break;
-			case LogLevel::Warn:
-				notifySS << "notify-send -u \"critical\" \"SLSsteam\" \"" << formatted.c_str() << "\"";
+			case LogLevel::NotifyWarn:
+				notifySS << "notify-send -u \"critical\" \"SLSsteam - Warning\" \"" << formatted.c_str() << "\"";
+				break;
+			case LogLevel::NotifyError:
+				notifySS << "notify-send -u \"critical\" \"SLSsteam - Error\" \"" << formatted.c_str() << "\"";
 				break;
 
 			default:

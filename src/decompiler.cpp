@@ -423,14 +423,14 @@ bool Decompiler::parseHeader(const lm_module_t& mod)
 	FILE* file = fopen(mod.path, "r");
 	if (!file)
 	{
-		LOG_DEBUG("Failed to open file for parsing Elf headers!\n");
+		LOG_ERROR("Failed to open file for parsing Elf headers!\n");
 		return false;
 	}
 
 	Elf_Ehdr hdr;
 	if (fread(&hdr, sizeof(hdr), 1, file) < 1)
 	{
-		LOG_DEBUG("Failed to read Elf header!\n");
+		LOG_ERROR("Failed to read Elf header!\n");
 		return false;
 	}
 
@@ -438,7 +438,7 @@ bool Decompiler::parseHeader(const lm_module_t& mod)
 
 	if (sizeof(Elf_Shdr) < hdr.e_shentsize)
 	{
-		LOG_DEBUG("hdr.e_shentsize < sizeof(Elf_Shdr)!\n");
+		LOG_ERROR("hdr.e_shentsize < sizeof(Elf_Shdr)!\n");
 		return false;
 	}
 
@@ -447,13 +447,13 @@ bool Decompiler::parseHeader(const lm_module_t& mod)
 
 	if (fseek(file, hdr.e_shoff, SEEK_SET) != 0)
 	{
-		LOG_DEBUG("Failed to seek to section headers\n");
+		LOG_ERROR("Failed to seek to section headers\n");
 		return false;
 	}
 
 	if (fread(shdrs.data(), sizeof(Elf_Shdr), shdrs.size(), file) < shdrs.size())
 	{
-		LOG_DEBUG("Failed to read section headers\n");
+		LOG_ERROR("Failed to read section headers\n");
 		return false;
 	}
 
@@ -463,13 +463,13 @@ bool Decompiler::parseHeader(const lm_module_t& mod)
 
 	if (fseek(file, strHdr.sh_offset, SEEK_SET) != 0)
 	{
-		LOG_DEBUG("Failed to seek to strHdr.sh_addr!\n");
+		LOG_ERROR("Failed to seek to strHdr.sh_addr!\n");
 		return false;
 	}
 	
 	if (fread(strSec.data(), sizeof(unsigned char), strSec.size(), file) < strSec.size())
 	{
-		LOG_DEBUG("Failed to seek to strHdr.sh_addr!\n");
+		LOG_ERROR("Failed to seek to strHdr.sh_addr!\n");
 		return false;
 	}
 
@@ -549,7 +549,7 @@ void Decompiler::__parseFunction
 	{
 		if (!LM_Disassemble(addr, &instr))
 		{
-			LOG_DEBUG("Failed to disassemble function %p at %p!\n", begin, addr);
+			LOG_WARN("Failed to disassemble function %p at %p!\n", begin, addr);
 			return;
 		}
 
@@ -563,7 +563,7 @@ void Decompiler::__parseFunction
 
 			if (!getRelativeTarget(instr, branch))
 			{
-				LOG_DEBUG("Failed to follow %s %s at %p!\n", instr.address, instr.mnemonic, instr.op_str);
+				LOG_WARN("Failed to follow %s %s at %p!\n", instr.address, instr.mnemonic, instr.op_str);
 				return;
 			}
 

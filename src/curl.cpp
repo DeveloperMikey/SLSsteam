@@ -20,7 +20,7 @@ int Curl::getString(const char* url, std::string& out)
 
 	if (pipe(pipefd) == -1)
 	{
-		LOG_DEBUG("Failed to create pipe!\n");
+		LOG_ERROR("Failed to create pipe!\n");
 		return 1;
 	}
 
@@ -46,7 +46,7 @@ int Curl::getString(const char* url, std::string& out)
 		close(pipefd[0]);
 		close(pipefd[1]);
 
-		LOG_DEBUG("Failed to fork!\n");
+		LOG_ERROR("Failed to fork!\n");
 		return 1;
 	}
 
@@ -54,7 +54,7 @@ int Curl::getString(const char* url, std::string& out)
 	{
 		if (dup2(pipefd[1], STDOUT_FILENO) == -1)
 		{
-			LOG_DEBUG("Failed to dup2!\n");
+			LOG_ERROR("Failed to dup2!\n");
 			exit(1);
 		}
 

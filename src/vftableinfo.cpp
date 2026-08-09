@@ -18,7 +18,7 @@ bool VFTableInfo_t::init()
 {
 	if (!Decompiler::vftables.contains(typeName))
 	{
-		LOG_DEBUG("%s not found in Decompiler::vftables!\n", typeName.c_str());
+		LOG_ERROR("%s not found in Decompiler::vftables!\n", typeName.c_str());
 		return false;
 	}
 
@@ -32,7 +32,7 @@ bool VFTableInfo_t::init()
 		const auto& tbl = VFTIndexes::tableMap.at(typeName);
 		if (!tbl.contains(functionName))
 		{
-			LOG_DEBUG("VFunction %s not found!\n", functionName.c_str());
+			LOG_ERROR("%s not found!\n", functionName.c_str());
 			return false;
 		}
 
@@ -44,7 +44,7 @@ bool VFTableInfo_t::init()
 
 	if (index >= funcs.size())
 	{
-		LOG_DEBUG("%s index bigger than vtable size!\n", getPrintName().c_str());
+		LOG_ERROR("%s index bigger than vtable size!\n", getPrintName().c_str());
 		return false;
 	}
 

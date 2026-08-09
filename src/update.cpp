@@ -44,6 +44,8 @@ bool Updater::init()
 			downloadSuccess = true;
 			break;
 		}
+
+		LOG_WARN("Download updates.yaml failed!\n");
 	}
 
 	if(!downloadSuccess)
@@ -51,6 +53,7 @@ bool Updater::init()
 		data = loadFromCache();
 		if(data.size() < 1)
 		{
+			LOG_ERROR("No cached updates.yaml found! Failing\n");
 			return false;
 		}
 
@@ -153,7 +156,7 @@ bool Updater::verifySafeModeHash()
 	}
 	catch(std::runtime_error& err)
 	{
-		LOG_DEBUG("Unable to read steamclient.so hash!\n");
+		LOG_ERROR("Unable to read steamclient.so hash!\n");
 		return false;
 	}
 

@@ -27,6 +27,8 @@ endif
 
 ifeq ($(shell echo $$DEBUG),1)
 	CXXFLAGS += -D "DEBUG"
+else
+	CXXFLAGS += -Wno-unused-parameter -Wno-unused-variable
 endif
 
 ifeq ($(shell echo $$NATIVE),1)

@@ -29,6 +29,8 @@ std::string CConfig::getDir() const
 	}
 	else
 	{
+		LOG_WARN("XDG_CONFIG_HOME not set! Falling back to HOME\n");
+
 		const char* home = getenv("HOME");
 		path << home << "/.config";
 	}
@@ -84,7 +86,7 @@ bool CConfig::init()
 {
 	if(!createFile())
 	{
-		LOG_DEBUG("Config creation failed!\n");
+		LOG_WARN("Config creation failed!\n");
 		return false;
 	}
 

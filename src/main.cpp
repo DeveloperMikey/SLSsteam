@@ -102,6 +102,8 @@ static void setup()
 	}
 
 	g_pLog = std::unique_ptr<CLog>(CLog::createDefaultLog());
+	//Won't happen, log throws a runtime exception when creation fails.
+	//But just in case I decide to refactor one day
 	if (!g_pLog)
 	{
 		unload();
@@ -172,7 +174,7 @@ static void load()
 	{
 		if (g_config.safeMode.get())
 		{
-			LOG_NOTIFYWARN("Unknown steamclient.so hash! Aborting...");
+			LOG_NOTIFYERROR("Unknown steamclient.so hash! Aborting...");
 			unload();
 			return;
 		}
@@ -184,19 +186,19 @@ static void load()
 
 	if (!Steam::init())
 	{
-		LOG_NOTIFYWARN("Failed to find steam exports!\n");
+		LOG_NOTIFYERROR("Failed to find steam exports!\n");
 		return;
 	}
 
 	if(!VFTIndexes::init())
 	{
-		LOG_NOTIFYWARN("Failed to parse VFTables! Aborting...");
+		LOG_NOTIFYERROR("Failed to parse VFTables! Aborting...");
 		return;
 	}
 
 	if (!Patterns::init())
 	{
-		LOG_NOTIFYWARN("Failed to find all patterns! Aborting...");
+		LOG_NOTIFYERROR("Failed to find all patterns! Aborting...");
 		return;
 	}
 
