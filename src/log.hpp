@@ -30,17 +30,17 @@
 
 enum ELogLevel : unsigned int
 {
-	k_ELogLevelTrace = 1 << 1, //Tracing for debug
-	k_ELogLevelOnce = 1 << 2, //Only log once
-	k_ELogLevelDebug = 1 << 3, //Debugging statements
-	k_ELogLevelWarn = 1 << 4, //Something went wrong but it's not terrible
-	k_ELogLevelError = 1 << 5, //Something went wrong and it's terrible/can't be recovered from. Function failed
-	k_ELogLevelInfo = 1 << 6, //Log for users/external tools
-	k_ELogLevelNotifyShort = 1 << 7,
-	k_ELogLevelNotifyLong = 1 << 8,
-	k_ELogLevelNotifyWarn = 1 << 9,
-	k_ELogLevelNotifyError = 1 << 10,
-	k_ELogLevelNone = 1 << 11
+	k_ELogLevelTrace = 1 << 0, //Tracing for debug
+	k_ELogLevelOnce = 1 << 1, //Only log once
+	k_ELogLevelDebug = 1 << 2, //Debugging statements
+	k_ELogLevelWarn = 1 << 3, //Something went wrong but it's not terrible
+	k_ELogLevelError = 1 << 4, //Something went wrong and it's terrible/can't be recovered from. Function failed
+	k_ELogLevelInfo = 1 << 5, //Log for users/external tools
+	k_ELogLevelNotifyShort = 1 << 6,
+	k_ELogLevelNotifyLong = 1 << 7,
+	k_ELogLevelNotifyWarn = 1 << 8,
+	k_ELogLevelNotifyError = 1 << 9,
+	k_ELogLevelNone = 1 << 10
 };
 
 std::string ELogLevel_ToString(unsigned int lvlFlags);
