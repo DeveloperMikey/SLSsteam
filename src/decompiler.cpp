@@ -185,14 +185,14 @@ lm_address_t Decompiler::getLeaOffset(lm_inst_t& callInstr)
 	lm_inst_t nextInstr;
 	if (!LM_Disassemble(offset, &nextInstr))
 	{
-		LOG_DEBUG("Failed to disassemble next in getLeaOffset at %p\n", offset);
+		LOG_DEBUG("Failed to disassemble next in getLeaOffset at 0x%x\n", offset);
 		return LM_ADDRESS_BAD;
 	}
 
 	//Thunk is followed by 'add thunkReg, num'
 	if (strcmp(nextInstr.mnemonic, "add") != 0)
 	{
-		LOG_DEBUG("Failed to get lea offset at %p, next instruction is not an add instruction!\n", offset);
+		LOG_DEBUG("Failed to get lea offset at 0x%x, next instruction is not an add instruction!\n", offset);
 		return LM_ADDRESS_BAD;
 	}
 
@@ -200,7 +200,7 @@ lm_address_t Decompiler::getLeaOffset(lm_inst_t& callInstr)
 	auto split = Utils::strsplit(nextInstr.op_str, ",");
 	if (split[0] != thunkReg)
 	{
-		LOG_DEBUG("Failed to get lea offset at %p, split[0] != thunkReg\n");
+		LOG_DEBUG("Failed to get lea offset at 0x%x, split[0] != thunkReg\n", callInstr.address);
 		return LM_ADDRESS_BAD;
 	}
 
@@ -242,7 +242,7 @@ bool Decompiler::isPICThunk(const lm_inst_t& callInstr, std::string* targetRegis
 		return false;
 	}
 
-	//LOG_DEBUG("Checking %s %s at %p\n", callInstr.mnemonic, callInstr.op_str, callInstr.address);
+	//LOG_DEBUG("Checking %s %s at 0x%x\n", callInstr.mnemonic, callInstr.op_str, callInstr.address);
 
 	lm_address_t target;
 	if (!getRelativeTarget(callInstr, target))
@@ -250,7 +250,7 @@ bool Decompiler::isPICThunk(const lm_inst_t& callInstr, std::string* targetRegis
 		return false;
 	}
 
-	//LOG_DEBUG("Call target at %p\n", target);
+	//LOG_DEBUG("Call target at 0x%x\n", target);
 
 	std::string espTarget;
 
@@ -259,7 +259,7 @@ bool Decompiler::isPICThunk(const lm_inst_t& callInstr, std::string* targetRegis
 	{
 		if (!LM_Disassemble(target, &instr))
 		{
-			LOG_DEBUG("Failed to disassemble %p!\n", target);
+			LOG_DEBUG("Failed to disassemble 0x%x!\n", target);
 			return false;
 		}
 
@@ -292,7 +292,7 @@ bool Decompiler::isPICThunk(const lm_inst_t& callInstr, std::string* targetRegis
 		}
 	}
 
-	//LOG_DEBUG("Found PIC thunk call at %p\n", callInstr.address);
+	//LOG_DEBUG("Found PIC thunk call at 0x%x\n", callInstr.address);
 	picThunks[callInstr.address] = espTarget;
 
 	if (targetRegister)
@@ -324,7 +324,7 @@ void Decompiler::collectStrings(const lm_module_t& mod, const Elf_Shdr& section)
 		}
 
 		strings[begin] = strBuf;
-		//LOG_DEBUG("Found string %s at %p with size %u\n", strBuf.c_str(), begin, strBuf.size());
+		//LOG_DEBUG("Found string %s at 0x%x with size %u\n", strBuf.c_str(), begin, strBuf.size());
 	}
 }
 
@@ -366,7 +366,7 @@ bool Decompiler::collectVFTables(const lm_module_t& mod, const Elf_Shdr& section
 			const lm_address_t typeInfo = addr - sizeof(addr);
 			const auto& name = strings.at(ptr);
 
-			//LOG_DEBUG("TypeInfo for %s at %p\n", name.c_str(), typeInfo);
+			//LOG_DEBUG("TypeInfo for %s at 0x%x\n", name.c_str(), typeInfo);
 			typeInfos[typeInfo] = name;
 		}
 	}
@@ -408,7 +408,7 @@ bool Decompiler::collectVFTables(const lm_module_t& mod, const Elf_Shdr& section
 			}
 
 			vftables[name] = vft;
-			//LOG_DEBUG("VFTable %s at %p\n", name.c_str(), vft.address);
+			//LOG_DEBUG("VFTable %s at 0x%x\n", name.c_str(), vft.address);
 		}
 	}
 
@@ -473,7 +473,7 @@ bool Decompiler::parseHeader(const lm_module_t& mod)
 		return false;
 	}
 
-	LOG_DEBUG("strHdr name %u address %p\n", strHdr.sh_name, strHdr.sh_offset);
+	LOG_DEBUG("strHdr name %u address 0x%x\n", strHdr.sh_name, strHdr.sh_offset);
 
 	for(const auto& shdr : shdrs)
 	{
@@ -484,7 +484,7 @@ bool Decompiler::parseHeader(const lm_module_t& mod)
 		}
 
 		const char* name = &strSec[shdr.sh_name];
-		LOG_DEBUG("Section header name %s, address %p, offset %p\n", name, shdr.sh_addr, shdr.sh_offset);
+		LOG_DEBUG("Section header name %s, address 0x%x, offset 0x%x\n", name, shdr.sh_addr, shdr.sh_offset);
 
 		auto mapName = std::string(mod.name) + "::" + name;
 		sections[mapName] = shdr;
@@ -549,11 +549,11 @@ void Decompiler::__parseFunction
 	{
 		if (!LM_Disassemble(addr, &instr))
 		{
-			LOG_WARN("Failed to disassemble function %p at %p!\n", begin, addr);
+			LOG_WARN("Failed to disassemble function 0x%x at 0x%x!\n", begin, addr);
 			return;
 		}
 
-		//LOG_DEBUG("%p: %s %s\n", addr, instr.mnemonic, instr.op_str);
+		//LOG_DEBUG("0x%x: %s %s\n", addr, instr.mnemonic, instr.op_str);
 
 		addr += instr.size;
 
@@ -563,13 +563,13 @@ void Decompiler::__parseFunction
 
 			if (!getRelativeTarget(instr, branch))
 			{
-				LOG_WARN("Failed to follow %s %s at %p!\n", instr.address, instr.mnemonic, instr.op_str);
+				LOG_WARN("Failed to follow %s %s at 0x%x!\n", instr.mnemonic, instr.op_str, instr.address);
 				return;
 			}
 
 			const bool taken = branchesTaken.contains(branch);
 
-			//LOG_DEBUG("Taking branch %s %s at %p to %p\n", instr.mnemonic, instr.op_str, instr.address, branch);
+			//LOG_DEBUG("Taking branch %s %s at 0x%x to 0x%x\n", instr.mnemonic, instr.op_str, instr.address, branch);
 			branchesTaken.emplace(branch);
 
 			if (strcmp(instr.mnemonic, "jmp") == 0)
@@ -595,7 +595,7 @@ void Decompiler::__parseFunction
 		//But just in case we check for all of them
 		else if(strcmp(instr.mnemonic, "ret") == 0 || strcmp(instr.mnemonic, "retn") == 0 || strcmp(instr.mnemonic, "retf") == 0)
 		{
-			//LOG_DEBUG("Hit %s instruction at %p, stopping\n", instr.mnemonic, instr.address);
+			//LOG_DEBUG("Hit %s instruction at 0x%x, stopping\n", instr.mnemonic, instr.address);
 			return;
 		}
 
@@ -636,7 +636,7 @@ void Decompiler::__parseFunction
 			continue;
 		}
 
-		//LOG_DEBUG("Target addr for op %p\n", targetAddr);
+		//LOG_DEBUG("Target addr for op 0x%x\n", targetAddr);
 
 		if (!strings.contains(targetAddr))
 		{
@@ -644,7 +644,7 @@ void Decompiler::__parseFunction
 		}
 
 		//const auto& str = strings.at(targetAddr);
-		//LOG_DEBUG("String reference to %s at %p\n", str.c_str(), instr.address);
+		//LOG_DEBUG("String reference to %s at 0x%x\n", str.c_str(), instr.address);
 		references[targetAddr]++;
 	}
 }

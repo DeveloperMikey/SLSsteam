@@ -46,11 +46,11 @@ namespace MemHlp
 		}
 		else if (!LM_WriteMemory(address, inst.bytes, inst.size))
 		{
-			LOG_DEBUG("Failed to write %s to %p!\n", code.c_str(), address);
+			LOG_DEBUG("Failed to write %s to 0x%x!\n", code.c_str(), address);
 		}
 		else
 		{
-			LOG_DEBUG("Wrote %s to %p with %i bytes\n", code.c_str(), address, inst.size);
+			LOG_DEBUG("Wrote %s to 0x%x with %i bytes\n", code.c_str(), address, inst.size);
 			address += inst.size;
 			success = true;
 		}

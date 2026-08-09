@@ -45,7 +45,7 @@ AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
 	const auto serverPipe = g_pSteamEngine->getServerPipe(pipe);
 	if (!serverPipe)
 	{
-		LOG_ERROR("ServerPipe for %p is null!\n", pipe);
+		LOG_ERROR("ServerPipe for %p is null!\n", reinterpret_cast<void*>(pipe));
 		return 0;
 	}
 
@@ -57,7 +57,7 @@ AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
 
 	if (!ifstream.is_open())
 	{
-		LOG_ERROR("Failed to open %s to get %p's appId!\n", path.c_str());
+		LOG_ERROR("Failed to open %s to get 0x%x's appId!\n", path.c_str(), pipe);
 		return 0;
 	}
 
@@ -84,7 +84,7 @@ AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
 
 	fakeAppIdMap[pipe] = appId;
 
-	LOG_DEBUG("AppId for %p is %u\n", pipe, appId);
+	LOG_DEBUG("AppId for 0x%x is %u\n", pipe, appId);
 	return appId;
 }
 
@@ -174,7 +174,7 @@ void FakeAppIds::closePipe(const HSteamPipe pipe)
 {
 	if (fakeAppIdMap.contains(pipe))
 	{
-		LOG_DEBUG("Deleting fake appId mapping %u for %p\n", fakeAppIdMap.at(pipe), pipe);
+		LOG_DEBUG("Deleting fake appId mapping %u for 0x%x\n", fakeAppIdMap.at(pipe), pipe);
 		fakeAppIdMap.erase(pipe);
 	}
 }
@@ -218,7 +218,7 @@ void FakeAppIds::runIPCFrame(const bool post, const EIPCInterface interface)
 	if (g_config.extendedLogging.get())
 	{
 		const auto utils = g_pSteamEngine->getUtils();
-		LOG_DEBUG("Setting AppId to %u in pipe %p\n", appId, utils ? utils->getCurrentSteamPipe() : 0);
+		LOG_DEBUG("Setting AppId to %u in pipe 0x%x\n", appId, utils ? utils->getCurrentSteamPipe() : 0);
 	}
 
 	g_pSteamEngine->setAppIdForCurrentPipe(appId);

@@ -114,9 +114,9 @@ void DetourHook<T>::place()
 
 	LOG_DEBUG
 	(
-		"Detour hooked %s (%p) with hook at %p and tramp at %p\n",
+		"Detour hooked %s (%p) with hook at 0x%x and tramp at 0x%x\n",
 		this->name.c_str(),
-		this->originalFn.address,
+		reinterpret_cast<void*>(this->originalFn.address),
 		this->hookFn.address,
 		this->tramp.address
 	);
@@ -144,7 +144,7 @@ void VFTHook<T>::place()
 
 	LOG_DEBUG
 	(
-		"VFT hooked %s (%p) with hook at %p\n",
+		"VFT hooked %s (0x%x) with hook at 0x%x\n",
 		this->name.c_str(),
 		this->originalFn.address,
 		this->hookFn.address
@@ -212,7 +212,7 @@ static uint32_t hkAPIJob_SendAndRecv(CAPIJob* pAPIJob, CProtoBufMsgBase* send, u
 		"%s(%p, %s, %u, %u, %s, %u) -> %u\n",
 
 		Hooks::CAPIJob_SendAndRecv.name.c_str(),
-		pAPIJob,
+		reinterpret_cast<void*>(pAPIJob),
 		MemHlp::getTypeName(send),
 		a2,
 		timeOut,
@@ -233,8 +233,8 @@ static uint32_t hkAppDataCache_BParseResponseFromMessage(void* pAppDataCache, CP
 	(
 		"%s(%p, %p) -> %i\n",
 		Patterns::CAppDataCache::BParseResponseMessage.name.c_str(),
-		pAppDataCache,
-		pMsg,
+		reinterpret_cast<void*>(pAppDataCache),
+		reinterpret_cast<void*>(pMsg),
 		ret
 	);
 
@@ -266,7 +266,7 @@ static uint32_t hkClientUnifiedServiceTransport_SendAndRecvMsg(CClientUnifiedSer
 		"%s(%p, %s, %s, %s, %p) -> %u\n",
 
 		Hooks::CClientUnifiedServiceMethod_SendAndRecvMsg.name.c_str(),
-		pUnifiedServiceTransport,
+		reinterpret_cast<void*>(pUnifiedServiceTransport),
 		name,
 		MemHlp::getTypeName(send),
 		MemHlp::getTypeName(recv),
@@ -279,7 +279,13 @@ static uint32_t hkClientUnifiedServiceTransport_SendAndRecvMsg(CClientUnifiedSer
 
 static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 {
-	LOG_DEBUG("RecvPkt with CMInterface at %p %s -> %p\n", pCMInterface, pNetPacket->getProtoBufTypeName().c_str(), pNetPacket->getType());
+	LOG_DEBUG
+	(
+		"RecvPkt with CMInterface at %p %s -> 0x%x\n",
+		reinterpret_cast<void*>(pCMInterface),
+		pNetPacket->getProtoBufTypeName().c_str(),
+		pNetPacket->getType()
+	);
 
 	if (pNetPacket->isValid() && pNetPacket->isProtoBuf())
 	{
@@ -330,7 +336,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe hPi
 	if (!g_pSteamEngine)
 	{
 		g_pSteamEngine = reinterpret_cast<CSteamEngine*>(pSteamEngine);
-		LOG_DEBUG("g_pSteamEngine at %p\n", g_pSteamEngine);
+		LOG_DEBUG("g_pSteamEngine at %p\n", reinterpret_cast<void*>(g_pSteamEngine));
 	}
 
 	uint32_t ret;
@@ -343,7 +349,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe hPi
 
 	if (log)
 	{
-		LOG_DEBUG("ProcessIPCFrame %p -> %s\n", hPipe, EIPCCmd_ToString(cmd).c_str());
+		LOG_DEBUG("ProcessIPCFrame 0x%x -> %s\n", hPipe, EIPCCmd_ToString(cmd).c_str());
 	}
 
 	if (cmd == EIPCCmd::RunInterface)
@@ -371,7 +377,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe hPi
 			const auto utils = g_pSteamEngine->getUtils();
 			LOG_DEBUG
 			(
-				"RunInterface %s %p for %u (%u)\n",
+				"RunInterface %s 0x%x for %u (%u)\n",
 
 				EIPCInterface_ToString(interface).c_str(),
 				function,
@@ -479,7 +485,7 @@ static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(void* pWebSocketConnec
 			memcpy(packet.body, pData, dataSize);
 			packet.size = dataSize;
 
-			LOG_DEBUG("SendPkt with CWebSocketConnection at %p %s -> %p\n", pWebSocketConnection, packet.getProtoBufTypeName().c_str(), packet.getType());
+			LOG_DEBUG("SendPkt with CWebSocketConnection at %p %s -> 0x%x\n", pWebSocketConnection, packet.getProtoBufTypeName().c_str(), packet.getType());
 
 			if (packet.isValid() && packet.isProtoBuf())
 			{
@@ -511,13 +517,13 @@ static gameserverdetails_t* hkSteamMatchmakingServers_GetServerDetails(void* pSt
 
 	LOG_DEBUG
 	(
-		"%s(%p, %p, %u) -> %p\n",
+		"%s(%p, 0x%x, %u) -> %p\n",
 
 		Hooks::CSteamMatchmakingServers_GetServerDetails.name.c_str(),
 		pSteamMatchmakingServers,
 		handle,
 		serverIdx,
-		ret
+		reinterpret_cast<void*>(ret)
 	);
 
 	if(ret)
@@ -537,7 +543,7 @@ static uint32_t hkSteamMatchmakingServers_RequestInternetServerList(void* pSteam
 
 	LOG_DEBUG
 	(
-		"%s(%p, %u, %p, %p, %p)->%p\n",
+		"%s(%p, %u, 0x%x, 0x%x, 0x%x)->0x%x\n",
 
 		Hooks::CSteamMatchmakingServers_RequestInternetServerList.name.c_str(),
 		pSteamMatchmakingServers,
@@ -591,7 +597,7 @@ static uint32_t hkUser_GetSubscribedApps(void* pClientUser, AppId_t* pAppList, u
 
 		Hooks::CUser_GetSubscribedApps.name.c_str(),
 		pClientUser,
-		pAppList,
+		reinterpret_cast<void*>(pAppList),
 		size,
 		a3,
 		count
@@ -746,7 +752,15 @@ static bool hkClientAppManager_GetUpdateInfo(void* pClientAppManager, AppId_t ap
 	LOG_TRACE("Calling original\n");
 
 	const bool success = Hooks::IClientAppManager_GetAppUpdateInfo.originalFn.fn(pClientAppManager, appId, a2);
-	LOG_ONCE("%s(%p, %u, %p) -> %i\n", Hooks::IClientAppManager_GetAppUpdateInfo.name.c_str(), pClientAppManager, appId, a2, success);
+	LOG_ONCE
+	(
+		"%s(%p, %u, %p) -> %i\n",
+		Hooks::IClientAppManager_GetAppUpdateInfo.name.c_str(),
+		pClientAppManager,
+		appId,
+		reinterpret_cast<void*>(a2),
+		success
+	);
 
 	if (Apps::shouldDisableUpdates(appId))
 	{
@@ -797,8 +811,8 @@ static bool hkClientApps_GetDLCDataByIndex(void* pClientApps, AppId_t appId, int
 		pClientApps,
 		appId,
 		dlcIndex,
-		pDlcId,
-		pIsAvailable,
+		reinterpret_cast<void*>(pDlcId),
+		reinterpret_cast<void*>(pIsAvailable),
 		pChDlcName,
 		dlcNameLen,
 		ret
@@ -856,7 +870,7 @@ static bool hkClientUser_BLoggedOn(void* pClientUser)
 	//Useless logging
 	//LOG_DEBUG
 	//(
-	//	"%s(%p) -> %i\n",
+	//	"%s(0x%x) -> %i\n",
 	//	Hooks::IClientUser_BLoggedOn.name.c_str(),
 	//	pClientUser,
 	//	ret
@@ -944,7 +958,7 @@ static bool hkClientUser_GetEncryptedAppTicket(void* pClientUser, void* pTicket,
 		pClientUser,
 		pTicket,
 		ticketSize,
-		pTicketSize,
+		reinterpret_cast<void*>(pTicketSize),
 		success
 	);
 
@@ -960,7 +974,7 @@ static uint8_t hkClientUser_IsUserSubscribedAppInTicket(void* pClientUser, uint3
 {
 	LOG_TRACE("Calling original\n");
 	const uint8_t ticketState = Hooks::IClientUser_IsUserSubscribedAppInTicket.originalFn.fn(pClientUser, steamId, a2, a3, appId);
-	//LOG_ONCE("IClientUser::IsUserSubscribedAppInTicket(%p, %u, %u, %u, %u) -> %i\n", pClientUser, steamId, a2, a3, appId, ticketState);
+	//LOG_ONCE("IClientUser::IsUserSubscribedAppInTicket(0x%x, %u, %u, %u, %u) -> %i\n", pClientUser, steamId, a2, a3, appId, ticketState);
 	//Don't log the steamId, protect users from themselves and stuff
 	LOG_ONCE
 	(
@@ -1045,12 +1059,12 @@ static bool hkClientUser_RequiresLegacyCDKey(void* pClientUser, AppId_t appId, u
 
 	LOG_ONCE
 	(
-		"%s(%p, %u, %u) -> %i\n",
+		"%s(%p, %u, %p) -> %i\n",
 
 		Hooks::IClientUser_RequiresLegacyCDKey.name.c_str(),
 		pClientUser,
 		appId,
-		a2,
+		reinterpret_cast<void*>(a2),
 		requiresKey
 	);
 
@@ -1112,7 +1126,7 @@ static void hkCGameInfoDialog_ServerResponded(void* pSteamMatchingPingResponse, 
 		"%s(%p, %p) for %u\n",
 		Hooks::CGameInfoDialog_ServerResponded.name.c_str(),
 		pSteamMatchingPingResponse,
-		details,
+		reinterpret_cast<void*>(details),
 		details ? details->appId : 0
 	);
 }
@@ -1124,7 +1138,7 @@ static bool hkClientConfigStore_SetString(void* pClientConfigStore, uint32_t sto
 
 	//LOG_DEBUG
 	//(
-	//	"%s(%p, %u, %s, %s) -> %u\n",
+	//	"%s(0x%x, %u, %s, %s) -> %u\n",
 
 	//	Hooks::IClientConfigStore_SetString.name.c_str(),
 	//	pClientConfigStore,
@@ -1350,11 +1364,11 @@ void Hooks::placeVFTHooks()
 	static std::mutex mutex;
 	std::lock_guard guard(mutex);
 
-	LOG_DEBUG("CUser at %p\n", usr);
+	LOG_DEBUG("CUser at %p\n", reinterpret_cast<void*>(usr));
 
 	{
 		const auto appManager = usr->getAppManager();
-		LOG_DEBUG("CUserAppManager at %p\n", appManager);
+		LOG_DEBUG("CUserAppManager at %p\n", reinterpret_cast<void*>(appManager));
 
 		std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
 		LM_VmtNew(*reinterpret_cast<lm_address_t**>(appManager), vft.get());
@@ -1371,12 +1385,12 @@ void Hooks::placeVFTHooks()
 		Hooks::IClientAppManager_LaunchApp.place();
 		Hooks::IClientAppManager_IsAppDlcInstalled.place();
 
-		LOG_DEBUG("IClientAppManager->vft at %p\n", vft->vtable);
+		LOG_DEBUG("IClientAppManager->vft at %p\n", reinterpret_cast<void*>(vft->vtable));
 	}
 
 	{
 		const auto clientApps = usr->getClientApps();
-		LOG_DEBUG("CUserAppInfo at %p\n", clientApps);
+		LOG_DEBUG("CUserAppInfo at %p\n", reinterpret_cast<void*>(clientApps));
 
 		std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
 		LM_VmtNew(*reinterpret_cast<lm_address_t**>(clientApps), vft.get());
@@ -1387,12 +1401,12 @@ void Hooks::placeVFTHooks()
 		Hooks::IClientApps_GetDLCDataByIndex.place();
 		Hooks::IClientApps_GetDLCCount.place();
 
-		LOG_DEBUG("IClientApps->vft at %p\n", vft->vtable);
+		LOG_DEBUG("IClientApps->vft at %p\n", reinterpret_cast<void*>(vft->vtable));
 	}
 
 	{
 		const auto clientUser = usr->getClientUser();
-		LOG_DEBUG("IClientUser at %p\n", clientUser);
+		LOG_DEBUG("IClientUser at %p\n", reinterpret_cast<void*>(clientUser));
 
 		std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
 		LM_VmtNew(*reinterpret_cast<lm_address_t**>(clientUser), vft.get());
@@ -1413,12 +1427,12 @@ void Hooks::placeVFTHooks()
 		Hooks::IClientUser_IsUserSubscribedAppInTicket.place();
 		Hooks::IClientUser_RequiresLegacyCDKey.place();
 
-		LOG_DEBUG("IClientUser->vft at %p\n", vft->vtable);
+		LOG_DEBUG("IClientUser->vft at %p\n", reinterpret_cast<void*>(vft->vtable));
 	}
 
 	{
 		const auto utils = g_pSteamEngine->getUtils();
-		LOG_DEBUG("IClientUtils at %p\n", utils);
+		LOG_DEBUG("IClientUtils at %p\n", reinterpret_cast<void*>(utils));
 
 		std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
 		LM_VmtNew(*reinterpret_cast<lm_address_t**>(utils), vft.get());
@@ -1429,7 +1443,7 @@ void Hooks::placeVFTHooks()
 		Hooks::IClientUtils_GetAppId.place();
 		Hooks::IClientUtils_GetOfflineMode.place();
 
-		LOG_DEBUG("IClientUtils->vft at %p\n", vft->vtable);
+		LOG_DEBUG("IClientUtils->vft at %p\n", reinterpret_cast<void*>(vft->vtable));
 	}
 
 	hooked = true;

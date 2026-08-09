@@ -100,7 +100,7 @@ public:
 
 		if (!msg.SerializeToArray(mem + msgOffset, msg.ByteSizeLong()))
 		{
-			LOG_ERROR("Failed to serialize %p!\n", getType());
+			LOG_ERROR("Failed to serialize 0x%x!\n", getType());
 			goto failed;
 		}
 

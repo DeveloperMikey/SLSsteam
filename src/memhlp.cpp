@@ -87,7 +87,7 @@ lm_address_t MemHlp::patternScan(const char* pattern, const lm_module_t targetMo
 
 			if (matches > 1)
 			{
-				LOG_DEBUG("Pattern %s found %i times at %p!\n", pattern, matches, addr);
+				LOG_DEBUG("Pattern %s found %i times at 0x%x!\n", pattern, matches, addr);
 			}
 		}
 	}
@@ -108,12 +108,12 @@ lm_address_t MemHlp::searchSignature(const char* name, const char* signature, co
 		switch (mode)
 		{
 			case SigFollowMode::Relative:
-				LOG_DEBUG("Resolving relative of %s at %p\n", name, address);
+				LOG_DEBUG("Resolving relative of %s at 0x%x\n", name, address);
 				address = MemHlp::getJmpTarget(address);
 				break;
 
 			case SigFollowMode::PrologueUpwards:
-				LOG_DEBUG("Searching function prologue of %s from %p\n", name, address);
+				LOG_DEBUG("Searching function prologue of %s from 0x%x\n", name, address);
 				address = MemHlp::findPrologue(address, static_cast<const int16_t*>(extraData), extraDataSize);
 				break;
 
@@ -121,7 +121,7 @@ lm_address_t MemHlp::searchSignature(const char* name, const char* signature, co
 				break;
 		}
 
-		LOG_DEBUG("%s at %p\n", name, address);
+		LOG_DEBUG("%s at 0x%x\n", name, address);
 	}
 
 	return address;
@@ -142,7 +142,7 @@ lm_address_t MemHlp::getJmpTarget(const lm_address_t address)
 	lm_inst_t inst;
 	if (!LM_Disassemble(address, &inst)) //Should not happen if we land in a code section
 	{
-		LOG_DEBUG("Failed to disassemble code at %p!");
+		LOG_DEBUG("Failed to disassemble code at 0x%x!", address);
 		return LM_ADDRESS_BAD;
 	}
 
@@ -180,12 +180,12 @@ lm_address_t MemHlp::findPrologue(const lm_address_t address, const int16_t* pro
 		if (found)
 		{
 			lm_address_t prol = address - i - prologueSize + 1; //Add 1 byte back since bytesSize would be to big otherwise
-			LOG_DEBUG("Prologue found at %p\n", prol);
+			LOG_DEBUG("Prologue found at 0x%x\n", prol);
 			return prol;
 		}
 	}
 
-	LOG_DEBUG("Unable to find prologue after going up %p bytes!\n", scanSize);
+	LOG_DEBUG("Unable to find prologue after going up 0x%x bytes!\n", scanSize);
 	return LM_ADDRESS_BAD;
 }
 
@@ -201,12 +201,12 @@ bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_a
 
 		if (!LM_Disassemble(startAddress, &inst))
 		{
-			LOG_DEBUG("Unable to dissassemble code at %p\n", tramp + curTrampOffset);
+			LOG_DEBUG("Unable to dissassemble code at 0x%x\n", tramp + curTrampOffset);
 			return false;
 		}
 		
 		curTrampOffset += inst.size;
-		LOG_DEBUG("%p: %s %s\n", inst.address, inst.mnemonic, inst.op_str);
+		LOG_DEBUG("0x%x: %s %s\n", inst.address, inst.mnemonic, inst.op_str);
 		
 		if (strcmp(inst.mnemonic, "call") != 0)
 		{
@@ -222,13 +222,13 @@ bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_a
 		{
 			if (!LM_Disassemble(followAddress, &inst))
 			{
-				LOG_DEBUG("Unable to dissassemble code at %p\n", followAddress);
+				LOG_DEBUG("Unable to dissassemble code at 0x%x\n", followAddress);
 				return false;
 			}
 
 			followAddress += inst.size;
 
-			LOG_DEBUG("%p: %s %s\n", inst.address, inst.mnemonic, inst.op_str);
+			LOG_DEBUG("0x%x: %s %s\n", inst.address, inst.mnemonic, inst.op_str);
 
 			//Can not declare in switch statement
 			auto splits = std::vector<std::string>();
@@ -276,7 +276,7 @@ bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_a
 		LM_ProtMemory(startAddress, inst.size, LM_PROT_XRW, &oldProt);
 		LM_WriteMemory(startAddress, inst.bytes, inst.size);
 		LM_ProtMemory(startAddress, inst.size, oldProt, nullptr);
-		LOG_DEBUG("Replaced PIC thunk call for %s at %p with %s\n", name, followAddress, newInstr);
+		LOG_DEBUG("Replaced PIC thunk call for %s at 0x%x with %s\n", name, followAddress, newInstr);
 		return true;
 	}
 

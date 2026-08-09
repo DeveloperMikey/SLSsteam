@@ -157,7 +157,7 @@ static void load()
 
 	LOG_INFO
 	(
-		"steamclient.so loaded from %s/%s at %p to %p\n",
+		"steamclient.so loaded from %s/%s at 0x%x to 0x%x\n",
 		dir.filename().c_str(),
 		path.filename().c_str(),
 		g_modSteamClient.base,
@@ -165,7 +165,7 @@ static void load()
 	);
 	LOG_INFO
 	(
-		"steamui.so loaded at %p to %p\n",
+		"steamui.so loaded at 0x%x to 0x%x\n",
 		g_modSteamUI.base,
 		g_modSteamUI.end
 	);
