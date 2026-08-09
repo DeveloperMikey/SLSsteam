@@ -29,7 +29,7 @@ std::string CConfig::getDir() const
 	}
 	else
 	{
-		LOG_WARN("XDG_CONFIG_HOME not set! Falling back to HOME\n");
+		LOG_CUSTOM(k_ELogLevelWarn | k_ELogLevelOnce, "XDG_CONFIG_HOME not set! Falling back to HOME\n");
 
 		const char* home = getenv("HOME");
 		path << home << "/.config";

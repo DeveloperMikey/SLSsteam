@@ -6,6 +6,59 @@
 #include <memory>
 
 
+std::string ELogLevel_ToString(const unsigned int lvlFlags)
+{
+	constexpr static auto flagToString = [](const unsigned int flag)
+	{
+		switch(flag)
+		{
+			case k_ELogLevelTrace:
+				return "Trace";
+			case k_ELogLevelOnce:
+				return "Once";
+			case k_ELogLevelDebug:
+				return "Debug";
+			case k_ELogLevelWarn:
+				return "Warn";
+			case k_ELogLevelError:
+				return "Error";
+			case k_ELogLevelInfo:
+				return "Info";
+			case k_ELogLevelNotifyShort:
+				return "Notify";
+			case k_ELogLevelNotifyLong:
+				return "Notify Long";
+			case k_ELogLevelNotifyWarn:
+				return "Notify Warn";
+			case k_ELogLevelNotifyError:
+				return "Notify Error";
+
+			default:
+				return "Unknown";
+		}
+	};
+
+	constexpr unsigned int numLogLevels = 11;
+	std::ostringstream lvlStr;
+
+	for(unsigned int i = 0; i < numLogLevels; i++)
+	{
+		const unsigned int flag = 1 << i;
+
+		if (lvlFlags & flag)
+		{
+			if (lvlStr.str().size() > 0)
+			{
+				lvlStr << "|";
+			}
+
+			lvlStr << flagToString(flag);
+		}
+	}
+
+	return lvlStr.str();
+}
+
 CLog::CLog(const char* path) : path(path)
 {
 	ofstream = std::ofstream(path);
@@ -25,9 +78,9 @@ CLog::~CLog()
 }
 
 //Dirty workaround for not being able to access g_config from __log
-LogLevel CLog::getMinLevel()
+ELogLevel CLog::getMinLevel()
 {
-	return static_cast<LogLevel>(g_config.logLevel.get());
+	return static_cast<ELogLevel>(1 << g_config.logLevel.get());
 }
 
 bool CLog::shouldNotify()
