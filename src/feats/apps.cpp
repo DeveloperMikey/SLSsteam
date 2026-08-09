@@ -51,7 +51,7 @@ bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info, const CSteam
 	info->freeLicense = info->familyShared;
 	info->siteLicense = false;
 
-	g_pLog->once("Unlocked %u\n", appId);
+	LOG_ONCE("Unlocked %u\n", appId);
 	return true;
 }
 
@@ -62,7 +62,7 @@ bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info)
 
 void Apps::buildDepotDependency(const AppId_t appId, CUtlVector<DepotInfo_t>* depots, CUtlVector<DepotInfo_t>* sharedDepots)
 {
-	g_pLog->debug("Vec Alloc %u, Grow %u, Size %u\n", depots->memory.alloc, depots->memory.growSize, depots->size);
+	LOG_DEBUG("Vec Alloc %u, Grow %u, Size %u\n", depots->memory.alloc, depots->memory.growSize, depots->size);
 
 	const auto depotBlacklist = g_config.depotBlacklist.get();
 	const auto manifestOverrides = g_config.manifestIds.get();
@@ -73,7 +73,7 @@ void Apps::buildDepotDependency(const AppId_t appId, CUtlVector<DepotInfo_t>* de
 
 		if (depotBlacklist.contains(depot->depotId))
 		{
-			g_pLog->debug("Removing %u with %llu\n", depot->depotId, depot->manifestId);
+			LOG_DEBUG("Removing %u with %llu\n", depot->depotId, depot->manifestId);
 			depots->swap(i, depots->size - 1);
 			depots->size--;
 		}
@@ -82,16 +82,16 @@ void Apps::buildDepotDependency(const AppId_t appId, CUtlVector<DepotInfo_t>* de
 		{
 			const uint64_t oldId = depot->manifestId;
 			depot->manifestId = manifestOverrides.at(depot->depotId);
-			g_pLog->debug("Overrode %u's manifest %llu with %llu\n", depot->depotId, oldId, depot->manifestId);
+			LOG_DEBUG("Overrode %u's manifest %llu with %llu\n", depot->depotId, oldId, depot->manifestId);
 		}
 
-		g_pLog->debug("Depot %u for %u -> %llu\n", depot->depotId, depot->appId, depot->manifestId);
+		LOG_DEBUG("Depot %u for %u -> %llu\n", depot->depotId, depot->appId, depot->manifestId);
 	}
 
 	for(unsigned int i = 0; i < sharedDepots->size; i++)
 	{
 		const auto depot = sharedDepots->at(i);
-		g_pLog->debug("Shared Depot %u for %u -> %llu\n", depot->depotId, depot->appId, depot->manifestId);
+		LOG_DEBUG("Shared Depot %u for %u -> %llu\n", depot->depotId, depot->appId, depot->manifestId);
 	}
 }
 
@@ -110,7 +110,7 @@ bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
 	if (denuvoOwner.isSet() && denuvoOwner.steamId64 != g_currentSteamId.steamId64)
 	{
 		//Would love to log the SteamId, but for users anonymity I won't
-		g_pLog->once("Skipping %u because it's a Denuvo game from someone else\n", appId);
+		LOG_ONCE("Skipping %u because it's a Denuvo game from someone else\n", appId);
 		return false;
 	}
 
@@ -122,12 +122,12 @@ bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
 	if (pInfo->lowViolence)
 	{
 		pInfo->lowViolence = false;
-		g_pLog->once("Decensoring %u\n", appId);
+		LOG_ONCE("Decensoring %u\n", appId);
 	}
 	if (pInfo->regionRestricted)
 	{
 		pInfo->regionRestricted = false;
-		g_pLog->once("Bypassing region restriction for %u\n", appId);
+		LOG_ONCE("Bypassing region restriction for %u\n", appId);
 	}
 
 	const auto times = g_config.subscriptionTimestamps.get();
@@ -208,7 +208,7 @@ void Apps::postAppLicensesChanged(const std::unordered_set<AppId_t>& apps)
 		cb.appsAdded |= 1llu << idx;
 		cb.remainingPackets = totalPackets;
 
-		g_pLog->debug("AppLicensesChanged_t.apps[%u] -> %u (i -> %i, packets left -> %i, appsAdded %llu)\n", idx, cb.apps[idx], i, totalPackets, cb.appsAdded);
+		LOG_DEBUG("AppLicensesChanged_t.apps[%u] -> %u (i -> %i, packets left -> %i, appsAdded %llu)\n", idx, cb.apps[idx], i, totalPackets, cb.appsAdded);
 
 		if (idx + 1 >= AppLicensesChanged_t::MAX_APPS_PER_CALLBACK)
 		{
@@ -229,7 +229,7 @@ void Apps::postAppLicensesChanged(const std::unordered_set<AppId_t>& apps)
 		appsLog << (appsLog.str().size() ? ", " : "") << app;
 	}
 
-	g_pLog->info("AppLicensesChanged callback invoked for %s!\n", appsLog.str().c_str());
+	LOG_INFO("AppLicensesChanged callback invoked for %s!\n", appsLog.str().c_str());
 }
 
 void Apps::runIPCFrame()
@@ -270,7 +270,7 @@ void Apps::runIPCFrame()
 
 		apps[idx] = appId;
 
-		g_pLog->debug("AppInfoRequest %u -> %u from (%i)\n", idx, apps[idx], i);
+		LOG_DEBUG("AppInfoRequest %u -> %u from (%i)\n", idx, apps[idx], i);
 
 		if (idx + 1 >= MAX_APPS_PER_REQUEST)
 		{
@@ -332,7 +332,7 @@ void Apps::sendAndRecvLastPlayedTimes(const char* name, CPlayer_GetLastPlayedTim
 			continue;
 		}
 
-		g_pLog->debug("Removed serverside PlayTime for %u\n", game->appid());
+		LOG_DEBUG("Removed serverside PlayTime for %u\n", game->appid());
 		recv->mutable_games()->DeleteSubrange(i, 1);
 	}
 }
@@ -359,7 +359,7 @@ void Apps::sendGamesPlayed(CNetPacket* pkt)
 		// Leave the original shortcut title and 64-bit ID untouched.
 		if (gameId & GAME_TYPE_SHORTCUT)
 		{
-			g_pLog->debug("Preserving non-Steam shortcut %llu\n", gameId);
+			LOG_DEBUG("Preserving non-Steam shortcut %llu\n", gameId);
 			continue;
 		}
 
@@ -390,14 +390,14 @@ void Apps::sendGamesPlayed(CNetPacket* pkt)
 
 			if (len > 0)
 			{
-				g_pLog->debug("AppName %s (%i)\n", name, len);
+				LOG_DEBUG("AppName %s (%i)\n", name, len);
 				game->set_game_extra_info(name);
 			}
 		}
 
 		//msg->mutable_games_played(i)->ParseFromString(game.SerializeAsString());
 
-		g_pLog->debug("Playing game %llu with flags %u & pid %u\n", gameId, game->game_flags(), game->process_id());
+		LOG_DEBUG("Playing game %llu with flags %u & pid %u\n", gameId, game->game_flags(), game->process_id());
 	}
 
 	if (msg.games_played_size() < 1)
@@ -432,7 +432,7 @@ void Apps::sendPICSInfoRequest(CNetPacket* pkt)
 		if (tokens.contains(app->appid()))
 		{
 			app->set_access_token(tokens.at(app->appid()));
-			g_pLog->debug("Used access token from config for %u\n", app->appid());
+			LOG_DEBUG("Used access token from config for %u\n", app->appid());
 		}
 	}
 
@@ -465,7 +465,7 @@ void Apps::setConfigStoreString(const char* key, const char* value)
 		return;
 	}
 
-	g_pLog->debug("%s -> %s\n", key, value);
+	LOG_DEBUG("%s -> %s\n", key, value);
 
 	auto str = std::string(value);
 	if (str.size() < 3) //List is empty, nope out
@@ -481,11 +481,11 @@ void Apps::setConfigStoreString(const char* key, const char* value)
 	{
 		if (!Utils::isNumber(s.c_str()))
 		{
-			g_pLog->debug("%s is not a number! Skipping\n", s.c_str());
+			LOG_WARN("%s is not a number! Skipping\n", s.c_str());
 		}
 
 		const AppId_t appId = std::stoul(s);
 		privateApps.emplace(appId);
-		g_pLog->debug("Added %u to privateApps\n", appId);
+		LOG_DEBUG("Added %u to privateApps\n", appId);
 	}
 }

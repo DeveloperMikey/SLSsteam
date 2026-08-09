@@ -44,7 +44,7 @@ void SLSAPI::onFileChange()
 	char cmd[128];
 	fstream.getline(cmd, sizeof(cmd));
 
-	g_pLog->debug("API Running %s\n", cmd);
+	LOG_DEBUG("API Running %s\n", cmd);
 
 	const auto split = Utils::strsplit(cmd, "|");
 	if (strcmp(split[0].c_str(), "install") == 0 && split.size() > 2)
@@ -59,7 +59,7 @@ void SLSAPI::onFileChange()
 		}
 		catch(...)
 		{
-			g_pLog->info("API Failed to parse %s or %s!\n", split[1].c_str(), split[2].c_str());
+			LOG_INFO("API Failed to parse %s or %s!\n", split[1].c_str(), split[2].c_str());
 		}
 	}
 	else if (strcmp(split[0].c_str(), "uninstall") == 0 && split.size() > 1)
@@ -73,7 +73,7 @@ void SLSAPI::onFileChange()
 		}
 		catch(...)
 		{
-			g_pLog->info("API Failed to parse %s!\n", split[1].c_str());
+			LOG_INFO("API Failed to parse %s!\n", split[1].c_str());
 		}
 	}
 }
@@ -84,7 +84,7 @@ void SLSAPI::init()
 
 	if (!fstream.is_open())
 	{
-		g_pLog->warn("Failed to create %s (%s)!\n API will be unavailable", path, strerror(errno));
+		LOG_NOTIFYWARN("Failed to create %s (%s)!\n API will be unavailable", path, strerror(errno));
 		return;
 	}
 
@@ -92,12 +92,12 @@ void SLSAPI::init()
 	const int fd = watcher->addFile(path);
 	if (fd == -1)
 	{
-		g_pLog->warn("Failed to watch %s!\n API will be unavailable", path);
+		LOG_NOTIFYWARN("Failed to watch %s!\n API will be unavailable", path);
 		return;
 	}
 
 	watcher->start();
-	g_pLog->debug("SLSsteam API initialized!\n");
+	LOG_DEBUG("SLSsteam API initialized!\n");
 }
 
 void SLSAPI::runIPCFrame()
@@ -123,7 +123,7 @@ void SLSAPI::runIPCFrame()
 		appManager->installApp(app->appId, app->libraryIndex);
 		installs.erase(app);
 
-		g_pLog->debug("Installed %u to %u\n", app->appId, app->libraryIndex);
+		LOG_DEBUG("Installed %u to %u\n", app->appId, app->libraryIndex);
 	}
 
 	while(uninstalls.size())
@@ -132,6 +132,6 @@ void SLSAPI::runIPCFrame()
 		appManager->uninstallApp(*app);
 		uninstalls.erase(app);
 
-		g_pLog->debug("Uninstalled %u\n", *app);
+		LOG_DEBUG("Uninstalled %u\n", *app);
 	}
 }

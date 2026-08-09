@@ -40,7 +40,7 @@ static bool cleanEnvVar(const char* varName, const char* endsWith)
 		const auto split = splits.at(i);
 		if (split.ends_with(endsWith))
 		{
-			g_pLog->debug("Removed %s from $%s\n", endsWith, varName);
+			LOG_DEBUG("Removed %s from $%s\n", endsWith, varName);
 			continue;
 		}
 
@@ -59,7 +59,7 @@ static bool cleanEnvVar(const char* varName, const char* endsWith)
 	{
 		unsetenv(varName);
 	}
-	//g_pLog->debug("Set %s to %s\n", varName, newEnv.c_str());
+	//LOG_DEBUG("Set %s to %s\n", varName, newEnv.c_str());
 
 	return true;
 }
@@ -108,7 +108,7 @@ static void setup()
 		return;
 	}
 
-	g_pLog->debug("SLSsteam loading in %s\n", proc.name);
+	LOG_DEBUG("SLSsteam loading in %s\n", proc.name);
 
 	//Any release
 	cleanEnvVar("LD_AUDIT", "SLSsteam.so");
@@ -153,7 +153,7 @@ static void load()
 	const auto path = std::filesystem::path(g_modSteamClient.path);
 	const auto dir = path.parent_path();
 
-	g_pLog->info
+	LOG_INFO
 	(
 		"steamclient.so loaded from %s/%s at %p to %p\n",
 		dir.filename().c_str(),
@@ -161,7 +161,7 @@ static void load()
 		g_modSteamClient.base,
 		g_modSteamClient.end
 	);
-	g_pLog->info
+	LOG_INFO
 	(
 		"steamui.so loaded at %p to %p\n",
 		g_modSteamUI.base,
@@ -172,31 +172,31 @@ static void load()
 	{
 		if (g_config.safeMode.get())
 		{
-			g_pLog->warn("Unknown steamclient.so hash! Aborting...");
+			LOG_NOTIFYWARN("Unknown steamclient.so hash! Aborting...");
 			unload();
 			return;
 		}
 		else if (g_config.warnHashMissmatch.get())
 		{
-			g_pLog->warn("steamclient.so hash missmatch! Please update :)");
+			LOG_NOTIFYWARN("steamclient.so hash missmatch! Please update :)");
 		}
 	}
 
 	if (!Steam::init())
 	{
-		g_pLog->warn("Failed to find steam exports!\n");
+		LOG_NOTIFYWARN("Failed to find steam exports!\n");
 		return;
 	}
 
 	if(!VFTIndexes::init())
 	{
-		g_pLog->warn("Failed to parse VFTables! Aborting...");
+		LOG_NOTIFYWARN("Failed to parse VFTables! Aborting...");
 		return;
 	}
 
 	if (!Patterns::init())
 	{
-		g_pLog->warn("Failed to find all patterns! Aborting...");
+		LOG_NOTIFYWARN("Failed to find all patterns! Aborting...");
 		return;
 	}
 
@@ -217,11 +217,11 @@ static void load()
 		//Funsy easter egg :)
 		if (static_cast<unsigned int>(ymd.month()) == 2 && static_cast<unsigned int>(ymd.day()) == 22)
 		{
-			g_pLog->notify("Happy birthday SLSsteam!");
+			LOG_NOTIFY("Happy birthday SLSsteam!");
 		}
 		else
 		{
-			g_pLog->notify("Loaded successfully");
+			LOG_NOTIFY("Loaded successfully");
 		}
 	}
 }

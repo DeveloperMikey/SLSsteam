@@ -17,7 +17,7 @@ bool Misc::shouldFakeOffline()
 		return false;
 	}
 
-	g_pLog->once("Faking offline mode for %u\n", appId);
+	LOG_ONCE("Faking offline mode for %u\n", appId);
 	return true;
 }
 
@@ -46,7 +46,7 @@ void Misc::recvMsg(CNetPacket *pkt)
 				}
 
 				frnd->set_player_name(name);
-				g_pLog->debug("Faked self persona\n");
+				LOG_DEBUG("Faked self persona\n");
 
 				pkt->serialize(msg);
 				break;

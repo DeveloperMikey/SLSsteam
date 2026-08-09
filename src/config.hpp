@@ -98,7 +98,7 @@ public:
 	{
 		if (!node[name])
 		{
-			//g_pLog->notifyLong("Missing %s in configfile! Using default", name);
+			//LOG_NOTIFYLONG("Missing %s in configfile! Using default", name);
 			setError(ELoadError::MissingKey, name);
 			return defVal;
 		}
@@ -109,7 +109,7 @@ public:
 		}
 		catch (YAML::BadConversion& er)
 		{
-			//g_pLog->notify("Failed to parse value of %s! Using default\n", name);
+			//LOG_NOTIFY("Failed to parse value of %s! Using default\n", name);
 			setError(ELoadError::ParsingException, name);
 			return defVal;
 		}
@@ -123,7 +123,7 @@ public:
 		const auto node = rootNode[name];
 		if (!node)
 		{
-			//g_pLog->notifyLong("Missing %s in configfile! Using default", name);
+			//LOG_NOTIFYLONG("Missing %s in configfile! Using default", name);
 			setError(ELoadError::MissingKey, name);
 			return list;
 		}
@@ -138,12 +138,12 @@ public:
 				//TODO: Find better way to log shit
 				if (std::is_same_v<T, uint32_t>)
 				{
-					g_pLog->info("Added %u to %s\n", val, name);
+					LOG_INFO("Added %u to %s\n", val, name);
 				}
 			}
 			catch(...)
 			{
-				//g_pLog->notify("Failed to parse %s!", name);
+				//LOG_NOTIFY("Failed to parse %s!", name);
 				setError(ELoadError::ParsingException, name);
 			}
 		}
@@ -159,7 +159,7 @@ public:
 		const auto node = rootNode[name];
 		if (!node)
 		{
-			//g_pLog->notifyLong("Missing %s in configfile! Using default", name);
+			//LOG_NOTIFYLONG("Missing %s in configfile! Using default", name);
 			setError(ELoadError::MissingKey, name);
 			return map;
 		}
@@ -176,16 +176,16 @@ public:
 
 				if (std::is_same_v<T, uint32_t> && std::is_same_v<T, T2>)
 				{
-					g_pLog->info("Added %u to %u in %s\n", k, v, name);
+					LOG_INFO("Added %u to %u in %s\n", k, v, name);
 				}
 				else if (std::is_same_v<T, uint32_t> && std::is_same_v<T2, uint64_t>)
 				{
-					g_pLog->info("Added %u to %llu in %s\n", k, v, name);
+					LOG_INFO("Added %u to %llu in %s\n", k, v, name);
 				}
 			}
 			catch(...)
 			{
-				//g_pLog->notify("Failed to parse %s!", name);
+				//LOG_NOTIFY("Failed to parse %s!", name);
 				setError(ELoadError::ParsingException, name);
 			}
 		}

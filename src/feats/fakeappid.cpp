@@ -45,7 +45,7 @@ AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
 	const auto serverPipe = g_pSteamEngine->getServerPipe(pipe);
 	if (!serverPipe)
 	{
-		g_pLog->debug("ServerPipe for %p is null!\n", pipe);
+		LOG_ERROR("ServerPipe for %p is null!\n", pipe);
 		return 0;
 	}
 
@@ -57,7 +57,7 @@ AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
 
 	if (!ifstream.is_open())
 	{
-		g_pLog->debug("Failed to open %s to get %p's appId!\n", path.c_str());
+		LOG_ERROR("Failed to open %s to get %p's appId!\n", path.c_str());
 		return 0;
 	}
 
@@ -79,12 +79,12 @@ AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
 	}
 	else
 	{
-		g_pLog->debug("No SteamAppId in %s! Using 0\n", path.c_str());
+		LOG_ERROR("No SteamAppId in %s! Using 0\n", path.c_str());
 	}
 
 	fakeAppIdMap[pipe] = appId;
 
-	g_pLog->debug("AppId for %p is %u\n", pipe, appId);
+	LOG_DEBUG("AppId for %p is %u\n", pipe, appId);
 	return appId;
 }
 
@@ -174,7 +174,7 @@ void FakeAppIds::closePipe(const HSteamPipe pipe)
 {
 	if (fakeAppIdMap.contains(pipe))
 	{
-		g_pLog->debug("Deleting fake appId mapping %u for %p\n", fakeAppIdMap.at(pipe), pipe);
+		LOG_DEBUG("Deleting fake appId mapping %u for %p\n", fakeAppIdMap.at(pipe), pipe);
 		fakeAppIdMap.erase(pipe);
 	}
 }
@@ -190,7 +190,7 @@ void FakeAppIds::setAppIdForCurrentPipe(AppId_t& appId)
 	const AppId_t newAppId = getFakeAppId(appId);
 	if (newAppId)
 	{
-		g_pLog->once("Changing AppId of %u\n", appId);
+		LOG_ONCE("Changing AppId of %u\n", appId);
 		appId = newAppId;
 	}
 }
@@ -218,7 +218,7 @@ void FakeAppIds::runIPCFrame(const bool post, const EIPCInterface interface)
 	if (g_config.extendedLogging.get())
 	{
 		const auto utils = g_pSteamEngine->getUtils();
-		g_pLog->debug("Setting AppId to %u in pipe %p\n", appId, utils ? utils->getCurrentSteamPipe() : 0);
+		LOG_DEBUG("Setting AppId to %u in pipe %p\n", appId, utils ? utils->getCurrentSteamPipe() : 0);
 	}
 
 	g_pSteamEngine->setAppIdForCurrentPipe(appId);
@@ -235,7 +235,7 @@ void FakeAppIds::getServerDetails(const uint32_t handle, gameserverdetails_t& de
 	fakeAppIdMapPings[*reinterpret_cast<uint64_t*>(&details.address)] = realAppId;
 	details.appId = realAppId;
 
-	g_pLog->debug("Changing appId back to %u\n", realAppId);
+	LOG_DEBUG("Changing appId back to %u\n", realAppId);
 }
 
 uint32_t FakeAppIds::requestInternetServerList(const AppId_t appId)
@@ -246,7 +246,7 @@ uint32_t FakeAppIds::requestInternetServerList(const AppId_t appId)
 		return 0;
 	}
 
-	g_pLog->debug("Replacing %u with %u\n", appId, fake);
+	LOG_DEBUG("Replacing %u with %u\n", appId, fake);
 	return fake;
 }
 
@@ -286,7 +286,7 @@ void FakeAppIds::sendGamesPlayed(CNetPacket *pkt)
 			continue;
 		}
 
-		g_pLog->debug("Setting %llu to %u\n", gameId, fakeAppId);
+		LOG_DEBUG("Setting %llu to %u\n", gameId, fakeAppId);
 		game->set_game_id(fakeAppId);
 	}
 
@@ -296,7 +296,7 @@ void FakeAppIds::sendGamesPlayed(CNetPacket *pkt)
 void FakeAppIds::sendRichPresenceUpload(CNetPacket* pkt)
 {
 	auto header = pkt->deserializeHeader();
-	g_pLog->debug("Routing appId %u\n", header.routing_appid());
+	LOG_DEBUG("Routing appId %u\n", header.routing_appid());
 
 	const auto appId = getFakeAppId(header.routing_appid());
 

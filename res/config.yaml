@@ -123,16 +123,20 @@ FakeEmail: ""
 FakeWalletBalance: 0
 
 #Log levels:
-#Once = 0
-#Debug = 1
-#Info = 2
-#NotifyShort = 3
-#NotifyLong = 4
-#Warn = 5
-#None = 6
-#LogLevels below info are stripped from release versions
+#Trace = 0 #Tracing
+#Once = 1 #Only log once
+#Debug = 2 #Debugging statements
+#Warn = 3 #Something went wrong but it's not terrible
+#Error = 4 #Something went wrong and it's terrible/can't be recovered from. Function failed
+#Info = 5 #Log for users/external tools
+#NotifyShort = 6
+#NotifyLong = 7
+#NotifyWarn = 8
+#NotifyError = 9
+#None = 10
+#LogLevels below Warn are stripped from release versions
 #If you want to use them use a debug version
-LogLevel: 2
+LogLevel: 4
 
 #Dump all used IClientInterfaceMaps
 DumpClientInterfaces: no

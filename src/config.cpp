@@ -53,17 +53,17 @@ bool CConfig::createFile() const
 		{
 			if (!std::filesystem::create_directory(dir))
 			{
-				g_pLog->notify("Unable to create config directory at %s!\n", dir.c_str());
+				LOG_NOTIFY("Unable to create config directory at %s!\n", dir.c_str());
 				return false;
 			}
 
-			g_pLog->debug("Created config directory at %s\n", dir.c_str());
+			LOG_DEBUG("Created config directory at %s\n", dir.c_str());
 		}
 
 		auto config = std::ofstream(path);
 		if (!config.is_open())
 		{
-			g_pLog->notify("Unable to create %s!", path.c_str());
+			LOG_NOTIFY("Unable to create %s!", path.c_str());
 			return false;
 		}
 
@@ -77,14 +77,14 @@ bool CConfig::createFile() const
 static void onFileChange()
 {
 	g_config.loadSettings();
-	g_pLog->notify("Config reloaded!");
+	LOG_NOTIFY("Config reloaded!");
 }
 
 bool CConfig::init()
 {
 	if(!createFile())
 	{
-		g_pLog->debug("Config creation failed!\n");
+		LOG_DEBUG("Config creation failed!\n");
 		return false;
 	}
 
@@ -144,12 +144,12 @@ bool CConfig::loadSettings(bool firstLoad)
 	}
 	catch (YAML::BadFile& bf)
 	{
-		g_pLog->notifyLong("Can not read config.yaml! %s\nUsing defaults", bf.msg.c_str());
+		LOG_NOTIFYLONG("Can not read config.yaml! %s\nUsing defaults", bf.msg.c_str());
 		node = YAML::Node(); //Create empty node and let defaults kick in
 	}
 	catch (YAML::ParserException& pe)
 	{
-		g_pLog->notifyLong("Error parsing config.yaml! %s\nUsing defaults", pe.msg.c_str());
+		LOG_NOTIFYLONG("Error parsing config.yaml! %s\nUsing defaults", pe.msg.c_str());
 		node = YAML::Node(); //Create empty node and let defaults kick in
 	}
 
@@ -173,22 +173,22 @@ bool CConfig::loadSettings(bool firstLoad)
 	logLevel = getSetting<unsigned int>(node, "LogLevel", 2);
 
 	//TODO: Create smart logging function to log them automatically via getSetting
-	g_pLog->info("DisableFamilyShareLock: %i\n", disableFamilyLock.get());
-	g_pLog->info("UseWhitelist: %i\n", useWhiteList.get());
-	g_pLog->info("MaxSchemaTries: %u\n", maxSchemaTries.get());
-	g_pLog->info("SafeMode: %i\n", safeMode.get());
-	g_pLog->info("Notifications: %i\n", notifications.get());
-	g_pLog->info("WarnHashMissmatch: %i\n", warnHashMissmatch.get());
-	g_pLog->info("NotifyInit: %i\n", notifyInit.get());
-	g_pLog->info("API: %i\n", api.get());
-	g_pLog->info("FakeName: %s\n", fakeName.get().c_str());
-	g_pLog->info("FakeEmail: %s\n", fakeEmail.get().c_str());
-	g_pLog->info("FakeWalletBalance: %i\n", fakeWalletBalance.get());
-	g_pLog->info("DisableCloud: %i\n", disableCloud.get());
-	g_pLog->info("DisableUpdates: %i\n", disableUpdates.get());
-	g_pLog->info("DumpClientInterfaces: %i\n", dumpInterfaceMaps.get());
-	g_pLog->info("ExtendedLogging: %i\n", extendedLogging.get());
-	g_pLog->info("LogLevel: %i\n", logLevel.get());
+	LOG_INFO("DisableFamilyShareLock: %i\n", disableFamilyLock.get());
+	LOG_INFO("UseWhitelist: %i\n", useWhiteList.get());
+	LOG_INFO("MaxSchemaTries: %u\n", maxSchemaTries.get());
+	LOG_INFO("SafeMode: %i\n", safeMode.get());
+	LOG_INFO("Notifications: %i\n", notifications.get());
+	LOG_INFO("WarnHashMissmatch: %i\n", warnHashMissmatch.get());
+	LOG_INFO("NotifyInit: %i\n", notifyInit.get());
+	LOG_INFO("API: %i\n", api.get());
+	LOG_INFO("FakeName: %s\n", fakeName.get().c_str());
+	LOG_INFO("FakeEmail: %s\n", fakeEmail.get().c_str());
+	LOG_INFO("FakeWalletBalance: %i\n", fakeWalletBalance.get());
+	LOG_INFO("DisableCloud: %i\n", disableCloud.get());
+	LOG_INFO("DisableUpdates: %i\n", disableUpdates.get());
+	LOG_INFO("DumpClientInterfaces: %i\n", dumpInterfaceMaps.get());
+	LOG_INFO("ExtendedLogging: %i\n", extendedLogging.get());
+	LOG_INFO("LogLevel: %i\n", logLevel.get());
 
 	const std::lock_guard appsChanged(appsChangedMutex);
 	const auto prevAppIds = addedAppIds.get();
@@ -204,7 +204,7 @@ bool CConfig::loadSettings(bool firstLoad)
 			}
 
 			removedApps.emplace(appId);
-			g_pLog->debug("AppId %u removed from AdditionalApps\n", appId);
+			LOG_DEBUG("AppId %u removed from AdditionalApps\n", appId);
 		}
 		for(const auto& appId : _addedAppIds)
 		{
@@ -214,7 +214,7 @@ bool CConfig::loadSettings(bool firstLoad)
 			}
 
 			newApps.emplace(appId);
-			g_pLog->debug("AppId %u added to AdditionalApps\n", appId);
+			LOG_DEBUG("AppId %u added to AdditionalApps\n", appId);
 		}
 	}
 
@@ -246,11 +246,11 @@ bool CConfig::loadSettings(bool firstLoad)
 				title
 			};
 
-			g_pLog->info("Idle status %s with AppId %u\n", title.c_str(), appId);
+			LOG_INFO("Idle status %s with AppId %u\n", title.c_str(), appId);
 		}
 		catch(...)
 		{
-			//g_pLog->warn("Failed to parse IdleStatus!");A
+			//LOG_NOTIFYWARN("Failed to parse IdleStatus!");A
 			setError(ELoadError::ParsingException, "IdleStatus");
 		}
 	}
@@ -268,7 +268,7 @@ bool CConfig::loadSettings(bool firstLoad)
 
 				CDlcData data;
 				data.parentId = parentId;
-				g_pLog->info("Adding DlcData for %u\n", parentId);
+				LOG_INFO("Adding DlcData for %u\n", parentId);
 
 				for(auto& dlc : app.second)
 				{
@@ -277,14 +277,14 @@ bool CConfig::loadSettings(bool firstLoad)
 					const std::string dlcName = dlc.second.as<std::string>();
 
 					data.dlcIds[dlcId] = dlcName;
-					g_pLog->info("DlcId %u -> %s\n", dlcId, dlcName.c_str());
+					LOG_INFO("DlcId %u -> %s\n", dlcId, dlcName.c_str());
 				}
 
 				_dlcData[parentId] = data;
 			}
 			catch(...)
 			{
-				//g_pLog->notify("Failed to parse DlcData!");
+				//LOG_NOTIFY("Failed to parse DlcData!");
 				setError(ELoadError::ParsingException, "DlcData");
 				break;
 			}
@@ -294,7 +294,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	}
 	else
 	{
-		//g_pLog->notify("Missing DlcData entry in config!");
+		//LOG_NOTIFY("Missing DlcData entry in config!");
 		setError(ELoadError::MissingKey, "DlcData");
 	}
 
@@ -316,12 +316,12 @@ bool CConfig::loadSettings(bool firstLoad)
 					_denuvoGames[steamId].emplace(appId);
 
 					//Again, not loggin SteamId because of privacy
-					g_pLog->info("Added DenuvoGame %u\n", appId);
+					LOG_INFO("Added DenuvoGame %u\n", appId);
 				}
 			}
 			catch (...)
 			{
-				//g_pLog->notify("Failed to parse DenuvoGames!");
+				//LOG_NOTIFY("Failed to parse DenuvoGames!");
 				setError(ELoadError::ParsingException, "DenuvoGames");
 			}
 		}
@@ -330,14 +330,14 @@ bool CConfig::loadSettings(bool firstLoad)
 	}
 	else
 	{
-		//g_pLog->notify("Missing DenuvoGames entry in config!");
+		//LOG_NOTIFY("Missing DenuvoGames entry in config!");
 		setError(ELoadError::MissingKey, "DenuvoGames");
 	}
 
 	const auto errors = __loadErrors.get();
 	if (errors.size())
 	{
-		g_pLog->notify(errors.c_str());
+		LOG_NOTIFY(errors.c_str());
 	}
 
 	return true;
@@ -375,24 +375,24 @@ bool CConfig::shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditiona
 			//Do not blindly trust len, nor the str included. Some devs just like to mess with Valve or something (for example appId 221300)
 			if (len > 0 && Utils::isNumber(chParent))
 			{
-				//g_pLog->debug("AppId %i, parent %s (%i)\n", appId, chParent, len);
+				//LOG_DEBUG("AppId %i, parent %s (%i)\n", appId, chParent, len);
 				AppId_t parentId = std::stoul(chParent);
 
 				if (whitelist && !shouldExcludeAppId(parentId, true))
 				{
-					//g_pLog->debug("Override exclude %i with false, because parent %u isn't excluded\n", exclude, parentId);
+					//LOG_DEBUG("Override exclude %i with false, because parent %u isn't excluded\n", exclude, parentId);
 					exclude = false;
 				}
 				else if(!whitelist && shouldExcludeAppId(parentId, true))
 				{
-					//g_pLog->debug("Override exclude %i with true, because parent %u is excluded\n", exclude, parentId);
+					//LOG_DEBUG("Override exclude %i with true, because parent %u is excluded\n", exclude, parentId);
 					exclude = true;
 				}
 			}
 		}
 	}
 
-	g_pLog->once("shouldExcludeAppId(%u) -> %i\n", appId, exclude);
+	LOG_ONCE("shouldExcludeAppId(%u) -> %i\n", appId, exclude);
 	return exclude;
 }
 
@@ -402,7 +402,7 @@ CSteamId CConfig::getDenuvoGameOwner(const AppId_t appId)
 	{
 		if (tpl.second.contains(appId))
 		{
-			//g_pLog->once("%u is DenuvoGame\n", appId);
+			//LOG_ONCE("%u is DenuvoGame\n", appId);
 			return CSteamId(tpl.first);
 		}
 	}

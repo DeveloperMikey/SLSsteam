@@ -166,9 +166,9 @@ bool Steam::init()
 		return false;
 	}
 
-	g_pLog->debug("Plat_Alloc at %p\n", Plat_Alloc);
-	g_pLog->debug("Plat_Free at %p\n", Plat_Free);
-	g_pLog->debug("Plat_Realloc at %p\n", Plat_Realloc);
+	LOG_DEBUG("Plat_Alloc at %p\n", Plat_Alloc);
+	LOG_DEBUG("Plat_Free at %p\n", Plat_Free);
+	LOG_DEBUG("Plat_Realloc at %p\n", Plat_Realloc);
 
 	return true;
 }

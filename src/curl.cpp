@@ -14,17 +14,17 @@
 //will crash inside libssl.3.so (might have to do with broken certs, idk for sure).
 int Curl::getString(const char* url, std::string& out)
 {
-	g_pLog->debug("Curl::getString(%s)\n", url);
+	LOG_DEBUG("Curl::getString(%s)\n", url);
 
 	int pipefd[2];
 
 	if (pipe(pipefd) == -1)
 	{
-		g_pLog->debug("Failed to create pipe!\n");
+		LOG_DEBUG("Failed to create pipe!\n");
 		return 1;
 	}
 
-	g_pLog->debug("Created pipe %i : %i\n", pipefd[0], pipefd[1]);
+	LOG_DEBUG("Created pipe %i : %i\n", pipefd[0], pipefd[1]);
 
 	constexpr static const char* env[] =
 	{
@@ -46,7 +46,7 @@ int Curl::getString(const char* url, std::string& out)
 		close(pipefd[0]);
 		close(pipefd[1]);
 
-		g_pLog->debug("Failed to fork!\n");
+		LOG_DEBUG("Failed to fork!\n");
 		return 1;
 	}
 
@@ -54,7 +54,7 @@ int Curl::getString(const char* url, std::string& out)
 	{
 		if (dup2(pipefd[1], STDOUT_FILENO) == -1)
 		{
-			g_pLog->debug("Failed to dup2!\n");
+			LOG_DEBUG("Failed to dup2!\n");
 			exit(1);
 		}
 
@@ -67,14 +67,14 @@ int Curl::getString(const char* url, std::string& out)
 		//NixOS
 		execve("/run/current-system/sw/bin/curl", const_cast<char**>(args), const_cast<char**>(env));
 
-		g_pLog->debug("Failed to execv curl!\n");
+		LOG_DEBUG("Failed to execv curl!\n");
 		exit(1);
 	}
 
 	//No need for writing
 	close(pipefd[1]);
 
-	g_pLog->debug("Child PID %i\n", pid);
+	LOG_DEBUG("Child PID %i\n", pid);
 
 	std::ostringstream bufSS;
 	char buf[8192];
@@ -100,7 +100,7 @@ int Curl::getString(const char* url, std::string& out)
 
 	status = WEXITSTATUS(status);
 
-	g_pLog->debug("Exit Status: %i\n", status);
+	LOG_DEBUG("Exit Status: %i\n", status);
 
 	out = bufSS.str();
 

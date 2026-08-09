@@ -20,20 +20,20 @@ void* watchLoop(void* args)
 	ssize_t size;
 
 	auto watcher = reinterpret_cast<CFileWatcher*>(args);
-	g_pLog->debug("Started FileWatcher %u\n", watcher->notifyFd);
+	LOG_DEBUG("Started FileWatcher %u\n", watcher->notifyFd);
 
 	for(;;)
 	{
 		size = read(watcher->notifyFd, buf, sizeof(buf));
 		if (!size)
 		{
-			g_pLog->debug("Failed to read from FileWatcher %i! (size = 0)\n", watcher->notifyFd);
+			LOG_DEBUG("Failed to read from FileWatcher %i! (size = 0)\n", watcher->notifyFd);
 			break;
 		}
 
 		if (size == -1)
 		{
-			g_pLog->debug("Failed to read from FileWatcher %i (%s)!\n", watcher->notifyFd, strerror(errno));
+			LOG_DEBUG("Failed to read from FileWatcher %i (%s)!\n", watcher->notifyFd, strerror(errno));
 			break;
 		}
 
@@ -54,7 +54,7 @@ void* watchLoop(void* args)
 				continue;
 			}
 
-			g_pLog->debug("inotify %s(%u) -> %u : %s\n", path.filename().c_str(), event->wd, event->mask, event->len ? event->name : "none");
+			LOG_DEBUG("inotify %s(%u) -> %u : %s\n", path.filename().c_str(), event->wd, event->mask, event->len ? event->name : "none");
 
 			watcher->onModify();
 		}
@@ -68,7 +68,7 @@ CFileWatcher::CFileWatcher(const FileModifyEvent_t onModify)
 	this->onModify = onModify;
 
 	notifyFd = inotify_init();
-	g_pLog->debug("Created notify fd %i\n", notifyFd);
+	LOG_DEBUG("Created notify fd %i\n", notifyFd);
 }
 
 CFileWatcher::~CFileWatcher()
@@ -106,7 +106,7 @@ int CFileWatcher::addFile(const char* path)
 	}
 
 	fileFdMap[fd] = p;
-	g_pLog->debug("Added %s with file %s to FileWatcher %i\n", p.parent_path().c_str(), p.filename().c_str(), notifyFd);
+	LOG_DEBUG("Added %s with file %s to FileWatcher %i\n", p.parent_path().c_str(), p.filename().c_str(), notifyFd);
 	return fd;
 }
 

@@ -37,7 +37,7 @@ bool Updater::init()
 	for(const auto url : urls)
 	{
 		res = Curl::getString(url, data);
-		g_pLog->info("Curl Res: %u for %s with len %i\n", res, url, data.size());
+		LOG_INFO("Curl Res: %u for %s with len %i\n", res, url, data.size());
 
 		if (res == 0 && data.size() > 0) //User reported empty responses
 		{
@@ -54,10 +54,10 @@ bool Updater::init()
 			return false;
 		}
 
-		g_pLog->info("Using cached updates.yaml\n");
+		LOG_INFO("Using cached updates.yaml\n");
 	}
 
-	g_pLog->debug("updates.yaml:\n%s\n", data.c_str());
+	LOG_DEBUG("updates.yaml:\n%s\n", data.c_str());
 
 	try
 	{
@@ -67,20 +67,20 @@ bool Updater::init()
 			const uint64_t version = sub.first.as<uint64_t>();
 			clientHashMap[version] = std::unordered_set<std::string>();
 
-			g_pLog->debug("Parsing version %llu\n", version);
+			LOG_DEBUG("Parsing version %llu\n", version);
 
 			for(const auto& hash : sub.second)
 			{
 				const auto str = hash.as<std::string>();
 				clientHashMap[version].emplace(str);
 
-				g_pLog->debug("Added %s to SLSsteam version %llu\n", str.c_str(), version);
+				LOG_DEBUG("Added %s to SLSsteam version %llu\n", str.c_str(), version);
 			}
 		}
 	}
 	catch(...)
 	{
-		g_pLog->info("Failed to parse updates!\n");
+		LOG_INFO("Failed to parse updates!\n");
 		return false;
 	}
 
@@ -102,7 +102,7 @@ void Updater::saveToCache(const std::string yaml)
 	stream << yaml;
 	stream.close();
 
-	g_pLog->debug("Cached res/updates.yaml!\n");
+	LOG_DEBUG("Cached res/updates.yaml!\n");
 }
 
 std::string Updater::loadFromCache()
@@ -113,7 +113,7 @@ std::string Updater::loadFromCache()
 		return std::string();
 	}
 
-	g_pLog->debug("Loading updates.ymal from disk!\n");
+	LOG_DEBUG("Loading updates.ymal from disk!\n");
 
 	std::ifstream fstream = std::ifstream(path.c_str());
 	std::ostringstream buf;
@@ -136,7 +136,7 @@ bool Updater::verifySafeModeHash()
 	try
 	{
 		const std::string sha256 = Utils::getFileSHA256(path.c_str());
-		g_pLog->info("steamclient.so hash is %s\n", sha256.c_str());
+		LOG_INFO("steamclient.so hash is %s\n", sha256.c_str());
 
 		if (!clientHashMap.contains(VERSION))
 		{
@@ -153,7 +153,7 @@ bool Updater::verifySafeModeHash()
 	}
 	catch(std::runtime_error& err)
 	{
-		g_pLog->debug("Unable to read steamclient.so hash!\n");
+		LOG_DEBUG("Unable to read steamclient.so hash!\n");
 		return false;
 	}
 

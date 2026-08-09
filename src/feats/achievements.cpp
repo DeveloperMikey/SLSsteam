@@ -44,7 +44,7 @@ std::unordered_set<uint64_t> Achievements::getReviewersForGame(const AppId_t app
 
 	if(Curl::getString(url.c_str(), reviews))
 	{
-		g_pLog->debug("Failed to get reviewer list for %u!\n", appId);
+		LOG_WARN("Failed to get reviewer list for %u!\n", appId);
 		return list;
 	}
 
@@ -53,7 +53,7 @@ std::unordered_set<uint64_t> Achievements::getReviewersForGame(const AppId_t app
 		ownerBlacklist[appId] = std::unordered_set<uint64_t>();
 	}
 
-	//g_pLog->debug("Downloaded reviewers %s\n", reviews.c_str());
+	LOG_TRACE("Downloaded reviewers %s\n", reviews.c_str());
 
 	std::regex steamIdFieldsRe("\"steamid\":\"[0-9]+\"");
 
@@ -65,7 +65,7 @@ std::unordered_set<uint64_t> Achievements::getReviewersForGame(const AppId_t app
 		std::smatch steamIdMatch = *i;
 		std::string steamIdFieldStr = steamIdMatch.str();
 
-		//g_pLog->debug("SteamId match %s\n", match.str().c_str());
+		//LOG_DEBUG("SteamId match %s\n", match.str().c_str());
 
 		std::regex idRe("[0-9]+");
 		if (!std::regex_search(steamIdFieldStr, steamIdMatch, idRe))
@@ -73,12 +73,12 @@ std::unordered_set<uint64_t> Achievements::getReviewersForGame(const AppId_t app
 			continue;
 		}
 
-		g_pLog->debug("Extracted SteamId %s\n", steamIdMatch.str().c_str());
+		LOG_DEBUG("Extracted SteamId %s\n", steamIdMatch.str().c_str());
 
 		uint64_t steamId = std::stoull(steamIdMatch.str().c_str());
 		if (ownerBlacklist[appId].contains(steamId))
 		{
-			g_pLog->debug("Skipping %llu for %u because it has failed before\n", steamId, appId);
+			LOG_TRACE("Skipping %llu for %u because it has failed before\n", steamId, appId);
 			continue;
 		}
 
@@ -98,7 +98,7 @@ uint32_t Achievements::tryGetPlayerStats
 	const uint64_t steamId
 )
 {
-	g_pLog->debug("CPlayer_GetUserStats_Request->set_steamid(%llu)\n", steamId);
+	LOG_TRACE("CPlayer_GetUserStats_Request->set_steamid(%llu)\n", steamId);
 	send->set_steamid(steamId);
 	uint32_t res = serviceTransport->sendAndRecvMsg(serviceName, send, recv);
 
@@ -118,7 +118,7 @@ uint32_t Achievements::tryGetPlayerStats
 	recv->clear_stats();
 
 	preferredOwners[appId] = steamId;
-	g_pLog->debug("Using steamId %llu for %u\n", steamId, appId);
+	LOG_DEBUG("Using steamId %llu for %u\n", steamId, appId);
 	return k_EResultOK;
 }
 
@@ -168,7 +168,7 @@ uint32_t Achievements::sendAndRecvGetPlayerStats
 		}
 	}
 
-	g_pLog->debug("No schemas for %u found! Falling back to offline cache\n", appId);
+	LOG_DEBUG("No schemas for %u found! Falling back to offline cache\n", appId);
 	return k_EResultNoConnection;
 }
 
@@ -176,7 +176,7 @@ uint32_t Achievements::tryGetUserStats(CAPIJob* job, CProtoBufMsgBase* send, con
 {
 	const auto sendBdy = send->getBody<CMsgClientGetUserStats>();
 
-	g_pLog->debug("CMsgClientGetUserStats->set_steam_id_for_user(%llu)\n", steamId);
+	LOG_TRACE("CMsgClientGetUserStats->set_steam_id_for_user(%llu)\n", steamId);
 	sendBdy->set_steam_id_for_user(steamId);
 
 	const uint32_t ret = job->sendAndRecv(send, timeOut, recv, targetType);
@@ -203,7 +203,7 @@ uint32_t Achievements::tryGetUserStats(CAPIJob* job, CProtoBufMsgBase* send, con
 	recvBdy->clear_crc_stats();
 	recvBdy->clear_stats();
 
-	g_pLog->debug("Using steamId %llu for %u\n", steamId, appId);
+	LOG_DEBUG("Using steamId %llu for %u\n", steamId, appId);
 	preferredOwners[appId] = steamId;
 	return ret;
 }
@@ -250,6 +250,6 @@ uint32_t Achievements::sendAndRecvGetUserStats(CAPIJob* job, CProtoBufMsgBase* s
 
 	const auto recvBdy = recv->getBody<CMsgClientGetUserStatsResponse>();
 	recvBdy->set_eresult(k_EResultNoConnection);
-	g_pLog->debug("No schemas for %u found! Falling back to offline cache\n", appId);
+	LOG_DEBUG("No schemas for %u found! Falling back to offline cache\n", appId);
 	return 1;
 }

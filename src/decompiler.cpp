@@ -180,27 +180,27 @@ lm_address_t Decompiler::getLeaOffset(lm_inst_t& callInstr)
 
 	//Thunk moves the return address into our target register
 	offset = callInstr.address + callInstr.size;
-	//g_pLog->debug("Found thunk with %s target\n", thunkRegister.c_str());
+	//LOG_DEBUG("Found thunk with %s target\n", thunkRegister.c_str());
 
 	lm_inst_t nextInstr;
 	if (!LM_Disassemble(offset, &nextInstr))
 	{
-		g_pLog->debug("Failed to disassemble next in getLeaOffset at %p\n", offset);
+		LOG_DEBUG("Failed to disassemble next in getLeaOffset at %p\n", offset);
 		return LM_ADDRESS_BAD;
 	}
 
 	//Thunk is followed by 'add thunkReg, num'
 	if (strcmp(nextInstr.mnemonic, "add") != 0)
 	{
-		g_pLog->debug("Failed to get lea offset at %p, next instruction is not an add instruction!\n", offset);
+		LOG_DEBUG("Failed to get lea offset at %p, next instruction is not an add instruction!\n", offset);
 		return LM_ADDRESS_BAD;
 	}
 
-	//g_pLog->debug("Found %s %s\n", instr.mnemonic, instr.op_str);
+	//LOG_DEBUG("Found %s %s\n", instr.mnemonic, instr.op_str);
 	auto split = Utils::strsplit(nextInstr.op_str, ",");
 	if (split[0] != thunkReg)
 	{
-		g_pLog->debug("Failed to get lea offset at %p, split[0] != thunkReg\n");
+		LOG_DEBUG("Failed to get lea offset at %p, split[0] != thunkReg\n");
 		return LM_ADDRESS_BAD;
 	}
 
@@ -242,7 +242,7 @@ bool Decompiler::isPICThunk(const lm_inst_t& callInstr, std::string* targetRegis
 		return false;
 	}
 
-	//g_pLog->debug("Checking %s %s at %p\n", callInstr.mnemonic, callInstr.op_str, callInstr.address);
+	//LOG_DEBUG("Checking %s %s at %p\n", callInstr.mnemonic, callInstr.op_str, callInstr.address);
 
 	lm_address_t target;
 	if (!getRelativeTarget(callInstr, target))
@@ -250,7 +250,7 @@ bool Decompiler::isPICThunk(const lm_inst_t& callInstr, std::string* targetRegis
 		return false;
 	}
 
-	//g_pLog->debug("Call target at %p\n", target);
+	//LOG_DEBUG("Call target at %p\n", target);
 
 	std::string espTarget;
 
@@ -259,7 +259,7 @@ bool Decompiler::isPICThunk(const lm_inst_t& callInstr, std::string* targetRegis
 	{
 		if (!LM_Disassemble(target, &instr))
 		{
-			g_pLog->debug("Failed to disassemble %p!\n", target);
+			LOG_DEBUG("Failed to disassemble %p!\n", target);
 			return false;
 		}
 
@@ -278,7 +278,7 @@ bool Decompiler::isPICThunk(const lm_inst_t& callInstr, std::string* targetRegis
 				splits = Utils::strsplit(instr.op_str, ",");
 				espTarget = splits[0];
 
-				//g_pLog->debug("Target %s\n", espTarget.c_str());
+				//LOG_DEBUG("Target %s\n", espTarget.c_str());
 
 				break;
 
@@ -292,7 +292,7 @@ bool Decompiler::isPICThunk(const lm_inst_t& callInstr, std::string* targetRegis
 		}
 	}
 
-	//g_pLog->debug("Found PIC thunk call at %p\n", callInstr.address);
+	//LOG_DEBUG("Found PIC thunk call at %p\n", callInstr.address);
 	picThunks[callInstr.address] = espTarget;
 
 	if (targetRegister)
@@ -324,7 +324,7 @@ void Decompiler::collectStrings(const lm_module_t& mod, const Elf_Shdr& section)
 		}
 
 		strings[begin] = strBuf;
-		//g_pLog->debug("Found string %s at %p with size %u\n", strBuf.c_str(), begin, strBuf.size());
+		//LOG_DEBUG("Found string %s at %p with size %u\n", strBuf.c_str(), begin, strBuf.size());
 	}
 }
 
@@ -366,7 +366,7 @@ bool Decompiler::collectVFTables(const lm_module_t& mod, const Elf_Shdr& section
 			const lm_address_t typeInfo = addr - sizeof(addr);
 			const auto& name = strings.at(ptr);
 
-			//g_pLog->debug("TypeInfo for %s at %p\n", name.c_str(), typeInfo);
+			//LOG_DEBUG("TypeInfo for %s at %p\n", name.c_str(), typeInfo);
 			typeInfos[typeInfo] = name;
 		}
 	}
@@ -408,7 +408,7 @@ bool Decompiler::collectVFTables(const lm_module_t& mod, const Elf_Shdr& section
 			}
 
 			vftables[name] = vft;
-			//g_pLog->debug("VFTable %s at %p\n", name.c_str(), vft.address);
+			//LOG_DEBUG("VFTable %s at %p\n", name.c_str(), vft.address);
 		}
 	}
 
@@ -418,27 +418,27 @@ bool Decompiler::collectVFTables(const lm_module_t& mod, const Elf_Shdr& section
 bool Decompiler::parseHeader(const lm_module_t& mod)
 {
 	//We parse the ELF binary from disk because trying to do so from memory f's up
-	g_pLog->debug("Decompiler::parseHeader(%s)\n", mod.name);
+	LOG_DEBUG("Decompiler::parseHeader(%s)\n", mod.name);
 
 	FILE* file = fopen(mod.path, "r");
 	if (!file)
 	{
-		g_pLog->debug("Failed to open file for parsing Elf headers!\n");
+		LOG_DEBUG("Failed to open file for parsing Elf headers!\n");
 		return false;
 	}
 
 	Elf_Ehdr hdr;
 	if (fread(&hdr, sizeof(hdr), 1, file) < 1)
 	{
-		g_pLog->debug("Failed to read Elf header!\n");
+		LOG_DEBUG("Failed to read Elf header!\n");
 		return false;
 	}
 
-	g_pLog->debug("shsstrndx %u\n", hdr.e_shstrndx);
+	LOG_DEBUG("shsstrndx %u\n", hdr.e_shstrndx);
 
 	if (sizeof(Elf_Shdr) < hdr.e_shentsize)
 	{
-		g_pLog->debug("hdr.e_shentsize < sizeof(Elf_Shdr)!\n");
+		LOG_DEBUG("hdr.e_shentsize < sizeof(Elf_Shdr)!\n");
 		return false;
 	}
 
@@ -447,13 +447,13 @@ bool Decompiler::parseHeader(const lm_module_t& mod)
 
 	if (fseek(file, hdr.e_shoff, SEEK_SET) != 0)
 	{
-		g_pLog->debug("Failed to seek to section headers\n");
+		LOG_DEBUG("Failed to seek to section headers\n");
 		return false;
 	}
 
 	if (fread(shdrs.data(), sizeof(Elf_Shdr), shdrs.size(), file) < shdrs.size())
 	{
-		g_pLog->debug("Failed to read section headers\n");
+		LOG_DEBUG("Failed to read section headers\n");
 		return false;
 	}
 
@@ -463,28 +463,28 @@ bool Decompiler::parseHeader(const lm_module_t& mod)
 
 	if (fseek(file, strHdr.sh_offset, SEEK_SET) != 0)
 	{
-		g_pLog->debug("Failed to seek to strHdr.sh_addr!\n");
+		LOG_DEBUG("Failed to seek to strHdr.sh_addr!\n");
 		return false;
 	}
 	
 	if (fread(strSec.data(), sizeof(unsigned char), strSec.size(), file) < strSec.size())
 	{
-		g_pLog->debug("Failed to seek to strHdr.sh_addr!\n");
+		LOG_DEBUG("Failed to seek to strHdr.sh_addr!\n");
 		return false;
 	}
 
-	g_pLog->debug("strHdr name %u address %p\n", strHdr.sh_name, strHdr.sh_offset);
+	LOG_DEBUG("strHdr name %u address %p\n", strHdr.sh_name, strHdr.sh_offset);
 
 	for(const auto& shdr : shdrs)
 	{
 		if (!shdr.sh_name)
 		{
-			g_pLog->debug("Skipping nameless section\n");
+			LOG_DEBUG("Skipping nameless section\n");
 			continue;
 		}
 
 		const char* name = &strSec[shdr.sh_name];
-		g_pLog->debug("Section header name %s, address %p, offset %p\n", name, shdr.sh_addr, shdr.sh_offset);
+		LOG_DEBUG("Section header name %s, address %p, offset %p\n", name, shdr.sh_addr, shdr.sh_offset);
 
 		auto mapName = std::string(mod.name) + "::" + name;
 		sections[mapName] = shdr;
@@ -504,21 +504,21 @@ void Decompiler::parseModule(const lm_module_t &mod)
 	if (shROData)
 	{
 		//Collect strings to cross-reference
-		g_pLog->debug("Scanning .rodata for strings in %s\n", mod.name);
+		LOG_DEBUG("Scanning .rodata for strings in %s\n", mod.name);
 		collectStrings(mod, *shROData);
 	}
 
 	const Elf_Shdr* shRODataStr = getSection(mod, ".rodata.str");
 	if (shRODataStr)
 	{
-		g_pLog->debug("Scanning .rodata.str for strings in %s\n", mod.name);
+		LOG_DEBUG("Scanning .rodata.str for strings in %s\n", mod.name);
 		collectStrings(mod, *shRODataStr);
 	}
 
 	const Elf_Shdr* shDataRelRO = getSection(mod, ".data.rel.ro");
 	if (shDataRelRO)
 	{
-		g_pLog->debug("Scanning .data.rel.ro for VFTables in %s\n", mod.name);
+		LOG_DEBUG("Scanning .data.rel.ro for VFTables in %s\n", mod.name);
 		//Use collected strings to identify typeInfos, then cross reference those to find VFTables
 		collectVFTables(mod, *shDataRelRO);
 	}
@@ -549,11 +549,11 @@ void Decompiler::__parseFunction
 	{
 		if (!LM_Disassemble(addr, &instr))
 		{
-			g_pLog->debug("Failed to disassemble function %p at %p!\n", begin, addr);
+			LOG_DEBUG("Failed to disassemble function %p at %p!\n", begin, addr);
 			return;
 		}
 
-		//g_pLog->debug("%p: %s %s\n", addr, instr.mnemonic, instr.op_str);
+		//LOG_DEBUG("%p: %s %s\n", addr, instr.mnemonic, instr.op_str);
 
 		addr += instr.size;
 
@@ -563,13 +563,13 @@ void Decompiler::__parseFunction
 
 			if (!getRelativeTarget(instr, branch))
 			{
-				g_pLog->debug("Failed to follow %s %s at %p!\n", instr.address, instr.mnemonic, instr.op_str);
+				LOG_DEBUG("Failed to follow %s %s at %p!\n", instr.address, instr.mnemonic, instr.op_str);
 				return;
 			}
 
 			const bool taken = branchesTaken.contains(branch);
 
-			//g_pLog->debug("Taking branch %s %s at %p to %p\n", instr.mnemonic, instr.op_str, instr.address, branch);
+			//LOG_DEBUG("Taking branch %s %s at %p to %p\n", instr.mnemonic, instr.op_str, instr.address, branch);
 			branchesTaken.emplace(branch);
 
 			if (strcmp(instr.mnemonic, "jmp") == 0)
@@ -595,7 +595,7 @@ void Decompiler::__parseFunction
 		//But just in case we check for all of them
 		else if(strcmp(instr.mnemonic, "ret") == 0 || strcmp(instr.mnemonic, "retn") == 0 || strcmp(instr.mnemonic, "retf") == 0)
 		{
-			//g_pLog->debug("Hit %s instruction at %p, stopping\n", instr.mnemonic, instr.address);
+			//LOG_DEBUG("Hit %s instruction at %p, stopping\n", instr.mnemonic, instr.address);
 			return;
 		}
 
@@ -636,7 +636,7 @@ void Decompiler::__parseFunction
 			continue;
 		}
 
-		//g_pLog->debug("Target addr for op %p\n", targetAddr);
+		//LOG_DEBUG("Target addr for op %p\n", targetAddr);
 
 		if (!strings.contains(targetAddr))
 		{
@@ -644,7 +644,7 @@ void Decompiler::__parseFunction
 		}
 
 		//const auto& str = strings.at(targetAddr);
-		//g_pLog->debug("String reference to %s at %p\n", str.c_str(), instr.address);
+		//LOG_DEBUG("String reference to %s at %p\n", str.c_str(), instr.address);
 		references[targetAddr]++;
 	}
 }
@@ -659,11 +659,11 @@ std::map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char
 
 	auto& vft = vftables[interface];
 
-	g_pLog->debug("Disassembling %s's functions\n", interface);
+	LOG_DEBUG("Disassembling %s's functions\n", interface);
 
 	for(unsigned int i = 0; i < vft.functions.size(); i++)
 	{
-		//g_pLog->debug("Decompiling %u\n", i);
+		//LOG_DEBUG("Decompiling %u\n", i);
 		const lm_address_t fn = vft.functions[i];
 
 		auto refs = std::unordered_map<lm_address_t, unsigned int>();
@@ -699,7 +699,7 @@ std::map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char
 			//Since we can't know which one is the right one without applying possibly wrong heuristics
 			//We just index all of them
 			functionMap[str] = i;
-			//g_pLog->debug("%s::%s at %u (%u times)\n", interface, str.c_str(), i, ref.second);
+			//LOG_DEBUG("%s::%s at %u (%u times)\n", interface, str.c_str(), i, ref.second);
 		}
 	}
 

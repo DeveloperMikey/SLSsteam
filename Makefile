@@ -21,6 +21,10 @@ JOBS := $(shell nproc)
 #DATE := $(shell date "+%Y%m%d%H%M%S")
 DATE := $(shell cat res/version.txt)
 
+ifeq ($(shell echo $$TRACE),1)
+	CXXFLAGS += -D "TRACE"
+endif
+
 ifeq ($(shell echo $$DEBUG),1)
 	CXXFLAGS += -D "DEBUG"
 endif

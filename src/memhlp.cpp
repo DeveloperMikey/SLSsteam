@@ -44,7 +44,7 @@ lm_address_t MemHlp::patternScan(const char* pattern, const lm_module_t targetMo
 	const Elf_Shdr* shText = Decompiler::getSection(targetModule, ".text");
 	if (!shText)
 	{
-		g_pLog->debug("Didn't find .text section for %s!\n", targetModule.name);
+		LOG_DEBUG("Didn't find .text section for %s!\n", targetModule.name);
 		return LM_ADDRESS_BAD;
 	}
 
@@ -87,7 +87,7 @@ lm_address_t MemHlp::patternScan(const char* pattern, const lm_module_t targetMo
 
 			if (matches > 1)
 			{
-				g_pLog->debug("Pattern %s found %i times at %p!\n", pattern, matches, addr);
+				LOG_DEBUG("Pattern %s found %i times at %p!\n", pattern, matches, addr);
 			}
 		}
 	}
@@ -101,19 +101,19 @@ lm_address_t MemHlp::searchSignature(const char* name, const char* signature, co
 	lm_address_t address = patternScan(signature, module);
 	if (address == LM_ADDRESS_BAD)
 	{
-		g_pLog->debug("Unable to find signature for %s!\n", name);
+		LOG_DEBUG("Unable to find signature for %s!\n", name);
 	}
 	else
 	{
 		switch (mode)
 		{
 			case SigFollowMode::Relative:
-				g_pLog->debug("Resolving relative of %s at %p\n", name, address);
+				LOG_DEBUG("Resolving relative of %s at %p\n", name, address);
 				address = MemHlp::getJmpTarget(address);
 				break;
 
 			case SigFollowMode::PrologueUpwards:
-				g_pLog->debug("Searching function prologue of %s from %p\n", name, address);
+				LOG_DEBUG("Searching function prologue of %s from %p\n", name, address);
 				address = MemHlp::findPrologue(address, static_cast<const int16_t*>(extraData), extraDataSize);
 				break;
 
@@ -121,7 +121,7 @@ lm_address_t MemHlp::searchSignature(const char* name, const char* signature, co
 				break;
 		}
 
-		g_pLog->debug("%s at %p\n", name, address);
+		LOG_DEBUG("%s at %p\n", name, address);
 	}
 
 	return address;
@@ -142,11 +142,11 @@ lm_address_t MemHlp::getJmpTarget(const lm_address_t address)
 	lm_inst_t inst;
 	if (!LM_Disassemble(address, &inst)) //Should not happen if we land in a code section
 	{
-		g_pLog->debug("Failed to disassemble code at %p!");
+		LOG_DEBUG("Failed to disassemble code at %p!");
 		return LM_ADDRESS_BAD;
 	}
 
-	g_pLog->debug("Resolved to %s %s\n", inst.mnemonic, inst.op_str);
+	LOG_DEBUG("Resolved to %s %s\n", inst.mnemonic, inst.op_str);
 
 	if (strcmp(inst.mnemonic, "jmp") != 0 && strcmp(inst.mnemonic, "call") != 0)
 	{
@@ -180,18 +180,18 @@ lm_address_t MemHlp::findPrologue(const lm_address_t address, const int16_t* pro
 		if (found)
 		{
 			lm_address_t prol = address - i - prologueSize + 1; //Add 1 byte back since bytesSize would be to big otherwise
-			g_pLog->debug("Prologue found at %p\n", prol);
+			LOG_DEBUG("Prologue found at %p\n", prol);
 			return prol;
 		}
 	}
 
-	g_pLog->debug("Unable to find prologue after going up %p bytes!\n", scanSize);
+	LOG_DEBUG("Unable to find prologue after going up %p bytes!\n", scanSize);
 	return LM_ADDRESS_BAD;
 }
 
 bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_address_t tramp)
 {
-	g_pLog->debug("Fixing PIC thunks for %s's trampoline\n", name);
+	LOG_DEBUG("Fixing PIC thunks for %s's trampoline\n", name);
 	constexpr unsigned int maxBytes = 0x5; //Minimum bytes needed to detour a function, so our tramp will at least be of this size
 	
 	lm_inst_t inst;
@@ -201,12 +201,12 @@ bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_a
 
 		if (!LM_Disassemble(startAddress, &inst))
 		{
-			g_pLog->debug("Unable to dissassemble code at %p\n", tramp + curTrampOffset);
+			LOG_DEBUG("Unable to dissassemble code at %p\n", tramp + curTrampOffset);
 			return false;
 		}
 		
 		curTrampOffset += inst.size;
-		g_pLog->debug("%p: %s %s\n", inst.address, inst.mnemonic, inst.op_str);
+		LOG_DEBUG("%p: %s %s\n", inst.address, inst.mnemonic, inst.op_str);
 		
 		if (strcmp(inst.mnemonic, "call") != 0)
 		{
@@ -222,13 +222,13 @@ bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_a
 		{
 			if (!LM_Disassemble(followAddress, &inst))
 			{
-				g_pLog->debug("Unable to dissassemble code at %p\n", followAddress);
+				LOG_DEBUG("Unable to dissassemble code at %p\n", followAddress);
 				return false;
 			}
 
 			followAddress += inst.size;
 
-			g_pLog->debug("%p: %s %s\n", inst.address, inst.mnemonic, inst.op_str);
+			LOG_DEBUG("%p: %s %s\n", inst.address, inst.mnemonic, inst.op_str);
 
 			//Can not declare in switch statement
 			auto splits = std::vector<std::string>();
@@ -268,7 +268,7 @@ bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_a
 
 		if(!LM_Assemble(newInstr, &inst))
 		{
-			g_pLog->debug("Unable to assemble instruction %s!\n", newInstr);
+			LOG_DEBUG("Unable to assemble instruction %s!\n", newInstr);
 			return false;
 		}
 
@@ -276,7 +276,7 @@ bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_a
 		LM_ProtMemory(startAddress, inst.size, LM_PROT_XRW, &oldProt);
 		LM_WriteMemory(startAddress, inst.bytes, inst.size);
 		LM_ProtMemory(startAddress, inst.size, oldProt, nullptr);
-		g_pLog->debug("Replaced PIC thunk call for %s at %p with %s\n", name, followAddress, newInstr);
+		LOG_DEBUG("Replaced PIC thunk call for %s at %p with %s\n", name, followAddress, newInstr);
 		return true;
 	}
 
