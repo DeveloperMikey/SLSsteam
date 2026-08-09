@@ -11,7 +11,7 @@
 #include <cstring>
 #include <dlfcn.h>
 #include <elf.h>
-#include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
