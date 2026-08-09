@@ -232,7 +232,7 @@ void FakeAppIds::getServerDetails(const uint32_t handle, gameserverdetails_t& de
 	}
 
 	const AppId_t realAppId = fakeAppIdMapServer[handle];
-	fakeAppIdMapPings[*reinterpret_cast<uint64_t*>(&details.address)] = realAppId;
+	fakeAppIdMapPings[details.ip64] = realAppId;
 	details.appId = realAppId;
 
 	LOG_DEBUG("Changing appId back to %u\n", realAppId);
@@ -257,7 +257,7 @@ void FakeAppIds::pingResponse(gameserverdetails_t *details)
 		return;
 	}
 
-	const uint64_t ip = *reinterpret_cast<uint64_t*>(&details->address);
+	const uint64_t ip = details->ip64;
 	if (!fakeAppIdMapPings.contains(ip))
 	{
 		return;

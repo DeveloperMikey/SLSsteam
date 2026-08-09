@@ -15,7 +15,12 @@ struct servernetadr_t
 struct gameserverdetails_t
 {
 public:
-	servernetadr_t address;		//0x0
+	union
+	{
+		servernetadr_t address;		//0x0
+		uint64_t ip64;
+	};
+
 	uint8_t __pad_0x0[0x88];	//0x8
 	AppId_t appId;
 };
