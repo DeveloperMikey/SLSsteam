@@ -13,7 +13,10 @@
 #include <unordered_set>
 
 #define LOG_TRACE(fmt, ...) g_pLog->trace(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_TRACE_ONCE(fmt, ...) g_pLog->traceOnce(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+
 #define LOG_ONCE(fmt, ...) g_pLog->once(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+
 #define LOG_DEBUG(fmt, ...) g_pLog->debug(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
 #define LOG_DEBUG_ONCE(fmt, ...) g_pLog->debugOnce(__FILE__, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
 
@@ -155,9 +158,25 @@ public:
 	{
 		__log(k_ELogLevelTrace, file, function, line, msg, args...);
 	}
+	template<typename ...Args>
+	constexpr void traceOnce(const char* file, const char* function, const int line, const char* msg, Args... args)
+	{
+		__log(k_ELogLevelTrace | k_ELogk_ELogLevelOnce, file, function, line, msg, args...);
+	}
 	#else
 	template<typename ...Args>
 	constexpr void trace
+	(
+		__attribute__((unused)) const char* file,
+		__attribute__((unused)) const char* function,
+		__attribute__((unused)) const int line,
+		__attribute__((unused)) const char* msg,
+		__attribute__((unused)) Args... args
+	)
+	{
+	}
+	template<typename ...Args>
+	constexpr void traceOnce
 	(
 		__attribute__((unused)) const char* file,
 		__attribute__((unused)) const char* function,
