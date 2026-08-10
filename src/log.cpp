@@ -42,7 +42,7 @@ std::string ELogLevel_ToString(const unsigned int lvlFlags)
 
 	std::ostringstream lvlStr;
 
-	for(int i = ELogLevelCount; i >= 0; i--)
+	for(int i = ELogLevelCount - 1; i >= 0; i--)
 	{
 		const unsigned int flag = 1 << i;
 

@@ -24,7 +24,7 @@
 
 #define LOG_CUSTOM(lvl, fmt, ...) g_pLog->custom(lvl, __FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
 
-constexpr unsigned int ELogLevelCount = 8;
+constexpr unsigned int ELogLevelCount = 9;
 
 enum ELogLevel : unsigned int
 {
