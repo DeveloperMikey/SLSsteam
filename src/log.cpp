@@ -60,7 +60,6 @@ std::string ELogLevel_ToString(const unsigned int lvlFlags)
 	return lvlStr.str();
 }
 
-
 std::string CLog::buildNotification(const unsigned int flags, const char* msg)
 {
 	const bool notifyShort = flags & k_ELogLevelNotifyShort;
@@ -108,7 +107,7 @@ std::string CLog::buildNotification(const unsigned int flags, const char* msg)
 
 void CLog::__log(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
 {
-	if (flags < getMinLevel())
+	if (!(g_config.logLevel.get() & flags))
 	{
 		return;
 	}
@@ -341,12 +340,6 @@ void CLog::custom(const unsigned int flags, const char* file, const char* functi
 	va_start(vArgs, msg);
 	__log(flags, file, function, line, msg, vArgs);
 	va_end(vArgs);
-}
-
-//Dirty workaround for not being able to access g_config from __log
-ELogLevel CLog::getMinLevel()
-{
-	return static_cast<ELogLevel>(g_config.logLevel.get());
 }
 
 bool CLog::shouldNotify()

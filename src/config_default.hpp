@@ -94,9 +94,6 @@ MaxSchemaTries: 10
 #You should enable this if you're planing to use SLSsteam with Steam Deck's gamemode
 SafeMode: no
 
-#Toggles notifications via notify-send
-Notifications: yes
-
 #Warn user via notification when steamclient.so hash differs from known safe hash
 #Mostly useful for development so I don't accidentally miss an update
 WarnHashMissmatch: no
@@ -125,20 +122,20 @@ FakeEmail: ""
 FakeWalletBalance: 0
 
 #Log levels:
-#Trace = 1 #Tracing
-#Once = 2 #Only log once
-#Debug = 4 #Debugging statements
-#Warn = 8 #Something went wrong but it's not terrible
-#Error = 16 #Something went wrong and it's terrible/can't be recovered from. Function failed
-#Info = 32 #Log for users/external tools
-#NotifyShort = 64
-#NotifyLong = 128
-#None = 256
+#Trace = 0x1 #Tracing
+#Once = 0x2 #Only log once
+#Debug = 0x4 #Debugging statements
+#Warn = 0x8 #Something went wrong but it's not terrible
+#Error = 0x10 #Something went wrong and it's terrible/can't be recovered from. Function failed
+#Info = 0x20 #Log for users/external tools
+#NotifyShort = 0x40
+#NotifyLong = 0x80
 #LogLevels below Warn are stripped from release versions
 #If you want to use them use a debug version
 #LogLevels are bitwise flags, so for example to only
-#show Long error notifications use 16 | 128 which is 144
-LogLevel: 8
+#show Long Notifications & Errors use 0x90 (calculated via 0x80 or 0x10)
+#Default enables everything
+LogLevel: 0xff
 
 #Dump all used IClientInterfaceMaps
 DumpClientInterfaces: no
