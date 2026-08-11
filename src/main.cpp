@@ -35,7 +35,7 @@ static bool cleanEnvVar(const char* varName, const char* endsWith)
 	const auto splits = Utils::strsplit(var, ":");
 	auto newEnv = std::string();
 
-	for(unsigned int i = 0; i < splits.size(); i++)
+	for (unsigned int i = 0; i < splits.size(); i++)
 	{
 		const auto split = splits.at(i);
 		if (split.ends_with(endsWith))
@@ -44,14 +44,14 @@ static bool cleanEnvVar(const char* varName, const char* endsWith)
 			continue;
 		}
 
-		if(newEnv.size() > 0)
+		if (newEnv.size() > 0)
 		{
 			newEnv.append(":");
 		}
 		newEnv.append(split);
 	}
 
-	if(newEnv.size())
+	if (newEnv.size())
 	{
 		setenv(varName, newEnv.c_str(), true);
 	}
@@ -122,7 +122,7 @@ static void setup()
 	//TODO: Investigate weird logging. Not like it's necessary anymore
 	//cleanEnvVar("LD_PRELOAD");
 
-	if(!g_config.init())
+	if (!g_config.init())
 	{
 		unload();
 		return;
@@ -190,7 +190,7 @@ static void load()
 		return;
 	}
 
-	if(!VFTIndexes::init())
+	if (!VFTIndexes::init())
 	{
 		LOG_NOTIFYERROR("Failed to parse VFTables! Aborting...");
 		return;
@@ -245,7 +245,7 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 		//This is wasteful, but we have to analyse right away otherwise the offset get turned into
 		//addresses messing up the analysis.
 		//We could workaround it by only loading after a late module has been loaded
-		for(auto& vft : Decompiler::vftables)
+		for (auto& vft : Decompiler::vftables)
 		{
 			vft.second.analyze();
 		}
@@ -260,7 +260,7 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 		//This is wasteful, but we have to analyse right away otherwise the offset get turned into
 		//addresses messing up the analysis.
 		//We could workaround it by only loading after a late module has been loaded
-		for(auto& vft : Decompiler::vftables)
+		for (auto& vft : Decompiler::vftables)
 		{
 			vft.second.analyze();
 		}

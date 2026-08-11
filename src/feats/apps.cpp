@@ -67,7 +67,7 @@ void Apps::buildDepotDependency(CUtlVector<DepotInfo_t>* depots, CUtlVector<Depo
 	const auto depotBlacklist = g_config.depotBlacklist.get();
 	const auto manifestOverrides = g_config.manifestIds.get();
 
-	for(unsigned int i = 0; i < depots->size; i++)
+	for (unsigned int i = 0; i < depots->size; i++)
 	{
 		const auto depot = depots->at(i);
 
@@ -88,7 +88,7 @@ void Apps::buildDepotDependency(CUtlVector<DepotInfo_t>* depots, CUtlVector<Depo
 		LOG_DEBUG("Depot %u for %u -> %llu\n", depot->depotId, depot->appId, depot->manifestId);
 	}
 
-	for(unsigned int i = 0; i < sharedDepots->size; i++)
+	for (unsigned int i = 0; i < sharedDepots->size; i++)
 	{
 		const auto depot = sharedDepots->at(i);
 		LOG_DEBUG("Shared Depot %u for %u -> %llu\n", depot->depotId, depot->appId, depot->manifestId);
@@ -156,7 +156,7 @@ void Apps::getSubscribedApps(AppId_t* appList, const size_t size, uint32_t& coun
 	}
 
 	//TODO: Maybe Add check if AppId already in list before blindly appending
-	for(auto& appId : g_config.addedAppIds.get())
+	for (auto& appId : g_config.addedAppIds.get())
 	{
 		appList[count++] = appId;
 	}
@@ -169,7 +169,7 @@ void Apps::parseProductInfoFromResponse(CMsgClientPICSProductInfoResponse* msg)
 	std::lock_guard lock(pendingLicenseChangesMutex);
 
 	auto set = std::unordered_set<AppId_t>();
-	for(const auto& app : msg->apps())
+	for (const auto& app : msg->apps())
 	{
 		if (!pendingLicenseChanges.contains(app.appid()))
 		{
@@ -199,7 +199,7 @@ void Apps::postAppLicensesChanged(const std::unordered_set<AppId_t>& apps)
 	AppLicensesChanged_t cb { };
 	unsigned int totalPackets = std::floor(apps.size() / AppLicensesChanged_t::MAX_APPS_PER_CALLBACK);
 
-	for(unsigned int i = 0; i < apps.size(); i++)
+	for (unsigned int i = 0; i < apps.size(); i++)
 	{
 		unsigned int idx = i % AppLicensesChanged_t::MAX_APPS_PER_CALLBACK;
 
@@ -224,7 +224,7 @@ void Apps::postAppLicensesChanged(const std::unordered_set<AppId_t>& apps)
 	}
 
 	std::ostringstream appsLog;
-	for(const auto& app : apps)
+	for (const auto& app : apps)
 	{
 		appsLog << (appsLog.str().size() ? ", " : "") << app;
 	}
@@ -263,7 +263,7 @@ void Apps::runIPCFrame()
 	AppId_t apps[MAX_APPS_PER_REQUEST] { };
 
 	unsigned int i = 0;
-	for(; i < added.size(); i++)
+	for (; i < added.size(); i++)
 	{
 		const unsigned int idx = i % MAX_APPS_PER_REQUEST;
 		const AppId_t appId = *std::next(added.begin(), i);
@@ -345,7 +345,7 @@ void Apps::sendGamesPlayed(CNetPacket* pkt)
 
 	auto msg = pkt->deserializeBody<CMsgClientGamesPlayed>();
 
-	for(int i = 0; i < msg.games_played_size(); i++)
+	for (int i = 0; i < msg.games_played_size(); i++)
 	{
 		auto game = msg.mutable_games_played(i);
 		if (!game->game_id())
@@ -426,7 +426,7 @@ void Apps::sendPICSInfoRequest(CNetPacket* pkt)
 	const auto tokens = g_config.appTokens.get();
 	auto msg = pkt->deserializeBody<CMsgClientPICSProductInfoRequest>();
 
-	for(int i = 0; i < msg.apps_size(); i++)
+	for (int i = 0; i < msg.apps_size(); i++)
 	{
 		auto app = msg.mutable_apps(i);
 		if (tokens.contains(app->appid()))
@@ -477,7 +477,7 @@ void Apps::setConfigStoreString(const char* key, const char* value)
 	str = str.substr(1, str.size() - 2); //[730,240,440,etc]
 	const auto split = Utils::strsplit(const_cast<char*>(str.c_str()), ",");
 
-	for(const auto& s : split)
+	for (const auto& s : split)
 	{
 		if (!Utils::isNumber(s.c_str()))
 		{

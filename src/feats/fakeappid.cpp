@@ -270,7 +270,7 @@ void FakeAppIds::sendGamesPlayed(CNetPacket *pkt)
 {
 	auto msg = pkt->deserializeBody<CMsgClientGamesPlayed>();
 
-	for(int i = 0; i < msg.games_played_size(); i++)
+	for (int i = 0; i < msg.games_played_size(); i++)
 	{
 		const auto game = msg.mutable_games_played(i);
 		const uint64_t gameId = game->game_id();

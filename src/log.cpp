@@ -42,7 +42,7 @@ std::string ELogLevel_ToString(const unsigned int lvlFlags)
 
 	std::ostringstream lvlStr;
 
-	for(int i = ELogLevelCount - 1; i >= 0; i--)
+	for (int i = ELogLevelCount - 1; i >= 0; i--)
 	{
 		const unsigned int flag = 1 << i;
 
@@ -150,7 +150,7 @@ void CLog::__log(const unsigned int flags, const char* file, const char* functio
 
 	if (flags & k_ELogLevelOnce)
 	{
-		for(const auto& oldMsg : msgHist)
+		for (const auto& oldMsg : msgHist)
 		{
 			if (oldMsg == formatted)
 			{

@@ -88,12 +88,12 @@ int Curl::getString(const char* url, std::string& out)
 	close(pipefd[0]);
 
 	int status;
-	if(waitpid(pid, &status, 0) == -1)
+	if (waitpid(pid, &status, 0) == -1)
 	{
 		return 1;
 	}
 
-	if(!WIFEXITED(status))
+	if (!WIFEXITED(status))
 	{
 		return 1;
 	}

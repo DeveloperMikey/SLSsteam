@@ -58,7 +58,7 @@ lm_address_t MemHlp::patternScan(const char* pattern, const lm_module_t targetMo
 	{
 		bool found = true;
 
-		for(unsigned int i = 0; i < bytes.size(); i++)
+		for (unsigned int i = 0; i < bytes.size(); i++)
 		{
 			if (bytes.at(i) == -1)
 			{
@@ -160,10 +160,10 @@ lm_address_t MemHlp::findPrologue(const lm_address_t address, const int16_t* pro
 {
 	constexpr unsigned int scanSize = 0x10000;
 
-	for(unsigned int i = 0u; i < scanSize; i++)
+	for (unsigned int i = 0u; i < scanSize; i++)
 	{
 		bool found = true;
-		for(unsigned int j = 0u; j < prologueSize; j++)
+		for (unsigned int j = 0u; j < prologueSize; j++)
 		{
 			if (prologueBytes[j] == -1)
 			{
@@ -195,7 +195,7 @@ bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_a
 	constexpr unsigned int maxBytes = 0x5; //Minimum bytes needed to detour a function, so our tramp will at least be of this size
 	
 	lm_inst_t inst;
-	for(unsigned int curTrampOffset = 0; curTrampOffset <= maxBytes; )
+	for (unsigned int curTrampOffset = 0; curTrampOffset <= maxBytes; )
 	{
 		const lm_address_t startAddress = tramp + curTrampOffset;
 
@@ -218,7 +218,7 @@ bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_a
 		bool isIPCThunk = true;
 		char newInstr[sizeof(inst.mnemonic) + sizeof(inst.op_str)];
 
-		for(unsigned int i = 0; i < 2; i++) //Dissassemble next 2 instructions and check if they're an actual IPC thunk call
+		for (unsigned int i = 0; i < 2; i++) //Dissassemble next 2 instructions and check if they're an actual IPC thunk call
 		{
 			if (!LM_Disassemble(followAddress, &inst))
 			{
@@ -266,7 +266,7 @@ bool MemHlp::fixPICThunkCall(const char* name, const lm_address_t fn, const lm_a
 			continue;
 		}
 
-		if(!LM_Assemble(newInstr, &inst))
+		if (!LM_Assemble(newInstr, &inst))
 		{
 			LOG_DEBUG("Unable to assemble instruction %s!\n", newInstr);
 			return false;
@@ -290,7 +290,7 @@ std::string MemHlp::hexdump(const void* address, const size_t size)
 
 	ss << std::setfill(' ') << std::hex;
 
-	for(unsigned int i = 0; i < ROWS; i++)
+	for (unsigned int i = 0; i < ROWS; i++)
 	{
 		if (i == 0)
 		{
@@ -302,14 +302,14 @@ std::string MemHlp::hexdump(const void* address, const size_t size)
 		}
 	}
 
-	for(uintptr_t i = 0; i < size; i += ROWS)
+	for (uintptr_t i = 0; i < size; i += ROWS)
 	{
 		const unsigned int byteStart = reinterpret_cast<uintptr_t>(address) + i;
 		const unsigned int num = ROWS > size - i ? size - i : ROWS;
 
 		ss << "\n0x" << byteStart;
 
-		for(uintptr_t j = 0; j < num; j++)
+		for (uintptr_t j = 0; j < num; j++)
 		{
 			const unsigned int byte = *reinterpret_cast<uint8_t*>(byteStart + j);
 			ss << " " << std::setfill('0') << std::setw(2) << byte;
@@ -317,7 +317,7 @@ std::string MemHlp::hexdump(const void* address, const size_t size)
 
 		ss << std::setfill(' ') << std::setw((ROWS - num) * 3 + 1) << " ";
 
-		for(uintptr_t j = 0; j < num; j++)
+		for (uintptr_t j = 0; j < num; j++)
 		{
 			const unsigned char byte = *reinterpret_cast<unsigned char*>(byteStart + j);
 			if (std::isprint(byte))

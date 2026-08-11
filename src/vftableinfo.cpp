@@ -286,7 +286,7 @@ void VFTIndexes::dump(const std::string& name, const std::map<std::string, unsig
 
 	ss << "\n" << name << "\n{";
 
-	for(const auto& kv : functionMap)
+	for (const auto& kv : functionMap)
 	{
 		ss << "\n\t" << kv.first << " = " << kv.second;
 	}
@@ -300,7 +300,7 @@ bool VFTIndexes::init()
 {
 	bool success = true;
 
-	for(const auto& fn : functions)
+	for (const auto& fn : functions)
 	{
 		if (!fn->init())
 		{
@@ -310,7 +310,7 @@ bool VFTIndexes::init()
 
 	if (g_config.dumpInterfaceMaps.get())
 	{
-		for(const auto& tbl : tableMap)
+		for (const auto& tbl : tableMap)
 		{
 			dump(tbl.first, tbl.second);
 		}

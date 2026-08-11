@@ -233,7 +233,7 @@ void Ticket::recvEncryptedAppTicket(CNetPacket* pkt)
 	}
 
 	const SavedTicket* ticket = getCachedEncryptedTicket(msg.app_id());
-	if(!ticket)
+	if (!ticket)
 	{
 		return;
 	}
@@ -247,7 +247,7 @@ void Ticket::recvEncryptedAppTicket(CNetPacket* pkt)
 void Ticket::recvAppTicket(const CNetPacket* pkt)
 {
 	const auto msg = pkt->deserializeBody<CMsgClientGetAppOwnershipTicketResponse>();
-	if(msg.eresult() == k_EResultOK)
+	if (msg.eresult() == k_EResultOK)
 	{
 		saveTicketToCache(msg);
 		return;

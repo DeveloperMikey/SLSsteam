@@ -36,7 +36,7 @@ void Misc::recvMsg(CNetPacket *pkt)
 
 			auto msg = pkt->deserializeBody<CMsgClientPersonaState>();
 
-			for(int i = 0; i < msg.friends_size(); i++)
+			for (int i = 0; i < msg.friends_size(); i++)
 			{
 				auto frnd = msg.mutable_friends(i);
 

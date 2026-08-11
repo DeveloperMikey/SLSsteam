@@ -139,7 +139,7 @@ public:
 			return list;
 		}
 
-		for(auto subNode : node)
+		for (auto subNode : node)
 		{
 			try
 			{
@@ -179,7 +179,7 @@ public:
 			return map;
 		}
 
-		for(auto& subNode : node)
+		for (auto& subNode : node)
 		{
 			try
 			{

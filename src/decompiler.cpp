@@ -39,7 +39,7 @@ unsigned int VFTable::analyze()
 
 	const lm_address_t start = address + sizeof(lm_address_t) * 2;
 
-	for(unsigned int i = 0; ;i++)
+	for (unsigned int i = 0; ;i++)
 	{
 		const lm_address_t offset = *(reinterpret_cast<lm_address_t*>(start) + i);
 		if (!offset)
@@ -59,7 +59,7 @@ unsigned int VFTable::analyze()
 		this->functions.emplace_back(offset + moduleBase);
 	}
 
-	for(auto& sub : subclasses)
+	for (auto& sub : subclasses)
 	{
 		sub.second.analyze();
 	}
@@ -79,7 +79,7 @@ unsigned int Decompiler::getString(const lm_address_t addr, std::string* outStr)
 	bool nullTerminated = false;
 	unsigned int i = 0;
 
-	for(; ; i++)
+	for (; ; i++)
 	{
 		const char c = *(pChAddr + i);
 		if (c == '\0')
@@ -110,7 +110,7 @@ lm_address_t Decompiler::extractHexNum(const std::string& str)
 	unsigned int start = 0;
 	unsigned int end = 0;
 
-	for(unsigned int i = 0; i < str.size(); i++)
+	for (unsigned int i = 0; i < str.size(); i++)
 	{
 		const char c = str.at(i);
 
@@ -159,7 +159,7 @@ bool Decompiler::getRelativeTarget(const lm_inst_t& instr, lm_address_t& target)
 	}
 	str = str.substr(2, str.size() - 2);
 
-	if (std::find_if(str.begin(), str.end(), [](const unsigned char c) { return !std::isxdigit(c); }) != str.end())
+	if (std::find_if (str.begin(), str.end(), [](const unsigned char c) { return !std::isxdigit(c); }) != str.end())
 	{
 		return false;
 	}
@@ -255,7 +255,7 @@ bool Decompiler::isPICThunk(const lm_inst_t& callInstr, std::string* targetRegis
 	std::string espTarget;
 
 	lm_inst_t instr;
-	for(unsigned int i = 0; i < 2; i++)
+	for (unsigned int i = 0; i < 2; i++)
 	{
 		if (!LM_Disassemble(target, &instr))
 		{
@@ -310,7 +310,7 @@ void Decompiler::collectStrings(const lm_module_t& mod, const Elf_Shdr& section)
 
 	std::string strBuf;
 
-	for(lm_address_t addr = start; addr < end; )
+	for (lm_address_t addr = start; addr < end; )
 	{
 		lm_address_t begin = addr;
 		unsigned int read = getString(addr, &strBuf);
@@ -340,7 +340,7 @@ bool Decompiler::collectVFTables(const lm_module_t& mod, const Elf_Shdr& section
 	//Potential solutions: Matching the name via regex
 
 	//First pass to collect all typeInfos. Luckily .data.rel.ro seems to be sizeof(lm_address_t) byte aligned
-	for(lm_address_t addr = start; addr < end; addr += sizeof(addr))
+	for (lm_address_t addr = start; addr < end; addr += sizeof(addr))
 	{
 		const lm_address_t offset = *reinterpret_cast<const lm_address_t*>(addr);
 		if (!offset)
@@ -372,7 +372,7 @@ bool Decompiler::collectVFTables(const lm_module_t& mod, const Elf_Shdr& section
 	}
 
 	//Second pass to find actual VFTables by looking up the TypeInfos
-	for(lm_address_t addr = start; addr < end; addr += sizeof(addr))
+	for (lm_address_t addr = start; addr < end; addr += sizeof(addr))
 	{
 		const lm_address_t offset = *reinterpret_cast<const lm_address_t*>(addr);
 		if (!offset)
@@ -475,7 +475,7 @@ bool Decompiler::parseHeader(const lm_module_t& mod)
 
 	LOG_DEBUG("strHdr name %u address 0x%x\n", strHdr.sh_name, strHdr.sh_offset);
 
-	for(const auto& shdr : shdrs)
+	for (const auto& shdr : shdrs)
 	{
 		if (!shdr.sh_name)
 		{
@@ -545,7 +545,7 @@ void Decompiler::__parseFunction
 	lm_address_t addr = begin;
 	lm_inst_t instr;
 
-	for(;;)
+	for (;;)
 	{
 		if (!LM_Disassemble(addr, &instr))
 		{
@@ -593,7 +593,7 @@ void Decompiler::__parseFunction
 		}
 		//Checking the log it seems like capstone is turning all ret instructions into just ret.
 		//But just in case we check for all of them
-		else if(strcmp(instr.mnemonic, "ret") == 0 || strcmp(instr.mnemonic, "retn") == 0 || strcmp(instr.mnemonic, "retf") == 0)
+		else if (strcmp(instr.mnemonic, "ret") == 0 || strcmp(instr.mnemonic, "retn") == 0 || strcmp(instr.mnemonic, "retf") == 0)
 		{
 			//LOG_DEBUG("Hit %s instruction at 0x%x, stopping\n", instr.mnemonic, instr.address);
 			return;
@@ -626,7 +626,7 @@ void Decompiler::__parseFunction
 			const lm_address_t offset = extractHexNum(instr.op_str);
 			targetAddr = leaOffset - offset;
 		}
-		else if(strstr(instr.op_str, "+"))
+		else if (strstr(instr.op_str, "+"))
 		{
 			const lm_address_t offset = extractHexNum(instr.op_str);
 			targetAddr = leaOffset + offset;
@@ -652,7 +652,7 @@ void Decompiler::__parseFunction
 std::map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char* interface)
 {
 	auto functionMap = std::map<std::string, unsigned int>();
-	if(!vftables.contains(interface))
+	if (!vftables.contains(interface))
 	{
 		return functionMap;
 	}
@@ -661,7 +661,7 @@ std::map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char
 
 	LOG_DEBUG("Disassembling %s's functions\n", interface);
 
-	for(unsigned int i = 0; i < vft.functions.size(); i++)
+	for (unsigned int i = 0; i < vft.functions.size(); i++)
 	{
 		//LOG_DEBUG("Decompiling %u\n", i);
 		const lm_address_t fn = vft.functions[i];
@@ -669,7 +669,7 @@ std::map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char
 		auto refs = std::unordered_map<lm_address_t, unsigned int>();
 		parseFunction(fn, refs);
 
-		for(const auto& ref : refs)
+		for (const auto& ref : refs)
 		{
 			auto str = strings[ref.first];
 			if (strstr(interface, str.c_str()))
@@ -681,7 +681,7 @@ std::map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char
 			{
 				//Some functions are overloaded, so we append a 2, 3, etc
 				unsigned int idx = 2;
-				for(;;)
+				for (;;)
 				{
 					auto indexedStr = str + std::to_string(idx);
 					if (!functionMap.contains(indexedStr))

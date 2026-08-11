@@ -18,7 +18,7 @@ bool Utils::isNumber(const char* str)
 		return false;
 	}
 
-	for(unsigned int i = 0; i < len; i++)
+	for (unsigned int i = 0; i < len; i++)
 	{
 		const char c = str[i];
 
@@ -66,7 +66,7 @@ std::string Utils::getFileSHA256(const char *filePath)
 	SHA256(bytes.data(), bytes.size(), sha256Bytes);
 
 	std::ostringstream sha256;
-	for(int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
 	{
 		sha256 << std::hex << std::setw(2) << std::setfill('0') << (int)sha256Bytes[i];
 	}

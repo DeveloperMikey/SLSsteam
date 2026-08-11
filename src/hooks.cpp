@@ -526,7 +526,7 @@ static gameserverdetails_t* hkSteamMatchmakingServers_GetServerDetails(void* pSt
 		reinterpret_cast<void*>(ret)
 	);
 
-	if(ret)
+	if (ret)
 	{
 		FakeAppIds::getServerDetails(handle, *ret);
 	}
@@ -1092,7 +1092,7 @@ static AppId_t hkClientUtils_GetAppId(void* pClientUtils)
 	);
 
 	const AppId_t real = FakeAppIds::getRealAppIdForCurrentPipe(false);
-	if(real)
+	if (real)
 	{
 		LOG_DEBUG("Overwriting appId with %u\n", real);
 		return real;

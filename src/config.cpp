@@ -84,7 +84,7 @@ static void onFileChange()
 
 bool CConfig::init()
 {
-	if(!createFile())
+	if (!createFile())
 	{
 		LOG_WARN("Config creation failed!\n");
 		return false;
@@ -187,7 +187,7 @@ bool CConfig::loadSettings(bool firstLoad)
 
 	if (!firstLoad)
 	{
-		for(const auto& appId : prevAppIds)
+		for (const auto& appId : prevAppIds)
 		{
 			if (_addedAppIds.contains(appId))
 			{
@@ -197,7 +197,7 @@ bool CConfig::loadSettings(bool firstLoad)
 			removedApps.emplace(appId);
 			LOG_DEBUG("AppId %u removed from AdditionalApps\n", appId);
 		}
-		for(const auto& appId : _addedAppIds)
+		for (const auto& appId : _addedAppIds)
 		{
 			if (prevAppIds.contains(appId))
 			{
@@ -247,11 +247,11 @@ bool CConfig::loadSettings(bool firstLoad)
 	}
 
 	const auto dlcDataNode = node["DlcData"];
-	if(dlcDataNode)
+	if (dlcDataNode)
 	{
 		auto _dlcData = dlcData.empty();
 
-		for(auto& app : dlcDataNode)
+		for (auto& app : dlcDataNode)
 		{
 			try
 			{
@@ -370,7 +370,7 @@ bool CConfig::shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditiona
 					//LOG_DEBUG("Override exclude %i with false, because parent %u isn't excluded\n", exclude, parentId);
 					exclude = false;
 				}
-				else if(!whitelist && shouldExcludeAppId(parentId, true))
+				else if (!whitelist && shouldExcludeAppId(parentId, true))
 				{
 					//LOG_DEBUG("Override exclude %i with true, because parent %u is excluded\n", exclude, parentId);
 					exclude = true;
@@ -385,7 +385,7 @@ bool CConfig::shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditiona
 
 CSteamId CConfig::getDenuvoGameOwner(const AppId_t appId)
 {
-	for(const auto& tpl : denuvoGames.get())
+	for (const auto& tpl : denuvoGames.get())
 	{
 		if (tpl.second.contains(appId))
 		{

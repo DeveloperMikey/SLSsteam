@@ -22,7 +22,7 @@ void* watchLoop(void* args)
 	auto watcher = reinterpret_cast<CFileWatcher*>(args);
 	LOG_DEBUG("Started FileWatcher %u\n", watcher->notifyFd);
 
-	for(;;)
+	for (;;)
 	{
 		size = read(watcher->notifyFd, buf, sizeof(buf));
 		if (!size)
@@ -82,7 +82,7 @@ CFileWatcher::~CFileWatcher()
 	{
 		close(notifyFd);
 
-		for(const auto& fd : fileFdMap)
+		for (const auto& fd : fileFdMap)
 		{
 			if (fd.first == -1)
 			{

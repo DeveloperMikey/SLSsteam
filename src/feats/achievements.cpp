@@ -42,7 +42,7 @@ std::unordered_set<uint64_t> Achievements::getReviewersForGame(const AppId_t app
 	auto url = getReviewUrl(appId);
 	std::string reviews;
 
-	if(Curl::getString(url.c_str(), reviews))
+	if (Curl::getString(url.c_str(), reviews))
 	{
 		LOG_WARN("Failed to get reviewer list for %u!\n", appId);
 		return list;
@@ -53,14 +53,14 @@ std::unordered_set<uint64_t> Achievements::getReviewersForGame(const AppId_t app
 		ownerBlacklist[appId] = std::unordered_set<uint64_t>();
 	}
 
-	LOG_DEBUG("Downloaded reviewers %s\n", reviews.c_str());
+	//LOG_DEBUG("Downloaded reviewers %s\n", reviews.c_str());
 
 	std::regex steamIdFieldsRe("\"steamid\":\"[0-9]+\"");
 
 	auto begin = std::sregex_iterator(reviews.begin(), reviews.end(), steamIdFieldsRe);
 	auto end = std::sregex_iterator();
 
-	for(auto i = begin; i != end; ++i)
+	for (auto i = begin; i != end; ++i)
 	{
 		std::smatch steamIdMatch = *i;
 		std::string steamIdFieldStr = steamIdMatch.str();
@@ -159,7 +159,7 @@ uint32_t Achievements::sendAndRecvGetPlayerStats
 
 	const auto reviewers = getReviewersForGame(send->appid());
 
-	for(const auto& id : reviewers)
+	for (const auto& id : reviewers)
 	{
 		const uint32_t res = tryGetPlayerStats(serviceTransport, serviceName, send, recv, id);
 		if (res == k_EResultOK)
@@ -239,7 +239,7 @@ uint32_t Achievements::sendAndRecvGetUserStats(CAPIJob* job, CProtoBufMsgBase* s
 
 	const auto reviewers = getReviewersForGame(sendBdy->game_id());
 
-	for(const auto& id : reviewers)
+	for (const auto& id : reviewers)
 	{
 		const uint32_t ret = tryGetUserStats(job, send, timeOut, recv, targetType, id);
 		if (ret)

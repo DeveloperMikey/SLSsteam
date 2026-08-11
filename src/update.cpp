@@ -34,7 +34,7 @@ bool Updater::init()
 
 	bool downloadSuccess = false;
 
-	for(const auto url : urls)
+	for (const auto url : urls)
 	{
 		res = Curl::getString(url, data);
 		LOG_INFO("Curl Res: %u for %s with len %i\n", res, url, data.size());
@@ -48,10 +48,10 @@ bool Updater::init()
 		LOG_WARN("Download updates.yaml failed!\n");
 	}
 
-	if(!downloadSuccess)
+	if (!downloadSuccess)
 	{
 		data = loadFromCache();
-		if(data.size() < 1)
+		if (data.size() < 1)
 		{
 			LOG_ERROR("No cached updates.yaml found! Failing\n");
 			return false;
@@ -72,7 +72,7 @@ bool Updater::init()
 
 			LOG_DEBUG("Parsing version %llu\n", version);
 
-			for(const auto& hash : sub.second)
+			for (const auto& hash : sub.second)
 			{
 				const auto str = hash.as<std::string>();
 				clientHashMap[version].emplace(str);
