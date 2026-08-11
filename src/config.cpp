@@ -163,7 +163,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	//This is shitty, but to do it properly have to do something even shittier
 	if (firstLoad)
 	{
-		LOG_INFO("LogLevels is %u\n", logLevels.get());
+		LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "LogLevels is %u\n", logLevels.get());
 	}
 
 	disableFamilyLock = getSetting<bool>(node, "DisableFamilyShareLock", true);
@@ -237,7 +237,7 @@ bool CConfig::loadSettings(bool firstLoad)
 				title
 			};
 
-			LOG_INFO("Idle status %s with AppId %u\n", title.c_str(), appId);
+			LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "Idle status %s with AppId %u\n", title.c_str(), appId);
 		}
 		catch(...)
 		{
@@ -256,7 +256,7 @@ bool CConfig::loadSettings(bool firstLoad)
 			try
 			{
 				const AppId_t parentId = app.first.as<AppId_t>();
-				LOG_INFO("Parsing DlcData for %u\n", parentId);
+				LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "Parsing DlcData for %u\n", parentId);
 				const auto dlcIds = getMap<AppId_t, std::string>(dlcDataNode, std::to_string(parentId).c_str());
 
 				CDlcData& data = _dlcData[parentId];
@@ -297,7 +297,7 @@ bool CConfig::loadSettings(bool firstLoad)
 					_denuvoGames[steamId].emplace(appId);
 
 					//Again, not loggin SteamId because of privacy
-					LOG_INFO("Added DenuvoGame %u\n", appId);
+					LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "Added DenuvoGame %u\n", appId);
 				}
 			}
 			catch (...)

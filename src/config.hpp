@@ -109,11 +109,11 @@ public:
 
 			if constexpr (std::is_same_v<T, std::string>)
 			{
-				LOG_INFO("%s is \"%s\"\n", name, val.c_str());
+				LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "%s is \"%s\"\n", name, val.c_str());
 			}
 			else
 			{
-				LOG_INFO("%s is %s\n", name, std::to_string(val).c_str());
+				LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "%s is %s\n", name, std::to_string(val).c_str());
 			}
 
 			return val;
@@ -148,11 +148,11 @@ public:
 
 				if constexpr (std::is_same_v<T, std::string>)
 				{
-					LOG_INFO("Adding \"%s\" to %s\n", val.c_str(), name);
+					LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "Adding \"%s\" to %s\n", val.c_str(), name);
 				}
 				else
 				{
-					LOG_INFO("Adding %s to %s\n", std::to_string(val).c_str(), name);
+					LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "Adding %s to %s\n", std::to_string(val).c_str(), name);
 				}
 
 			}
@@ -191,11 +191,11 @@ public:
 
 				if constexpr (std::is_same_v<T2, std::string>)
 				{
-					LOG_INFO("Adding %s: \"%s\" to %s\n", std::to_string(k).c_str(), v.c_str(), name);
+					LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "Adding %s: \"%s\" to %s\n", std::to_string(k).c_str(), v.c_str(), name);
 				}
 				else
 				{
-					LOG_INFO("Adding %s: %s to %s\n", std::to_string(k).c_str(), std::to_string(v).c_str(), name);
+					LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "Adding %s: %s to %s\n", std::to_string(k).c_str(), std::to_string(v).c_str(), name);
 				}
 			}
 			catch(...)
