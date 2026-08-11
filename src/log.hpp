@@ -84,7 +84,6 @@ public:
 	__attribute__((__format__(__printf__, 6, 7)))
 	void custom(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, ...);
 
-	static bool shouldNotify();
 	static CLog* createDefaultLog();
 };
 

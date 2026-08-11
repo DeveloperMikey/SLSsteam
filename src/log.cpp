@@ -121,7 +121,7 @@ void CLog::__log(const unsigned int flags, const char* file, const char* functio
 	//Use built string to check further down
 	const auto notification = buildNotification(flags, formatted.c_str());
 
-	if (shouldNotify() && notification.size() > 0)
+	if (notification.size() > 0)
 	{
 		system(notification.c_str());
 		debug(file, function, line, "system(\"%s\")\n", notification.c_str());
@@ -340,11 +340,6 @@ void CLog::custom(const unsigned int flags, const char* file, const char* functi
 	va_start(vArgs, msg);
 	__log(flags, file, function, line, msg, vArgs);
 	va_end(vArgs);
-}
-
-bool CLog::shouldNotify()
-{
-	return g_config.notifications.get();
 }
 
 CLog* CLog::createDefaultLog()

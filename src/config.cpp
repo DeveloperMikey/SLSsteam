@@ -161,7 +161,6 @@ bool CConfig::loadSettings(bool firstLoad)
 	useWhiteList = getSetting<bool>(node, "UseWhitelist", false);
 	maxSchemaTries = getSetting<uint32_t>(node, "MaxSchemaTries", 10);
 	safeMode = getSetting<bool>(node, "SafeMode", false);
-	notifications = getSetting<bool>(node, "Notifications", true);
 	warnHashMissmatch = getSetting<bool>(node, "WarnHashMissmatch", false);
 	notifyInit = getSetting<bool>(node, "NotifyInit", true);
 	api = getSetting<bool>(node, "API", true);
@@ -179,7 +178,6 @@ bool CConfig::loadSettings(bool firstLoad)
 	LOG_INFO("UseWhitelist: %i\n", useWhiteList.get());
 	LOG_INFO("MaxSchemaTries: %u\n", maxSchemaTries.get());
 	LOG_INFO("SafeMode: %i\n", safeMode.get());
-	LOG_INFO("Notifications: %i\n", notifications.get());
 	LOG_INFO("WarnHashMissmatch: %i\n", warnHashMissmatch.get());
 	LOG_INFO("NotifyInit: %i\n", notifyInit.get());
 	LOG_INFO("API: %i\n", api.get());

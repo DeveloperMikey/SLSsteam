@@ -63,7 +63,6 @@ public:
 	MTVariable<bool> useWhiteList;
 	MTVariable<uint32_t> maxSchemaTries;
 	MTVariable<bool> safeMode;
-	MTVariable<bool> notifications;
 	MTVariable<bool> warnHashMissmatch;
 	MTVariable<bool> notifyInit;
 	MTVariable<bool> api;
