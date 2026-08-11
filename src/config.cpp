@@ -248,22 +248,12 @@ bool CConfig::loadSettings(bool firstLoad)
 			try
 			{
 				const AppId_t parentId = app.first.as<AppId_t>();
+				LOG_INFO("Parsing DlcData for %u\n", parentId);
+				const auto dlcIds = getMap<AppId_t, std::string>(dlcDataNode, std::to_string(parentId).c_str());
 
-				CDlcData data;
+				CDlcData& data = _dlcData[parentId];
 				data.parentId = parentId;
-				LOG_INFO("Adding DlcData for %u\n", parentId);
-
-				for(auto& dlc : app.second)
-				{
-					const AppId_t dlcId = dlc.first.as<AppId_t>();
-					//There's more efficient types to store strings, but they mostly do not work
-					const std::string dlcName = dlc.second.as<std::string>();
-
-					data.dlcIds[dlcId] = dlcName;
-					LOG_INFO("DlcId %u -> %s\n", dlcId, dlcName.c_str());
-				}
-
-				_dlcData[parentId] = data;
+				data.dlcIds = dlcIds;
 			}
 			catch(...)
 			{
@@ -320,7 +310,13 @@ bool CConfig::loadSettings(bool firstLoad)
 	const auto errors = __loadErrors.get();
 	if (errors.size())
 	{
+		//We know this isn't build by user input, so disabling the warning is fine for this line
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wformat-security"
+
 		LOG_NOTIFYWARN(errors.c_str());
+
+		#pragma GCC diagnostic pop
 	}
 
 	return true;

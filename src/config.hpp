@@ -94,7 +94,7 @@ public:
 	bool loadSettings(const bool firstLoad = false);
 
 	template<typename T>
-	T getSetting(YAML::Node& node, const char* name, const T defVal)
+	T getSetting(const YAML::Node& node, const char* name, const T defVal)
 	{
 		if (!node[name])
 		{
@@ -127,7 +127,7 @@ public:
 	}
 
 	template<typename T>
-	std::unordered_set<T> getList(YAML::Node& rootNode, const char* name)
+	std::unordered_set<T> getList(const YAML::Node& rootNode, const char* name)
 	{
 		auto list = std::unordered_set<T>();
 
@@ -167,7 +167,7 @@ public:
 	}
 
 	template<typename T, typename T2>
-	std::unordered_map<T, T2> getMap(YAML::Node& rootNode, const char* name)
+	std::unordered_map<T, T2> getMap(const YAML::Node& rootNode, const char* name)
 	{
 		auto map = std::unordered_map<T, T2>();
 
