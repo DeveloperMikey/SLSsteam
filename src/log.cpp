@@ -107,7 +107,7 @@ std::string CLog::buildNotification(const unsigned int flags, const char* msg)
 
 void CLog::__log(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
 {
-	if (!(g_config.logLevel.get() & flags))
+	if (!(g_config.logLevels.get() & flags))
 	{
 		return;
 	}

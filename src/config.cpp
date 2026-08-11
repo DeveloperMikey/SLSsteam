@@ -171,24 +171,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	disableUpdates = getSetting<bool>(node, "DisableUpdates", true);
 	dumpInterfaceMaps = getSetting<bool>(node, "DumpClientInterfaces", false);
 	extendedLogging = getSetting<bool>(node, "ExtendedLogging", false);
-	logLevel = getSetting<unsigned int>(node, "LogLevel", 2);
-
-	//TODO: Create smart logging function to log them automatically via getSetting
-	LOG_INFO("DisableFamilyShareLock: %i\n", disableFamilyLock.get());
-	LOG_INFO("UseWhitelist: %i\n", useWhiteList.get());
-	LOG_INFO("MaxSchemaTries: %u\n", maxSchemaTries.get());
-	LOG_INFO("SafeMode: %i\n", safeMode.get());
-	LOG_INFO("WarnHashMissmatch: %i\n", warnHashMissmatch.get());
-	LOG_INFO("NotifyInit: %i\n", notifyInit.get());
-	LOG_INFO("API: %i\n", api.get());
-	LOG_INFO("FakeName: %s\n", fakeName.get().c_str());
-	LOG_INFO("FakeEmail: %s\n", fakeEmail.get().c_str());
-	LOG_INFO("FakeWalletBalance: %i\n", fakeWalletBalance.get());
-	LOG_INFO("DisableCloud: %i\n", disableCloud.get());
-	LOG_INFO("DisableUpdates: %i\n", disableUpdates.get());
-	LOG_INFO("DumpClientInterfaces: %i\n", dumpInterfaceMaps.get());
-	LOG_INFO("ExtendedLogging: %i\n", extendedLogging.get());
-	LOG_INFO("LogLevel: %i\n", logLevel.get());
+	logLevels = getSetting<uint32_t>(node, "LogLevels", 0xff);
 
 	const std::lock_guard appsChanged(appsChangedMutex);
 	const auto prevAppIds = addedAppIds.get();

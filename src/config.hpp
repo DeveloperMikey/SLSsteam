@@ -13,6 +13,7 @@
 #include <mutex>
 #include <pthread.h>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -71,7 +72,7 @@ public:
 	MTVariable<std::string> fakeName;
 	MTVariable<std::string> fakeEmail;
 	MTVariable<int32_t> fakeWalletBalance;
-	MTVariable<unsigned int> logLevel;
+	MTVariable<uint32_t> logLevels;
 	MTVariable<bool> dumpInterfaceMaps;
 	MTVariable<bool> extendedLogging;
 
@@ -104,7 +105,18 @@ public:
 
 		try
 		{
-			 return node[name].as<T>();
+			const T val = node[name].as<T>();
+
+			if constexpr (std::is_same_v<T, std::string>)
+			{
+				LOG_INFO("%s is %s\n", name, val.c_str());
+			}
+			else
+			{
+				LOG_INFO("%s is %s\n", name, std::to_string(val).c_str());
+			}
+
+			return val;
 		}
 		catch (YAML::BadConversion& er)
 		{
@@ -134,11 +146,15 @@ public:
 				const T val = subNode.as<T>();
 				list.emplace(val);
 
-				//TODO: Find better way to log shit
-				if (std::is_same_v<T, uint32_t>)
+				if constexpr (std::is_same_v<T, std::string>)
 				{
-					LOG_INFO("Added %u to %s\n", val, name);
+					LOG_INFO("Adding %s to %s\n", val.c_str(), name);
 				}
+				else
+				{
+					LOG_INFO("Adding %s to %s\n", std::to_string(val).c_str(), name);
+				}
+
 			}
 			catch(...)
 			{
@@ -173,13 +189,13 @@ public:
 
 				map[k] = v;
 
-				if (std::is_same_v<T, uint32_t> && std::is_same_v<T, T2>)
+				if constexpr (std::is_same_v<T2, std::string>)
 				{
-					LOG_INFO("Added %u to %u in %s\n", k, v, name);
+					LOG_INFO("Adding %s: %s to %s\n", std::to_string(k).c_str(), v.c_str(), name);
 				}
-				else if (std::is_same_v<T, uint32_t> && std::is_same_v<T2, uint64_t>)
+				else
 				{
-					LOG_INFO("Added %u to %llu in %s\n", k, v, name);
+					LOG_INFO("Adding %s: %s to %s\n", std::to_string(k).c_str(), std::to_string(v).c_str(), name);
 				}
 			}
 			catch(...)

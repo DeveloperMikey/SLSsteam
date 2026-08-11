@@ -135,7 +135,7 @@ FakeWalletBalance: 0
 #LogLevels are bitwise flags, so for example to only
 #show Long Notifications & Errors use 0x90 (calculated via 0x80 or 0x10)
 #Default enables everything
-LogLevel: 0xff
+LogLevels: 0xff
 
 #Dump all used IClientInterfaceMaps
 DumpClientInterfaces: no

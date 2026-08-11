@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdarg>
+#include <cstdint>
 #include <fstream>
 #include <memory>
 #include <shared_mutex>
@@ -26,7 +27,7 @@
 
 constexpr unsigned int ELogLevelCount = 8;
 
-enum ELogLevel : unsigned int
+enum ELogLevel : uint32_t
 {
 	k_ELogLevelTrace = 1 << 0, //Tracing for debug
 	k_ELogLevelOnce = 1 << 1, //Only log once
