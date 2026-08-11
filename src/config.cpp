@@ -157,6 +157,15 @@ bool CConfig::loadSettings(bool firstLoad)
 
 	__loadErrors = std::string("");
 	
+	//Parse logLevels first, otherwise settings won't get logged
+	logLevels = getSetting<uint32_t>(node, "LogLevels", 0xff);
+
+	//This is shitty, but to do it properly have to do something even shittier
+	if (firstLoad)
+	{
+		LOG_INFO("LogLevels is %u\n", logLevels.get());
+	}
+
 	disableFamilyLock = getSetting<bool>(node, "DisableFamilyShareLock", true);
 	useWhiteList = getSetting<bool>(node, "UseWhitelist", false);
 	maxSchemaTries = getSetting<uint32_t>(node, "MaxSchemaTries", 10);
@@ -171,7 +180,6 @@ bool CConfig::loadSettings(bool firstLoad)
 	disableUpdates = getSetting<bool>(node, "DisableUpdates", true);
 	dumpInterfaceMaps = getSetting<bool>(node, "DumpClientInterfaces", false);
 	extendedLogging = getSetting<bool>(node, "ExtendedLogging", false);
-	logLevels = getSetting<uint32_t>(node, "LogLevels", 0xff);
 
 	const std::lock_guard appsChanged(appsChangedMutex);
 	const auto prevAppIds = addedAppIds.get();

@@ -109,7 +109,7 @@ public:
 
 			if constexpr (std::is_same_v<T, std::string>)
 			{
-				LOG_INFO("%s is %s\n", name, val.c_str());
+				LOG_INFO("%s is \"%s\"\n", name, val.c_str());
 			}
 			else
 			{
@@ -148,7 +148,7 @@ public:
 
 				if constexpr (std::is_same_v<T, std::string>)
 				{
-					LOG_INFO("Adding %s to %s\n", val.c_str(), name);
+					LOG_INFO("Adding \"%s\" to %s\n", val.c_str(), name);
 				}
 				else
 				{
@@ -191,7 +191,7 @@ public:
 
 				if constexpr (std::is_same_v<T2, std::string>)
 				{
-					LOG_INFO("Adding %s: %s to %s\n", std::to_string(k).c_str(), v.c_str(), name);
+					LOG_INFO("Adding %s: \"%s\" to %s\n", std::to_string(k).c_str(), v.c_str(), name);
 				}
 				else
 				{
