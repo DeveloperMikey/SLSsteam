@@ -163,7 +163,13 @@ bool CConfig::loadSettings(bool firstLoad)
 	//This is shitty, but to do it properly have to do something even shittier
 	if (firstLoad)
 	{
-		LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "LogLevels is %u\n", logLevels.get());
+		LOG_CUSTOM
+		(
+			k_ELogLevelInfo | k_ELogLevelOnce,
+			"LogLevels is \"%s\"\n",
+
+			ELogLevel_ToString(logLevels.get()).c_str()
+		);
 	}
 
 	disableFamilyLock = getSetting<bool>(node, "DisableFamilyShareLock", true);
