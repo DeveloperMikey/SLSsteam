@@ -12,6 +12,7 @@
 #include "sdk/CWebSocketConnection.hpp"
 #include "sdk/IClientAppManager.hpp"
 #include "sdk/IClientFriends.hpp"
+#include "sdk/IClientUser.hpp"
 #include "sdk/IClientUtils.hpp"
 #include "sdk/steam.hpp"
 
@@ -277,7 +278,7 @@ static uint32_t hkClientUnifiedServiceTransport_SendAndRecvMsg(CClientUnifiedSer
 	return ret;
 }
 
-static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
+static void hkCMInterface_RecvPkt(CCMInterface* pCMInterface, CNetPacket* pNetPacket)
 {
 	LOG_DEBUG
 	(
@@ -331,7 +332,7 @@ static void hkCMInterface_RecvPkt(void* pCMInterface, CNetPacket* pNetPacket)
 //I don't like forward declerations, but with the current style & hooks layout it's a necessity
 static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId);
 
-static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe hPipe, CUtlBuffer* pBufIn, CUtlBuffer* pBufOut)
+static uint32_t hkSteamEngine_ProcessIPCFrame(CSteamEngine* pSteamEngine, HSteamPipe hPipe, CUtlBuffer* pBufIn, CUtlBuffer* pBufOut)
 {
 	if (!g_pSteamEngine)
 	{
@@ -449,7 +450,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(void* pSteamEngine, HSteamPipe hPi
 	return ret;
 }
 
-static AppId_t hkSteamEngine_SetAppIdForCurrentPipe(void* pSteamEngine, AppId_t appId, bool a2)
+static AppId_t hkSteamEngine_SetAppIdForCurrentPipe(CSteamEngine* pSteamEngine, AppId_t appId, bool a2)
 {
 	FakeAppIds::setAppIdForCurrentPipe(appId);
 
@@ -461,7 +462,7 @@ static AppId_t hkSteamEngine_SetAppIdForCurrentPipe(void* pSteamEngine, AppId_t 
 		"%s(%p, %u, %i) -> %i\n",
 
 		Hooks::CSteamEngine_SetAppIdForCurrentPipe.name.c_str(),
-		pSteamEngine,
+		reinterpret_cast<void*>(pSteamEngine),
 		appId,
 		a2,
 		ret
@@ -470,7 +471,7 @@ static AppId_t hkSteamEngine_SetAppIdForCurrentPipe(void* pSteamEngine, AppId_t 
 	return ret;
 }
 
-static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(void* pWebSocketConnection, uint32_t type, void* pData, uint32_t dataSize)
+static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(CWebSocketConnection* pWebSocketConnection, uint32_t type, void* pData, uint32_t dataSize)
 {
 	if (type == k_EWebSocketConnectionSendRaw)
 	{
@@ -485,7 +486,13 @@ static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(void* pWebSocketConnec
 			memcpy(packet.body, pData, dataSize);
 			packet.size = dataSize;
 
-			LOG_DEBUG("SendPkt with CWebSocketConnection at %p %s -> 0x%x\n", pWebSocketConnection, packet.getProtoBufTypeName().c_str(), packet.getType());
+			LOG_DEBUG
+			(
+				"SendPkt with CWebSocketConnection at %p %s -> 0x%x\n",
+				reinterpret_cast<void*>(pWebSocketConnection),
+				packet.getProtoBufTypeName().c_str(),
+				packet.getType()
+			);
 
 			if (packet.isValid() && packet.isProtoBuf())
 			{
@@ -560,10 +567,10 @@ static uint32_t hkSteamMatchmakingServers_RequestInternetServerList(void* pSteam
 }
 
 __attribute__((hot))
-static uint32_t hkUser_CheckAppOwnership(void* pClientUser, AppId_t appId, AppOwnershipInfo_t* pOwnershipInfo)
+static uint32_t hkUser_CheckAppOwnership(CUser* pUser, AppId_t appId, AppOwnershipInfo_t* pOwnershipInfo)
 {
 	LOG_TRACE("Calling tramp\n");
-	const uint32_t ret = Hooks::CUser_CheckAppOwnership.tramp.fn(pClientUser, appId, pOwnershipInfo);
+	const uint32_t ret = Hooks::CUser_CheckAppOwnership.tramp.fn(pUser, appId, pOwnershipInfo);
 
 	//Do not log pOwnershipInfo because it gets deleted very quickly, so it's pretty much useless in the logs
 	LOG_ONCE
@@ -571,7 +578,7 @@ static uint32_t hkUser_CheckAppOwnership(void* pClientUser, AppId_t appId, AppOw
 		"%s(%p, %u) -> %i\n",
 
 		Hooks::CUser_CheckAppOwnership.name.c_str(),
-		pClientUser,
+		reinterpret_cast<void*>(pUser),
 		appId,
 		ret
 	);
@@ -584,10 +591,10 @@ static uint32_t hkUser_CheckAppOwnership(void* pClientUser, AppId_t appId, AppOw
 	return ret;
 }
 
-static uint32_t hkUser_GetSubscribedApps(void* pClientUser, AppId_t* pAppList, uint32_t size, uint8_t a3)
+static uint32_t hkUser_GetSubscribedApps(CUser* pUser, AppId_t* pAppList, uint32_t size, uint8_t a3)
 {
 	LOG_TRACE("Calling tramp\n");
-	uint32_t count = Hooks::CUser_GetSubscribedApps.tramp.fn(pClientUser, pAppList, size, a3);
+	uint32_t count = Hooks::CUser_GetSubscribedApps.tramp.fn(pUser, pAppList, size, a3);
 
 	Apps::getSubscribedApps(pAppList, size, count);
 
@@ -596,7 +603,7 @@ static uint32_t hkUser_GetSubscribedApps(void* pClientUser, AppId_t* pAppList, u
 		"%s(%p, %p, %i, %i) -> %i\n",
 
 		Hooks::CUser_GetSubscribedApps.name.c_str(),
-		pClientUser,
+		reinterpret_cast<void*>(pUser),
 		reinterpret_cast<void*>(pAppList),
 		size,
 		a3,
@@ -606,7 +613,7 @@ static uint32_t hkUser_GetSubscribedApps(void* pClientUser, AppId_t* pAppList, u
 	return count;
 }
 
-static uint32_t hkUser_PostCallbackToAppId(void* pUser, AppId_t appId, uint32_t type, void* pCallback, uint32_t callbackSize)
+static uint32_t hkUser_PostCallbackToAppId(CUser* pUser, AppId_t appId, uint32_t type, void* pCallback, uint32_t callbackSize)
 {
 	const AppId_t fakeAppId = FakeAppIds::getFakeAppId(appId);
 	if (fakeAppId)
@@ -623,7 +630,7 @@ static uint32_t hkUser_PostCallbackToAppId(void* pUser, AppId_t appId, uint32_t 
 		"%s(%p, %u, %u, %p, %u) -> %u\n",
 
 		Hooks::CUser_PostCallbackToAppId.name.c_str(),
-		pUser,
+		reinterpret_cast<void*>(pUser),
 		appId,
 		type,
 		pCallback,
@@ -636,7 +643,7 @@ static uint32_t hkUser_PostCallbackToAppId(void* pUser, AppId_t appId, uint32_t 
 
 static bool hkUserAppManager_BuildDepotDependency
 (
-	void* pClientAppManager,
+	IClientAppManager* pAppManager,
 	AppId_t appId,
 	void* a2,
 	CUtlVector<DepotInfo_t>* depots,
@@ -647,25 +654,32 @@ static bool hkUserAppManager_BuildDepotDependency
 )
 {
 	LOG_TRACE("Calling tramp\n");
-	const bool success = Hooks::CUserAppManager_BuildDepotDependency.tramp.fn(pClientAppManager, appId, a2, depots, sharedDepots, a5, pBuildId, a7);
+	const bool success = Hooks::CUserAppManager_BuildDepotDependency.tramp.fn(pAppManager, appId, a2, depots, sharedDepots, a5, pBuildId, a7);
 
-	LOG_DEBUG("%s(%p, %u) -> %i\n", Hooks::CUserAppManager_BuildDepotDependency.name.c_str(), pClientAppManager, appId, success);
+	LOG_DEBUG
+	(
+		"%s(%p, %u) -> %i\n",
+		Hooks::CUserAppManager_BuildDepotDependency.name.c_str(),
+		reinterpret_cast<void*>(pAppManager),
+		appId,
+		success
+	);
 
 	Apps::buildDepotDependency(depots, sharedDepots);
 
 	return success;
 }
 
-static bool hkClientAppManager_BCanRemotePlayTogether(void* pClientAppManager, AppId_t appId)
+static bool hkClientAppManager_BCanRemotePlayTogether(IClientAppManager* pAppManager, AppId_t appId)
 {
 	LOG_TRACE("Calling original\n");
-	const bool ret = Hooks::IClientAppManager_BCanRemotePlayTogether.originalFn.fn(pClientAppManager, appId);
+	const bool ret = Hooks::IClientAppManager_BCanRemotePlayTogether.originalFn.fn(pAppManager, appId);
 
 	LOG_DEBUG
 	(
 		"%s(%p, %u) -> %u\n",
 		Hooks::IClientAppManager_BCanRemotePlayTogether.name.c_str(),
-		pClientAppManager,
+		reinterpret_cast<void*>(pAppManager),
 		appId,
 		ret
 	);
@@ -673,7 +687,7 @@ static bool hkClientAppManager_BCanRemotePlayTogether(void* pClientAppManager, A
 	return true;
 }
 
-static void* hkClientAppManager_LaunchApp(void* pClientAppManager, AppId_t* pAppId, void* a2, void* a3, void* a4)
+static void* hkClientAppManager_LaunchApp(IClientAppManager* pAppManager, AppId_t* pAppId, void* a2, void* a3, void* a4)
 {
 	if (pAppId)
 	{
@@ -682,7 +696,7 @@ static void* hkClientAppManager_LaunchApp(void* pClientAppManager, AppId_t* pApp
 			"%s(%p, %u, %p, %p, %p)\n",
 
 			Hooks::IClientAppManager_LaunchApp.name.c_str(),
-			pClientAppManager,
+			reinterpret_cast<void*>(pAppManager),
 			*pAppId,
 			a2,
 			a3,
@@ -694,20 +708,20 @@ static void* hkClientAppManager_LaunchApp(void* pClientAppManager, AppId_t* pApp
 
 	LOG_TRACE("Calling original\n");
 	//Do not do anything in post! Otherwise App launching will break
-	return Hooks::IClientAppManager_LaunchApp.originalFn.fn(pClientAppManager, pAppId, a2, a3, a4);
+	return Hooks::IClientAppManager_LaunchApp.originalFn.fn(pAppManager, pAppId, a2, a3, a4);
 }
 
-static bool hkClientAppManager_IsAppDlcInstalled(void* pClientAppManager, AppId_t appId, AppId_t dlcId)
+static bool hkClientAppManager_IsAppDlcInstalled(IClientAppManager* pAppManager, AppId_t appId, AppId_t dlcId)
 {
 	LOG_TRACE("Calling original\n");
-	const bool ret = Hooks::IClientAppManager_IsAppDlcInstalled.originalFn.fn(pClientAppManager, appId, dlcId);
+	const bool ret = Hooks::IClientAppManager_IsAppDlcInstalled.originalFn.fn(pAppManager, appId, dlcId);
 
 	LOG_ONCE
 	(
 		"%s(%p, %u, %u) -> %i\n",
 
 		Hooks::IClientAppManager_IsAppDlcInstalled.name.c_str(),
-		pClientAppManager,
+		reinterpret_cast<void*>(pAppManager),
 		appId,
 		dlcId,
 		ret
@@ -721,17 +735,17 @@ static bool hkClientAppManager_IsAppDlcInstalled(void* pClientAppManager, AppId_
 	return ret;
 }
 
-static bool hkClientAppManager_BIsDlcEnabled(void* pClientAppManager, AppId_t appId, AppId_t dlcId, void* a3)
+static bool hkClientAppManager_BIsDlcEnabled(IClientAppManager* pAppManager, AppId_t appId, AppId_t dlcId, void* a3)
 {
 	LOG_TRACE("Calling original\n");
 
-	const bool ret = Hooks::IClientAppManager_BIsDlcEnabled.originalFn.fn(pClientAppManager, appId, dlcId, a3);
+	const bool ret = Hooks::IClientAppManager_BIsDlcEnabled.originalFn.fn(pAppManager, appId, dlcId, a3);
 	LOG_ONCE
 	(
 		"%s(%p, %u, %u, %p) -> %i\n",
 
 		Hooks::IClientAppManager_BIsDlcEnabled.name.c_str(),
-		pClientAppManager,
+		reinterpret_cast<void*>(pAppManager),
 		appId,
 		dlcId,
 		a3,
@@ -747,16 +761,16 @@ static bool hkClientAppManager_BIsDlcEnabled(void* pClientAppManager, AppId_t ap
 	return ret;
 }
 
-static bool hkClientAppManager_GetUpdateInfo(void* pClientAppManager, AppId_t appId, uint32_t* a2)
+static bool hkClientAppManager_GetUpdateInfo(IClientAppManager* pAppManager, AppId_t appId, uint32_t* a2)
 {
 	LOG_TRACE("Calling original\n");
 
-	const bool success = Hooks::IClientAppManager_GetAppUpdateInfo.originalFn.fn(pClientAppManager, appId, a2);
+	const bool success = Hooks::IClientAppManager_GetAppUpdateInfo.originalFn.fn(pAppManager, appId, a2);
 	LOG_ONCE
 	(
 		"%s(%p, %u, %p) -> %i\n",
 		Hooks::IClientAppManager_GetAppUpdateInfo.name.c_str(),
-		pClientAppManager,
+		reinterpret_cast<void*>(pAppManager),
 		appId,
 		reinterpret_cast<void*>(a2),
 		success
@@ -771,7 +785,7 @@ static bool hkClientAppManager_GetUpdateInfo(void* pClientAppManager, AppId_t ap
 	return success;
 }
 
-static unsigned int hkClientApps_GetDLCCount(void* pClientApps, AppId_t appId)
+static unsigned int hkClientApps_GetDLCCount(IClientApps* pClientApps, AppId_t appId)
 {
 	LOG_TRACE("Calling original\n");
 
@@ -781,7 +795,7 @@ static unsigned int hkClientApps_GetDLCCount(void* pClientApps, AppId_t appId)
 		"%s(%p, %u) -> %u\n",
 
 		Hooks::IClientApps_GetDLCCount.name.c_str(),
-		pClientApps,
+		reinterpret_cast<void*>(pClientApps),
 		appId,
 		count
 	);
@@ -795,7 +809,7 @@ static unsigned int hkClientApps_GetDLCCount(void* pClientApps, AppId_t appId)
 	return count;
 }
 
-static bool hkClientApps_GetDLCDataByIndex(void* pClientApps, AppId_t appId, int dlcIndex, AppId_t* pDlcId, bool* pIsAvailable, char* pChDlcName, size_t dlcNameLen)
+static bool hkClientApps_GetDLCDataByIndex(IClientApps* pClientApps, AppId_t appId, int dlcIndex, AppId_t* pDlcId, bool* pIsAvailable, char* pChDlcName, size_t dlcNameLen)
 {
 	LOG_TRACE("Calling original\n");
 	//Preserve original call to populate stuff
@@ -808,7 +822,7 @@ static bool hkClientApps_GetDLCDataByIndex(void* pClientApps, AppId_t appId, int
 		"%s(%p, %u, %i, %p, %p, %s, %i) -> %i\n",
 
 		Hooks::IClientApps_GetDLCDataByIndex.name.c_str(),
-		pClientApps,
+		reinterpret_cast<void*>(pClientApps),
 		appId,
 		dlcIndex,
 		reinterpret_cast<void*>(pDlcId),
@@ -863,7 +877,7 @@ static bool hkClientRemoteStorage_IsCloudEnabledForApp(void* pClientRemoteStorag
 	return enabled;
 }
 
-static bool hkClientUser_BLoggedOn(void* pClientUser)
+static bool hkClientUser_BLoggedOn(IClientUser* pClientUser)
 {
 	LOG_TRACE("Calling original\n");
 	const bool ret = Hooks::IClientUser_BLoggedOn.originalFn.fn(pClientUser);
@@ -884,7 +898,7 @@ static bool hkClientUser_BLoggedOn(void* pClientUser)
 	return ret;
 }
 
-static uint32_t hkClientUser_BUpdateAppOwnershipTicket(void* pClientUser, AppId_t appId, bool staleOnly)
+static uint32_t hkClientUser_BUpdateAppOwnershipTicket(IClientUser* pClientUser, AppId_t appId, bool staleOnly)
 {
 	const auto cached = Ticket::getCachedTicket(appId);
 	if (g_pSteamEngine->getUser(0)->isSubscribed(appId) && !cached)
@@ -901,7 +915,7 @@ static uint32_t hkClientUser_BUpdateAppOwnershipTicket(void* pClientUser, AppId_
 		"%s(%p, %u, %i) -> %u\n",
 
 		Hooks::IClientUser_BUpdateAppOwnershipTicket.name.c_str(),
-		pClientUser,
+		reinterpret_cast<void*>(pClientUser),
 		appId,
 		staleOnly,
 		ret
@@ -912,7 +926,7 @@ static uint32_t hkClientUser_BUpdateAppOwnershipTicket(void* pClientUser, AppId_
 
 static uint32_t hkClientUser_GetAppOwnershipTicketExtendedData
 (
-	void* pClientUser,
+	IClientUser* pClientUser,
 	AppId_t appId,
 	void* pTicket,
 	uint32_t ticketSize,
@@ -945,7 +959,7 @@ static uint32_t hkClientUser_GetAppOwnershipTicketExtendedData
 	return size;
 }
 
-static bool hkClientUser_GetEncryptedAppTicket(void* pClientUser, void* pTicket, uint32_t ticketSize, uint32_t* pTicketSize)
+static bool hkClientUser_GetEncryptedAppTicket(IClientUser* pClientUser, void* pTicket, uint32_t ticketSize, uint32_t* pTicketSize)
 {
 	LOG_TRACE("Calling original\n");
 	const bool success = Hooks::IClientUser_GetEncryptedAppTicket.originalFn.fn(pClientUser, pTicket, ticketSize, pTicketSize);
@@ -955,7 +969,7 @@ static bool hkClientUser_GetEncryptedAppTicket(void* pClientUser, void* pTicket,
 		"%s(%p, %p, %u, %p) -> %u\n",
 
 		Hooks::IClientUser_GetEncryptedAppTicket.name.c_str(),
-		pClientUser,
+		reinterpret_cast<void*>(pClientUser),
 		pTicket,
 		ticketSize,
 		reinterpret_cast<void*>(pTicketSize),
@@ -970,14 +984,14 @@ static bool hkClientUser_GetEncryptedAppTicket(void* pClientUser, void* pTicket,
 	return success;
 }
 
-static bool hkClientUser_GetLegacyCDKey(void* pClientUser, AppId_t appId, char* pChKey, uint32_t keySize)
+static bool hkClientUser_GetLegacyCDKey(IClientUser* pClientUser, AppId_t appId, char* pChKey, uint32_t keySize)
 {
 	Apps::getLegacyCDKey(appId);
 
 	return Hooks::IClientUser_GetLegacyCDKey.originalFn.fn(pClientUser, appId, pChKey, keySize);
 }
 
-static uint8_t hkClientUser_IsUserSubscribedAppInTicket(void* pClientUser, uint32_t steamId, uint32_t a2, uint32_t a3, AppId_t appId)
+static uint8_t hkClientUser_IsUserSubscribedAppInTicket(IClientUser* pClientUser, uint32_t steamId, uint32_t a2, uint32_t a3, AppId_t appId)
 {
 	LOG_TRACE("Calling original\n");
 	const uint8_t ticketState = Hooks::IClientUser_IsUserSubscribedAppInTicket.originalFn.fn(pClientUser, steamId, a2, a3, appId);
@@ -988,7 +1002,7 @@ static uint8_t hkClientUser_IsUserSubscribedAppInTicket(void* pClientUser, uint3
 		"%s(%p, %u, %u, %u) -> %i\n",
 
 		Hooks::IClientUser_IsUserSubscribedAppInTicket.name.c_str(),
-		pClientUser,
+		reinterpret_cast<void*>(pClientUser),
 		a2,
 		a3,
 		appId,
@@ -1059,7 +1073,7 @@ static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 	return steamId;
 }
 
-static AppId_t hkClientUtils_GetAppId(void* pClientUtils)
+static AppId_t hkClientUtils_GetAppId(IClientUtils* pClientUtils)
 {
 	LOG_TRACE("Calling original\n");
 	AppId_t appId = Hooks::IClientUtils_GetAppId.originalFn.fn(pClientUtils);
@@ -1069,7 +1083,7 @@ static AppId_t hkClientUtils_GetAppId(void* pClientUtils)
 		"%s(%p) -> %u\n",
 
 		Hooks::IClientUtils_GetAppId.name.c_str(),
-		pClientUtils,
+		reinterpret_cast<void*>(pClientUtils),
 		appId
 	);
 
@@ -1083,7 +1097,7 @@ static AppId_t hkClientUtils_GetAppId(void* pClientUtils)
 	return appId;
 }
 
-static bool hkClientUtils_GetOfflineMode(void* pClientUtils)
+static bool hkClientUtils_GetOfflineMode(IClientUtils* pClientUtils)
 {
 	LOG_TRACE("Calling original\n");
 	const bool ret = Hooks::IClientUtils_GetOfflineMode.originalFn.fn(pClientUtils);

@@ -12,14 +12,22 @@
 
 
 class CAPIJob;
+class CCMInterface;
 class CClientUnifiedServiceTransport;
 class CNetPacket;
+class CSteamEngine;
 class CProtoBufMsgBase;
-
+class CUser;
 class CUtlBuffer;
+class CWebSocketConnection;
 
 template<typename T>
 class CUtlVector;
+
+class IClientAppManager;
+class IClientApps;
+class IClientUser;
+class IClientUtils;
 
 struct AppOwnershipInfo_t;
 struct DepotInfo_t;
@@ -97,21 +105,21 @@ namespace Hooks
 
 	typedef uint32_t(*CClientUnifiedServiceMethod_SendAndRecvMsg_t)(CClientUnifiedServiceTransport*, const char*, void*, void*, void*);
 
-	typedef void(*CCMInterface_RecvPkt_t)(void*, CNetPacket*);
+	typedef void(*CCMInterface_RecvPkt_t)(CCMInterface*, CNetPacket*);
 
-	typedef uint32_t(*CSteamEngine_ProcessIPCFrame_t)(void*, HSteamPipe, CUtlBuffer*, CUtlBuffer*);
-	typedef AppId_t(*CSteamEngine_SetAppIdForCurrentPipe_t)(void*, AppId_t, bool);
+	typedef uint32_t(*CSteamEngine_ProcessIPCFrame_t)(CSteamEngine*, HSteamPipe, CUtlBuffer*, CUtlBuffer*);
+	typedef AppId_t(*CSteamEngine_SetAppIdForCurrentPipe_t)(CSteamEngine*, AppId_t, bool);
 
 	typedef gameserverdetails_t*(*CSteamMatchmakingServers_GetServerDetails_t)(void*, uint32_t, uint32_t);
 	typedef uint32_t(*CSteamMatchmakingServers_RequestInternetServerList_t)(void*, AppId_t, uint32_t, uint32_t, uint32_t);
 
-	typedef uint32_t(*CUser_CheckAppOwnership_t)(void*, AppId_t, AppOwnershipInfo_t*);
-	typedef uint32_t(*CUser_GetSubscribedApps_t)(void*, AppId_t*, uint32_t, uint8_t);
-	typedef uint32_t(*CUser_PostCallbackToAppId_t)(void*, AppId_t, uint32_t, void*, uint32_t);
+	typedef uint32_t(*CUser_CheckAppOwnership_t)(CUser*, AppId_t, AppOwnershipInfo_t*);
+	typedef uint32_t(*CUser_GetSubscribedApps_t)(CUser*, AppId_t*, uint32_t, uint8_t);
+	typedef uint32_t(*CUser_PostCallbackToAppId_t)(CUser*, AppId_t, uint32_t, void*, uint32_t);
 
-	typedef bool(*CUserAppManager_BuildDepotDependency_t)(void*, AppId_t, void*, CUtlVector<DepotInfo_t>*, CUtlVector<DepotInfo_t>*, void*, uint32_t*, bool*);
+	typedef bool(*CUserAppManager_BuildDepotDependency_t)(IClientAppManager*, AppId_t, void*, CUtlVector<DepotInfo_t>*, CUtlVector<DepotInfo_t>*, void*, uint32_t*, bool*);
 
-	typedef bool(*CWebSocketConnection_BBuildAndAsyncSendFrame_t)(void*, uint32_t, void*, uint32_t);
+	typedef bool(*CWebSocketConnection_BBuildAndAsyncSendFrame_t)(CWebSocketConnection*, uint32_t, void*, uint32_t);
 
 	typedef bool(*IClientConfigStore_SetString_t)(void*, uint32_t, const char*, const char*);
 
@@ -149,24 +157,24 @@ namespace Hooks
 
 	extern DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
 
-	typedef unsigned int(*IClientApps_GetDLCCount_t)(void*, AppId_t);
-	typedef bool(*IClientApps_GetDLCDataByIndex_t)(void*, AppId_t, int, AppId_t*, bool*, char*, size_t);
+	typedef unsigned int(*IClientApps_GetDLCCount_t)(IClientApps*, AppId_t);
+	typedef bool(*IClientApps_GetDLCDataByIndex_t)(IClientApps*, AppId_t, int, AppId_t*, bool*, char*, size_t);
 
-	typedef bool(*IClientAppManager_BCanRemotePlayTogether_t)(void*, AppId_t);
-	typedef bool(*IClientAppManager_BIsDlcEnabled_t)(void*, AppId_t, AppId_t, void*);
-	typedef bool(*IClientAppManager_GetAppUpdateInfo_t)(void*, AppId_t, uint32_t*);
-	typedef void*(*IClientAppManager_LaunchApp_t)(void*, AppId_t*, void*, void*, void*);
-	typedef bool(*IClientAppManager_IsAppDlcInstalled_t)(void*, AppId_t, AppId_t);
+	typedef bool(*IClientAppManager_BCanRemotePlayTogether_t)(IClientAppManager*, AppId_t);
+	typedef bool(*IClientAppManager_BIsDlcEnabled_t)(IClientAppManager*, AppId_t, AppId_t, void*);
+	typedef bool(*IClientAppManager_GetAppUpdateInfo_t)(IClientAppManager*, AppId_t, uint32_t*);
+	typedef void*(*IClientAppManager_LaunchApp_t)(IClientAppManager*, AppId_t*, void*, void*, void*);
+	typedef bool(*IClientAppManager_IsAppDlcInstalled_t)(IClientAppManager*, AppId_t, AppId_t);
 
-	typedef bool(*IClientUser_BLoggedOn_t)(void*);
-	typedef uint32_t(*IClientUser_BUpdateAppOwnershipTicket_t)(void*, AppId_t, bool);
-	typedef uint32_t(*IClientUser_GetAppOwnershipTicketExtendedData_t)(void*, uint32_t, void*, uint32_t, uint32_t*, uint32_t*, uint32_t*, uint32_t*);
-	typedef bool(*IClientUser_GetEncryptedAppTicket_t)(void*, void*, uint32_t, uint32_t*);
-	typedef bool(*IClientUser_GetLegacyCDKey_t)(void*, AppId_t, char*, uint32_t);
-	typedef uint8_t(*IClientUser_IsUserSubscribedAppInTicket_t)(void*, uint32_t, uint32_t, uint32_t, AppId_t);
+	typedef bool(*IClientUser_BLoggedOn_t)(IClientUser*);
+	typedef uint32_t(*IClientUser_BUpdateAppOwnershipTicket_t)(IClientUser*, AppId_t, bool);
+	typedef uint32_t(*IClientUser_GetAppOwnershipTicketExtendedData_t)(IClientUser*, uint32_t, void*, uint32_t, uint32_t*, uint32_t*, uint32_t*, uint32_t*);
+	typedef bool(*IClientUser_GetEncryptedAppTicket_t)(IClientUser*, void*, uint32_t, uint32_t*);
+	typedef bool(*IClientUser_GetLegacyCDKey_t)(IClientUser*, AppId_t, char*, uint32_t);
+	typedef uint8_t(*IClientUser_IsUserSubscribedAppInTicket_t)(IClientUser*, uint32_t, uint32_t, uint32_t, AppId_t);
 
-	typedef AppId_t(*IClientUtils_GetAppId_t)(void*);
-	typedef bool(*IClientUtils_GetOfflineMode_t)(void*);
+	typedef AppId_t(*IClientUtils_GetAppId_t)(IClientUtils*);
+	typedef bool(*IClientUtils_GetOfflineMode_t)(IClientUtils*);
 
 	extern VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 	extern VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;
