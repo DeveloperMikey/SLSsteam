@@ -970,6 +970,13 @@ static bool hkClientUser_GetEncryptedAppTicket(void* pClientUser, void* pTicket,
 	return success;
 }
 
+static bool hkClientUser_GetLegacyCDKey(void* pClientUser, AppId_t appId, char* pChKey, uint32_t keySize)
+{
+	Apps::getLegacyCDKey(appId);
+
+	return Hooks::IClientUser_GetLegacyCDKey.originalFn.fn(pClientUser, appId, pChKey, keySize);
+}
+
 static uint8_t hkClientUser_IsUserSubscribedAppInTicket(void* pClientUser, uint32_t steamId, uint32_t a2, uint32_t a3, AppId_t appId)
 {
 	LOG_TRACE("Calling original\n");
@@ -1050,31 +1057,6 @@ static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 	}
 
 	return steamId;
-}
-
-static bool hkClientUser_RequiresLegacyCDKey(void* pClientUser, AppId_t appId, uint32_t* a2)
-{
-	LOG_TRACE("Calling original\n");
-	const bool requiresKey = Hooks::IClientUser_RequiresLegacyCDKey.originalFn.fn(pClientUser, appId, a2);
-
-	LOG_ONCE
-	(
-		"%s(%p, %u, %p) -> %i\n",
-
-		Hooks::IClientUser_RequiresLegacyCDKey.name.c_str(),
-		pClientUser,
-		appId,
-		reinterpret_cast<void*>(a2),
-		requiresKey
-	);
-
-	if (Apps::shouldDisableCDKey(appId))
-	{
-		LOG_ONCE("Disable CD Key for %u\n", appId);
-		return false;
-	}
-
-	return requiresKey;
 }
 
 static AppId_t hkClientUtils_GetAppId(void* pClientUtils)
@@ -1202,8 +1184,8 @@ namespace Hooks
 	VFTHook<IClientUser_BUpdateAppOwnershipTicket_t> IClientUser_BUpdateAppOwnershipTicket;
 	VFTHook<IClientUser_GetAppOwnershipTicketExtendedData_t> IClientUser_GetAppOwnershipTicketExtendedData;
 	VFTHook<IClientUser_GetEncryptedAppTicket_t> IClientUser_GetEncryptedAppTicket;
+	VFTHook<IClientUser_GetLegacyCDKey_t> IClientUser_GetLegacyCDKey;
 	VFTHook<IClientUser_IsUserSubscribedAppInTicket_t> IClientUser_IsUserSubscribedAppInTicket;
-	VFTHook<IClientUser_RequiresLegacyCDKey_t> IClientUser_RequiresLegacyCDKey;
 
 	VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
 	VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;
@@ -1417,15 +1399,15 @@ void Hooks::placeVFTHooks()
 		//GetEncryptedAppTicket is just a wrapper for CUser::GetEncryptedAppTicket. But there is no need to go deeper
 		//since we load the encrypted ticket in the Networking layer. We just need this function to spoof our steamId once
 		Hooks::IClientUser_GetEncryptedAppTicket.setup(vft, VFTIndexes::IClientUser::GetEncryptedAppTicket, hkClientUser_GetEncryptedAppTicket);
+		Hooks::IClientUser_GetLegacyCDKey.setup(vft, VFTIndexes::IClientUser::GetLegacyCDKey, hkClientUser_GetLegacyCDKey);
 		Hooks::IClientUser_IsUserSubscribedAppInTicket.setup(vft, VFTIndexes::IClientUser::IsUserSubscribedAppInTicket, hkClientUser_IsUserSubscribedAppInTicket);
-		Hooks::IClientUser_RequiresLegacyCDKey.setup(vft, VFTIndexes::IClientUser::RequiresLegacyCDKey, hkClientUser_RequiresLegacyCDKey);
 
 		Hooks::IClientUser_BLoggedOn.place();
 		Hooks::IClientUser_BUpdateAppOwnershipTicket.place();
 		Hooks::IClientUser_GetAppOwnershipTicketExtendedData.place();
 		//Hooks::IClientUser_GetEncryptedAppTicket.place();
+		Hooks::IClientUser_GetLegacyCDKey.place();
 		Hooks::IClientUser_IsUserSubscribedAppInTicket.place();
-		Hooks::IClientUser_RequiresLegacyCDKey.place();
 
 		LOG_DEBUG("IClientUser->vft at %p\n", reinterpret_cast<void*>(vft->vtable));
 	}
@@ -1498,8 +1480,8 @@ void Hooks::remove()
 	IClientUser_BUpdateAppOwnershipTicket.remove();
 	IClientUser_GetAppOwnershipTicketExtendedData.remove();
 	//IClientUser_GetEncryptedAppTicket.remove();
+	IClientUser_GetLegacyCDKey.remove();
 	IClientUser_IsUserSubscribedAppInTicket.remove();
-	IClientUser_RequiresLegacyCDKey.remove();
 
 	IClientUtils_GetAppId.remove();
 	IClientUtils_GetOfflineMode.remove();

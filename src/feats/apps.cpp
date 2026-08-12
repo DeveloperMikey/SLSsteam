@@ -6,6 +6,7 @@
 #include "../sdk/CUtl.hpp"
 #include "../sdk/IClientApps.hpp"
 #include "../sdk/IClientAppManager.hpp"
+#include "../sdk/IClientUser.hpp"
 
 #include "../config.hpp"
 #include "../globals.hpp"
@@ -15,6 +16,8 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <mutex>
 #include <sstream>
 #include <string>
@@ -144,6 +147,68 @@ bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
 	unlockApp(appId, pInfo);
 
 	return true;
+}
+
+void Apps::getLegacyCDKey(const AppId_t appId)
+{
+	const auto user = g_pSteamEngine->getUser();
+	if (user->isSubscribed(appId))
+	{
+		return;
+	}
+
+	std::string newKey;
+
+	const auto keys = g_config.cdKeys.get();
+	if (keys.contains(appId))
+	{
+		newKey = keys.at(appId);
+		LOG_DEBUG("Using key from config for %u\n", appId);
+	}
+	else
+	{
+		constexpr const char* CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		static const unsigned int CHARS_SIZE = strlen(CHARS);
+
+		//Some games use 5 SEGMENT_CHARS/5 SEGMENT_NUM or a mix of both
+		//4 * 4 is the most common one though
+		constexpr unsigned int SEGMENT_CHARS = 4;
+		constexpr unsigned int SEGMENT_NUM = 4;
+
+		constexpr unsigned int SEGMENT_SIZE = SEGMENT_CHARS + 1; //AAAA-, BBBB-, etc
+		constexpr unsigned int KEY_SIZE = SEGMENT_SIZE * SEGMENT_NUM - 1; //Do not end with -
+		
+		//Don't forget null terminator since we
+		//do not pass a size argument to SetLegacyCDKey
+		newKey.resize(KEY_SIZE + 1);
+
+		srand(g_currentSteamId.steamId.accountId + appId);
+
+		for (unsigned int i = 0; i < KEY_SIZE; i++)
+		{
+			if ((i + 1) % SEGMENT_SIZE == 0)
+			{
+				newKey[i] = '-';
+				continue;
+			}
+
+			const unsigned int num = rand() % CHARS_SIZE;
+			newKey[i] = CHARS[num];
+		}
+
+		newKey[newKey.size() - 1] = '\0';
+		LOG_DEBUG("Generated random key %s for %u\n", newKey.c_str(), appId);
+	}
+
+	const auto clientUser = user->getClientUser();
+
+	//Wrapper function for CUser::SetLegacyCDKey, which gets called
+	//from CCMInterface when a legacy cd key packet arrives
+	//Injecting them only in GetLegacyCDKey doesn't work right, so we set it instead
+	if (!clientUser->setLegacyCDKey(appId, newKey.c_str()))
+	{
+		LOG_ERROR("Failed to set CDKey for %u\n", appId);
+	}
 }
 
 void Apps::getSubscribedApps(AppId_t* appList, const size_t size, uint32_t& count)

@@ -49,6 +49,7 @@ public:
 	MTVariable<std::unordered_set<AppId_t>> addedAppIds;
 	MTVariable<std::unordered_map<AppId_t, CDlcData>> dlcData;
 	MTVariable<std::unordered_map<AppId_t, uint64_t>> appTokens;
+	MTVariable<std::unordered_map<AppId_t, std::string>> cdKeys;
 	MTVariable<std::unordered_set<AppId_t>> fakeOffline;
 	MTVariable<std::unordered_map<AppId_t, AppId_t>> fakeAppIds;
 	MTVariable<std::unordered_map<AppId_t, uint64_t>> manifestIds;
@@ -94,7 +95,7 @@ public:
 	bool loadSettings(const bool firstLoad = false);
 
 	template<typename T>
-	T getSetting(const YAML::Node& node, const char* name, const T defVal)
+	T getSetting(const YAML::Node& node, const char* name, const T defVal, const bool silent = false)
 	{
 		if (!node[name])
 		{
@@ -106,6 +107,11 @@ public:
 		try
 		{
 			const T val = node[name].as<T>();
+
+			if (silent)
+			{
+				return val;
+			}
 
 			if constexpr (std::is_same_v<T, std::string>)
 			{
@@ -127,7 +133,7 @@ public:
 	}
 
 	template<typename T>
-	std::unordered_set<T> getList(const YAML::Node& rootNode, const char* name)
+	std::unordered_set<T> getList(const YAML::Node& rootNode, const char* name, const bool silent = false)
 	{
 		auto list = std::unordered_set<T>();
 
@@ -145,6 +151,11 @@ public:
 			{
 				const T val = subNode.as<T>();
 				list.emplace(val);
+
+				if (silent)
+				{
+					continue;
+				}
 
 				if constexpr (std::is_same_v<T, std::string>)
 				{
@@ -167,7 +178,7 @@ public:
 	}
 
 	template<typename T, typename T2>
-	std::unordered_map<T, T2> getMap(const YAML::Node& rootNode, const char* name)
+	std::unordered_map<T, T2> getMap(const YAML::Node& rootNode, const char* name, const bool silent = false)
 	{
 		auto map = std::unordered_map<T, T2>();
 
@@ -188,6 +199,11 @@ public:
 				const auto v = subNode.second.as<T2>();
 
 				map[k] = v;
+
+				if (silent)
+				{
+					continue;
+				}
 
 				if constexpr (std::is_same_v<T2, std::string>)
 				{

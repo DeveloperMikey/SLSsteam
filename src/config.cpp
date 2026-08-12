@@ -158,19 +158,16 @@ bool CConfig::loadSettings(bool firstLoad)
 	__loadErrors = std::string("");
 	
 	//Parse logLevels first, otherwise settings won't get logged
-	logLevels = getSetting<uint32_t>(node, "LogLevels", 0xff);
+	logLevels = getSetting<uint32_t>(node, "LogLevels", 0xff, true);
 
 	//This is shitty, but to do it properly have to do something even shittier
-	if (firstLoad)
-	{
-		LOG_CUSTOM
-		(
-			k_ELogLevelInfo | k_ELogLevelOnce,
-			"LogLevels is \"%s\"\n",
+	LOG_CUSTOM
+	(
+		k_ELogLevelInfo | k_ELogLevelOnce,
+		"LogLevels is \"%s\"\n",
 
-			ELogLevel_ToString(logLevels.get()).c_str()
-		);
-	}
+		ELogLevel_ToString(logLevels.get()).c_str()
+	);
 
 	disableFamilyLock = getSetting<bool>(node, "DisableFamilyShareLock", true);
 	useWhiteList = getSetting<bool>(node, "UseWhitelist", false);
@@ -224,9 +221,16 @@ bool CConfig::loadSettings(bool firstLoad)
 	fakeAppIds = getMap<AppId_t, AppId_t>(node, "FakeAppIds");
 	manifestIds = getMap<AppId_t, uint64_t>(node, "ManifestIds");
 	appTokens = getMap<AppId_t, uint64_t>(node, "AppTokens");
+	cdKeys = getMap<AppId_t, std::string>(node, "CDKeys", true);
 	gameTitles = getMap<AppId_t, std::string>(node, "GameTitles");
 	subscriptionTimestamps = getMap<AppId_t, uint32_t>(node, "SubscriptionTimestamps");
 	steamIdOverride = getMap<AppId_t, uint64_t>(node, "SteamIdOverride");
+
+	//Do not log the keys themself
+	for (const auto& key : cdKeys.get())
+	{
+		LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "Added CDKey for %u\n", key.first);
+	}
 
 	//Do not warn for these (yet?)
 	const auto idleStatusNode = node["IdleStatus"];
