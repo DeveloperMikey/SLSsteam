@@ -455,7 +455,7 @@ static AppId_t hkSteamEngine_SetAppIdForCurrentPipe(CSteamEngine* pSteamEngine, 
 	return ret;
 }
 
-static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(CWebSocketConnection* pWebSocketConnection, uint32_t type, void* pData, uint32_t dataSize)
+static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(CWebSocketConnection* pWebSocketConnection, EWebSocketConnectionSendType type, void* pData, uint32_t dataSize)
 {
 	if (type == k_EWebSocketConnectionSendRaw)
 	{

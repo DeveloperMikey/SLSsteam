@@ -94,7 +94,7 @@ namespace Hooks
 
 	typedef bool(*CUserAppManager_BuildDepotDependency_t)(IClientAppManager*, AppId_t, void*, CUtlVector<DepotInfo_t>*, CUtlVector<DepotInfo_t>*, void*, uint32_t*, bool*);
 
-	typedef bool(*CWebSocketConnection_BBuildAndAsyncSendFrame_t)(CWebSocketConnection*, uint32_t, void*, uint32_t);
+	typedef bool(*CWebSocketConnection_BBuildAndAsyncSendFrame_t)(CWebSocketConnection*, EWebSocketConnectionSendType, void*, uint32_t);
 
 	typedef bool(*IClientConfigStore_SetString_t)(void*, uint32_t, const char*, const char*);
 
