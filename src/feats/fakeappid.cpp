@@ -50,14 +50,37 @@ AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
 	}
 
 	std::ostringstream pathSS;
+
+	pathSS << "/proc/" << serverPipe->pid << "/comm";
+	const auto commPath = pathSS.str();
+
+	std::string exeName;
+	auto ifstream = std::ifstream(commPath);
+
+	if (ifstream.is_open())
+	{
+		std::copy(std::istreambuf_iterator(ifstream), std::istreambuf_iterator<char>(), std::back_inserter(exeName));
+		if (exeName.ends_with("\n"))
+		{
+			exeName = exeName.substr(0, exeName.size() - 1);
+		}
+	}
+	else
+	{
+		exeName = "Unknown";
+		LOG_WARN("Failed to read %s! ExeName will be unknown in logs\n", commPath.c_str());
+	}
+
+	pathSS.str("");
+	pathSS.clear();
 	pathSS << "/proc/" << serverPipe->pid << "/environ";
 
-	const auto path = pathSS.str();
-	auto ifstream = std::ifstream(path);
+	const auto environPath = pathSS.str();
+	ifstream = std::ifstream(environPath);
 
 	if (!ifstream.is_open())
 	{
-		LOG_ERROR("Failed to open %s to get 0x%x's appId!\n", path.c_str(), pipe);
+		LOG_ERROR("Failed to open %s for %s to get 0x%x's appId!\n", environPath.c_str(), exeName.c_str(), pipe);
 		return 0;
 	}
 
@@ -79,12 +102,12 @@ AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
 	}
 	else
 	{
-		LOG_ERROR("No SteamAppId in %s! Using 0\n", path.c_str());
+		LOG_ERROR("No SteamAppId in %s for %s! Using 0\n", environPath.c_str(), exeName.c_str());
 	}
 
 	fakeAppIdMap[pipe] = appId;
 
-	LOG_DEBUG("AppId for 0x%x is %u\n", pipe, appId);
+	LOG_DEBUG("AppId for process %s in 0x%x is %u\n", exeName.c_str(), pipe, appId);
 	return appId;
 }
 
