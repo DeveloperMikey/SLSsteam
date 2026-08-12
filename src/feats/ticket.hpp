@@ -6,10 +6,6 @@
 #include <unordered_map>
 
 
-class CMsgClientGetAppOwnershipTicketResponse;
-class CMsgClientRequestEncryptedAppTicketResponse;
-class CNetPacket;
-
 namespace Ticket
 {
 	class SavedTicket

@@ -2,7 +2,6 @@
 
 #include "../sdk/sdk.hpp"
 
-class CNetPacket;
 
 namespace Misc
 {

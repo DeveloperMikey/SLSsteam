@@ -6,11 +6,6 @@
 #include <unordered_map>
 
 
-class CNetPacket;
-
-struct gameserverdetails_t;
-struct servernetadr_t;
-
 namespace FakeAppIds
 {
 	extern std::unordered_map<HSteamPipe, AppId_t> fakeAppIdMap;

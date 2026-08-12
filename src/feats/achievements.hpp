@@ -8,12 +8,6 @@
 #include <unordered_set>
 
 
-class CAPIJob;
-class CClientUnifiedServiceTransport;
-class CPlayer_GetUserStats_Request;
-class CPlayer_GetUserStats_Response;
-class CProtoBufMsgBase;
-
 namespace Achievements
 {
 	constexpr const char* GET_PLAYER_STATS_SERVICE_NAME = "Player.GetUserStats#1";

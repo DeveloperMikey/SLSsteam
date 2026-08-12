@@ -6,8 +6,6 @@
 #include <cstdint>
 
 
-struct AppOwnershipInfo_t;
-
 namespace DLC
 {
 	bool shouldUnlockDlc(const AppId_t appId);

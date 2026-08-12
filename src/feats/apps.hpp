@@ -7,17 +7,6 @@
 #include <unordered_set>
 
 
-class CNetPacket;
-class CMsgClientGamesPlayed;
-class CMsgClientPICSProductInfoRequest;
-class CMsgClientPICSProductInfoResponse;
-class CPlayer_GetLastPlayedTimes_Response;
-
-template<typename T> class CUtlVector;
-
-struct AppOwnershipInfo_t;
-struct DepotInfo_t;
-
 namespace Apps
 {
 	extern bool applistRequested;
