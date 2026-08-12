@@ -92,8 +92,8 @@ clean-libs:
 		"tools/schema-grabber/obj"
 
 clean-tools:
-	$(MAKE) -C tools/schema-grabber clean
-	$(MAKE) -C tools/ticket-grabber clean
+	-$(MAKE) -C tools/schema-grabber clean
+	-$(MAKE) -C tools/ticket-grabber clean
 
 install:
 	sh setup.sh install
