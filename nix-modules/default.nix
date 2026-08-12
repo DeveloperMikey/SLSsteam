@@ -19,7 +19,7 @@ pkgs.pkgsi686Linux.stdenv.mkDerivation {
   ];
 
   postPatch = ''
-    substituteInPlace src/log.hpp \
+    substituteInPlace src/log.cpp \
       --replace-fail "notify-send" "${lib.getExe pkgs.libnotify}"
   '';
 
