@@ -1,9 +1,5 @@
 #include "api.hpp"
 
-#include "sdk/CSteamEngine.hpp"
-#include "sdk/CUser.hpp"
-#include "sdk/IClientAppManager.hpp"
-
 #include "config.hpp"
 #include "filewatcher.hpp"
 #include "utils.hpp"

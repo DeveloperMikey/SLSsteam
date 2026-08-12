@@ -2,12 +2,6 @@
 
 #include "../config.hpp"
 
-#include "../sdk/CNetPacket.hpp"
-#include "../sdk/CSteamEngine.hpp"
-#include "../sdk/CSteamMatchmakingServers.hpp"
-#include "../sdk/CUser.hpp"
-#include "../sdk/IClientUtils.hpp"
-
 #include <algorithm>
 #include <fstream>
 #include <iterator>

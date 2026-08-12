@@ -47,8 +47,10 @@ bool CUser::isSubscribed(const AppId_t appId)
 
 void CUser::postCallback(const ECallbackType type, void* pCallback, const uint32_t callbackSize)
 {
-	const static auto fn = reinterpret_cast<void(*)(void*, ECallbackType, void*, uint32_t, uint32_t)>(Patterns::CUser::PostCallback.address);
-	fn(this, type, pCallback, callbackSize, 0);
+	//const static auto fn = reinterpret_cast<void(*)(void*, ECallbackType, void*, uint32_t, uint32_t)>(Patterns::CUser::PostCallback.address);
+	//fn(this, type, pCallback, callbackSize, 0);
+	
+	Hooks::CUser_PostCallbackToAppId.tramp.fn(this, 0, static_cast<unsigned int>(type), pCallback, callbackSize);
 }
 
 void CUser::updateAppOwnershipTicket(const AppId_t appId, void* pTicket, const uint32_t len)

@@ -1,8 +1,5 @@
 #include "misc.hpp"
 
-#include "../sdk/CNetPacket.hpp"
-#include "../sdk/steam.hpp"
-
 #include "../config.hpp"
 #include "../globals.hpp"
 

@@ -1,8 +1,6 @@
 #pragma once
 
-#include "sdk/protobufs/enums_clientserver.pb.h"
-
-#include "sdk/steam.hpp"
+#include "sdk/sdk.hpp"
 
 #include "libmem/libmem.h"
 
@@ -10,29 +8,6 @@
 #include <memory>
 #include <string>
 
-
-class CAPIJob;
-class CCMInterface;
-class CClientUnifiedServiceTransport;
-class CNetPacket;
-class CSteamEngine;
-class CProtoBufMsgBase;
-class CUser;
-class CUtlBuffer;
-class CWebSocketConnection;
-
-template<typename T>
-class CUtlVector;
-
-class IClientAppManager;
-class IClientApps;
-class IClientUser;
-class IClientUtils;
-
-struct AppOwnershipInfo_t;
-struct DepotInfo_t;
-struct gameserverdetails_t;
-struct GamePlayed_t;
 
 struct Pattern_t;
 struct VFTableInfo_t;

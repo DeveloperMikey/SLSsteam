@@ -1,10 +1,6 @@
 #include "config.hpp"
 #include "config_default.hpp"
 
-#include "sdk/CSteamEngine.hpp"
-#include "sdk/CUser.hpp"
-#include "sdk/IClientApps.hpp"
-
 #include "filewatcher.hpp"
 #include "log.hpp"
 #include "utils.hpp"

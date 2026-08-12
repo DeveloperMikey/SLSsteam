@@ -1,14 +1,9 @@
 #include "ticket.hpp"
 
-#include "fakeappid.hpp"
-
 #include "../config.hpp"
 #include "../globals.hpp"
 
-#include "../sdk/CNetPacket.hpp"
-#include "../sdk/CSteamEngine.hpp"
-#include "../sdk/CUser.hpp"
-#include "../sdk/steam.hpp"
+#include "fakeappid.hpp"
 
 #include "base64/base64.hpp"
 #include "yaml-cpp/emitter.h"

@@ -1,9 +1,5 @@
 #include "dlc.hpp"
 
-#include "../sdk/CSteamEngine.hpp"
-#include "../sdk/CUser.hpp"
-#include "../sdk/IClientUtils.hpp"
-
 #include "../config.hpp"
 
 #include "apps.hpp"

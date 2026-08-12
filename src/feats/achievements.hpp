@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../sdk/protobufs/enums_clientserver.pb.h"
-
-#include "../sdk/steam.hpp"
+#include "../sdk/sdk.hpp"
 
 #include <cstdint>
 #include <string>

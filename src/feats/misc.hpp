@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../sdk/sdk.hpp"
 
 class CNetPacket;
 

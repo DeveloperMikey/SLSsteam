@@ -1,12 +1,6 @@
 #include "apps.hpp"
 
-#include "../sdk/CNetPacket.hpp"
-#include "../sdk/CSteamEngine.hpp"
-#include "../sdk/CUser.hpp"
-#include "../sdk/CUtl.hpp"
-#include "../sdk/IClientApps.hpp"
-#include "../sdk/IClientAppManager.hpp"
-#include "../sdk/IClientUser.hpp"
+#include "../sdk/sdk.hpp"
 
 #include "../config.hpp"
 #include "../globals.hpp"
