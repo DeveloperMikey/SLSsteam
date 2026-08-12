@@ -309,14 +309,14 @@ void CLog::notify(const char* file, const char* function, const int line, const 
 {
 	va_list vArgs;
 	va_start(vArgs, msg);
-	__log(k_ELogLevelNotifyShort, file, function, line, msg, vArgs);
+	__log(k_ELogLevelNotifyShort | k_ELogLevelInfo, file, function, line, msg, vArgs);
 	va_end(vArgs);
 }
 void CLog::notifyLong(const char* file, const char* function, const int line, const char* msg, ...)
 {
 	va_list vArgs;
 	va_start(vArgs, msg);
-	__log(k_ELogLevelNotifyLong, file, function, line, msg, vArgs);
+	__log(k_ELogLevelNotifyLong | k_ELogLevelInfo, file, function, line, msg, vArgs);
 	va_end(vArgs);
 }
 void CLog::notifyWarn(const char* file, const char* function, const int line, const char* msg, ...)
