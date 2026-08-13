@@ -1,7 +1,5 @@
 #include "apps.hpp"
 
-#include "../sdk/sdk.hpp"
-
 #include "../config.hpp"
 #include "../globals.hpp"
 #include "../utils.hpp"
