@@ -196,6 +196,20 @@ namespace VFTIndexes
 	//	};
 	//}
 
+	namespace IClientCompat
+	{
+		VFTableInfo_t BIsCompatLayerEnabled
+		{
+			"16IClientCompatMap",
+			"BIsCompatLayerEnabled"
+		};
+		VFTableInfo_t SpecifyCompatTool
+		{
+			"16IClientCompatMap",
+			"SpecifyCompatTool"
+		};
+	}
+
 	namespace IClientConfigStore
 	{
 		VFTableInfo_t SetString

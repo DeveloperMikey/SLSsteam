@@ -68,6 +68,12 @@ namespace VFTIndexes
 		extern VFTableInfo_t UninstallApp;
 	}
 
+	namespace IClientCompat
+	{
+		extern VFTableInfo_t BIsCompatLayerEnabled;
+		extern VFTableInfo_t SpecifyCompatTool;
+	}
+
 	namespace IClientConfigStore
 	{
 		extern VFTableInfo_t SetString;

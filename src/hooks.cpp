@@ -1111,6 +1111,17 @@ static void hkCGameInfoDialog_ServerResponded(void* pSteamMatchingPingResponse, 
 	);
 }
 
+static bool hkClientCompat_BIsCompatLayerEnabled(IClientCompat* pClientCompat)
+{
+	if (!g_pClientCompat)
+	{
+		g_pClientCompat = pClientCompat;
+		LOG_DEBUG("g_pClientCompat at %p\n", reinterpret_cast<void*>(g_pClientCompat));
+	}
+
+	return Hooks::IClientCompat_BIsCompatLayerEnabled.tramp.fn(pClientCompat);
+}
+
 static bool hkClientConfigStore_SetString(void* pClientConfigStore, uint32_t store, const char* key, const char* value)
 {
 	LOG_TRACE("Calling tramp\n");
@@ -1163,6 +1174,7 @@ namespace Hooks
 
 	DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
 
+	DetourHook<IClientCompat_BIsCompatLayerEnabled_t> IClientCompat_BIsCompatLayerEnabled;
 	DetourHook<IClientConfigStore_SetString_t> IClientConfigStore_SetString;
 
 	DetourHook<IClientFriends_GetFriendGamePlayed_t> IClientFriends_GetFriendGamePlayed;
@@ -1196,6 +1208,24 @@ namespace Hooks
 bool Hooks::setup()
 {
 	LOG_DEBUG("Hooks::setup()\n");
+
+	{
+		const auto name = std::string("14CCompatManager");
+		if (!Decompiler::vftables.contains(name))
+		{
+			LOG_ERROR("Failed to get %s VFTable!\n", name.c_str());
+			return false;
+		}
+
+		auto& compatMan = Decompiler::vftables.at(name);
+
+		IClientCompat_BIsCompatLayerEnabled.setup
+		(
+			VFTIndexes::IClientCompat::BIsCompatLayerEnabled.getPrintName().c_str(),
+			compatMan.functions[VFTIndexes::IClientCompat::BIsCompatLayerEnabled.index],
+			hkClientCompat_BIsCompatLayerEnabled
+		);
+	}
 
 	{
 		const auto name = std::string("12CConfigStore");
@@ -1318,6 +1348,8 @@ void Hooks::place()
 	CWebSocketConnection_BBuildAndAsyncSendFrame.place();
 
 	CGameInfoDialog_ServerResponded.place();
+
+	IClientCompat_BIsCompatLayerEnabled.place();
 
 	IClientConfigStore_SetString.place();
 
@@ -1457,6 +1489,8 @@ void Hooks::remove()
 	CWebSocketConnection_BBuildAndAsyncSendFrame.remove();
 
 	CGameInfoDialog_ServerResponded.remove();
+
+	IClientCompat_BIsCompatLayerEnabled.remove();
 
 	IClientConfigStore_SetString.remove();
 

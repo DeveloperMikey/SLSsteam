@@ -12,7 +12,7 @@ class CFileWatcher;
 
 namespace SLSAPI
 {
-	struct InstallCommand_t
+	struct InstallOp_t
 	{
 		enum class InstallType
 		{
@@ -25,18 +25,26 @@ namespace SLSAPI
 		uint32_t libraryIndex;
 	};
 
+	struct SetCompatOp_t
+	{
+		AppId_t appId;
+		std::string tool;
+	};
+
 	extern const char* path;
 	extern std::fstream fstream;
 	extern CFileWatcher* watcher;
 
 	extern std::mutex cmdMutex;
 
-	extern std::vector<InstallCommand_t> installs;
+	extern std::vector<InstallOp_t> installOps;
+	extern std::vector<SetCompatOp_t> compatOps;
 
 	bool isEnabled();
 	void onFileChange();
 	void init();
 
-	void runInstallCommands();
+	void runCompatOps();
+	void runInstallOps();
 	void runIPCFrame();
 }

@@ -17,7 +17,8 @@ namespace SLSAPI
 
 	std::mutex cmdMutex;
 
-	std::vector<InstallCommand_t> installs;
+	std::vector<SetCompatOp_t> compatOps;
+	std::vector<InstallOp_t> installOps;
 }
 
 bool SLSAPI::isEnabled()
@@ -41,54 +42,74 @@ void SLSAPI::onFileChange()
 	fstream.getline(cmd, sizeof(cmd));
 
 	LOG_DEBUG("API Running %s\n", cmd);
-
 	const auto split = Utils::strsplit(cmd, "|");
+
 	if (strcmp(split[0].c_str(), "install") == 0 && split.size() > 2)
 	{
-		if (!Utils::isNumber(split[1].c_str()))
+		AppId_t appId;
+		uint32_t library;
+
+		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
-			LOG_ERROR("Failed to run install API command, %s is not a number!\n", split[1].c_str());
+			LOG_ERROR("Failed to install %s (not a number)!\n", split[1].c_str());
 			return;
 		}
 
-		if (!Utils::isNumber(split[2].c_str()))
+		if (!Utils::tryConvertToNumber(split[2].c_str(), library))
 		{
-			LOG_ERROR("Failed to run install API command, %s is not a number!\n", split[2].c_str());
+			LOG_ERROR("Failed to install %u to %s (not a number)!\n", appId, split[2].c_str());
 			return;
 		}
-
-		const AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
-		const uint32_t library = std::strtoul(split[2].c_str(), nullptr, 10);
 
 		const std::lock_guard guard(cmdMutex);
-		installs.emplace_back
+		installOps.emplace_back
 		(
-			InstallCommand_t
+			InstallOp_t
 			{
-				InstallCommand_t::InstallType::Install,
+				InstallOp_t::InstallType::Install,
 				appId,
 				library
 			}
 		);
 	}
+
 	else if (strcmp(split[0].c_str(), "uninstall") == 0 && split.size() > 1)
 	{
-		if (!Utils::isNumber(split[1].c_str()))
+		AppId_t appId;
+		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
-			LOG_ERROR("Failed to run install API command, %s is not a number!\n", split[1].c_str());
+			LOG_ERROR("Failed to install %s (not a number)!\n", split[1].c_str());
 			return;
 		}
 
-		const AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
-
 		const std::lock_guard guard(cmdMutex);
-		installs.emplace_back
+		installOps.emplace_back
 		(
-			InstallCommand_t
+			InstallOp_t
 			{
-				InstallCommand_t::InstallType::Uninstall,
+				InstallOp_t::InstallType::Uninstall,
 				appId,
 				0 //No library index for uninstall needed
+			}
+		);
+	}
+
+	else if (strcmp(split[0].c_str(), "setcompat") == 0 && split.size() > 1)
+	{
+		AppId_t appId;
+		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
+		{
+			LOG_ERROR("Failed to set compat for %s (not a number)!\n", split[1].c_str());
+			return;
+		}
+
+		const std::lock_guard guard(cmdMutex);
+		compatOps.emplace_back
+		(
+			SetCompatOp_t
+			{
+				appId,
+				split.size() > 2 ? split[2].c_str() : "" //Empty string to clear compat tool
 			}
 		);
 	}
@@ -116,7 +137,26 @@ void SLSAPI::init()
 	LOG_DEBUG("SLSsteam API initialized!\n");
 }
 
-void SLSAPI::runInstallCommands()
+void SLSAPI::runCompatOps()
+{
+	if (!g_pClientCompat)
+	{
+		return;
+	}
+
+	while (compatOps.size())
+	{
+		const auto op = compatOps.begin();
+
+		//Steam calls them with the same values
+		g_pClientCompat->specifyCompatTool(op->appId, op->tool.c_str(), "", 250);
+		LOG_DEBUG("Set compatibility tool for %u to %s\n", op->appId, op->tool.c_str());
+
+		compatOps.erase(op);
+	}
+}
+
+void SLSAPI::runInstallOps()
 {
 	const auto usr = g_pSteamEngine->getUser();
 	if (!usr)
@@ -126,25 +166,25 @@ void SLSAPI::runInstallCommands()
 
 	const auto appManager = usr->getAppManager();
 
-	while(installs.size())
+	while (installOps.size())
 	{
-		const auto app = installs.begin();
+		const auto op = installOps.begin();
 
-		switch(app->type)
+		switch(op->type)
 		{
-			case InstallCommand_t::InstallType::Install:
-				appManager->installApp(app->appId, app->libraryIndex);
-				LOG_DEBUG("Installed %u to %u\n", app->appId, app->libraryIndex);
+			case InstallOp_t::InstallType::Install:
+				appManager->installApp(op->appId, op->libraryIndex);
+				LOG_DEBUG("Installed %u to %u\n", op->appId, op->libraryIndex);
 				break;
 
-			case InstallCommand_t::InstallType::Uninstall:
-				appManager->uninstallApp(app->appId);
-				LOG_DEBUG("Uninstalled %u\n", app->appId);
+			case InstallOp_t::InstallType::Uninstall:
+				appManager->uninstallApp(op->appId);
+				LOG_DEBUG("Uninstalled %u\n", op->appId);
 				break;
 
 		}
 
-		installs.erase(app);
+		installOps.erase(op);
 	}
 }
 
@@ -152,5 +192,6 @@ void SLSAPI::runIPCFrame()
 {
 	const std::lock_guard guard(cmdMutex);
 
-	runInstallCommands();
+	runCompatOps();
+	runInstallOps();
 }
