@@ -2,45 +2,102 @@
 
 #include "steam.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 
+constexpr static size_t CUTL_DEFAULT_ALLOC = 0x16;
 
 template<typename T>
 class CUtlMemory
 {
 public:
-
 	T* base;
 	uint32_t alloc;
 	uint32_t growSize;
 
-	CUtlMemory() : CUtlMemory(0x16) { }
-
-	CUtlMemory(unsigned int size)
+	CUtlMemory()
 	{
-		alloc = size;
+		base = nullptr;
+		alloc = 0;
 		growSize = 0;
-
-		base = reinterpret_cast<T*>(Steam::Plat_Alloc(this->alloc * sizeof(T)));
 	}
-
 	~CUtlMemory()
 	{
 		if (base)
 		{
 			Steam::Plat_Free(base);
 		}
+	};
+
+	constexpr bool resize(const size_t newSize)
+	{
+		void* mem;
+
+		if (base)
+		{
+			mem = Steam::Plat_Realloc(base, newSize);
+		}
+		else
+		{
+			mem = Steam::Plat_Alloc(newSize);
+		}
+
+		if (!mem)
+		{
+			return false;
+		}
+
+		alloc = newSize;
+		base = reinterpret_cast<T*>(mem);
+		return true;
 	}
 };
+
+class CUtlBuffer
+{
+	typedef int(*CUtlBuffer_Function1_t)(void*);
+	typedef bool(*CUtlBuffer_Resize_t)(void*, int32_t);
+
+public:
+	CUtlMemory<uint8_t> mem;			//0x0
+	int32_t get;						//0xC
+	int32_t put;						//0x10
+	int32_t offset;						//0x14
+	uint32_t flags;						//0x18
+	CUtlBuffer_Function1_t fn1C;		//0x1C
+	int32_t field20;					//0x20
+	CUtlBuffer_Resize_t resizeFn;		//0x24
+	int32_t field28;					//0x28
+
+	constexpr bool resize(const size_t newSize)
+	{
+		if (!mem.resize(newSize))
+		{
+			return false;
+		}
+
+		return true;
+	}
+}; //0x2C
 
 template<typename T>
 class CUtlVector
 {
 public:
-
-	CUtlMemory<T> memory;
+	CUtlMemory<T> mem;
 	uint32_t size;
+
+	constexpr bool resize(size_t newSize)
+	{
+		if (!mem.resize(newSize))
+		{
+			return false;
+		}
+
+		size = newSize;
+		return true;
+	}
 
 	constexpr T* at(uint32_t index)
 	{
@@ -49,7 +106,7 @@ public:
 			return nullptr;
 		}
 
-		return &memory.base[index];
+		return &mem.base[index];
 	};
 
 	constexpr bool swap(uint32_t index, uint32_t index2)
@@ -66,30 +123,3 @@ public:
 		return true;
 	}
 };
-
-template<typename T>
-class CUtlBuffer
-{
-	typedef int(*CUtlBuffer_Function1_t)(void*);
-	typedef bool(*CUtlBuffer_Resize_t)(void*, int32_t);
-
-public:
-	CUtlBuffer() : CUtlBuffer(0x16) { }
-
-	CUtlBuffer(unsigned int size)
-	{
-		//Never ever not zero the buffer, unless you want steam to implode
-		memset(reinterpret_cast<void*>(this), 0, sizeof(CUtlBuffer));
-		mem = CUtlMemory<T>(size);
-	}
-
-	CUtlMemory<T> mem;					//0x0
-	int32_t get;						//0xC
-	int32_t put;						//0x10
-	int32_t offset;						//0x14
-	uint32_t flags;						//0x18
-	CUtlBuffer_Function1_t fn1C;		//0x1C
-	int32_t field20;					//0x20
-	CUtlBuffer_Resize_t resize;			//0x24
-	int32_t field28;					//0x28
-}; //0x2C

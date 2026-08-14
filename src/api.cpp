@@ -6,6 +6,7 @@
 
 #include <cerrno>
 #include <mutex>
+#include <sstream>
 
 
 namespace SLSAPI
@@ -17,7 +18,7 @@ namespace SLSAPI
 
 	std::mutex cmdMutex;
 
-	std::vector<SetCompatOp_t> compatOps;
+	std::vector<CompatOp_t> compatOps;
 	std::vector<InstallOp_t> installOps;
 }
 
@@ -44,7 +45,72 @@ void SLSAPI::onFileChange()
 	LOG_DEBUG("API Running %s\n", cmd);
 	const auto split = Utils::strsplit(cmd, "|");
 
-	if (strcmp(split[0].c_str(), "install") == 0 && split.size() > 2)
+	//Compatibility Manager
+	if (strcmp(split[0].c_str(), "dumpcompat") == 0 && split.size() > 1)
+	{
+		AppId_t appId;
+		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
+		{
+			LOG_ERROR("Failed to dump compat for %s (not a number)!\n", split[1].c_str());
+			return;
+		}
+
+		const std::lock_guard guard(cmdMutex);
+		compatOps.emplace_back
+		(
+			CompatOp_t
+			{
+				CompatOp_t::OpType::Dump,
+				appId,
+				""
+			}
+		);
+	}
+
+	else if (strcmp(split[0].c_str(), "getcompat") == 0 && split.size() > 1)
+	{
+		AppId_t appId;
+		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
+		{
+			LOG_ERROR("Failed to get compat for %s (not a number)!\n", split[1].c_str());
+			return;
+		}
+
+		const std::lock_guard guard(cmdMutex);
+		compatOps.emplace_back
+		(
+			CompatOp_t
+			{
+				CompatOp_t::OpType::Get,
+				appId,
+				""
+			}
+		);
+	}
+
+	else if (strcmp(split[0].c_str(), "setcompat") == 0 && split.size() > 1)
+	{
+		AppId_t appId;
+		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
+		{
+			LOG_ERROR("Failed to set compat for %s (not a number)!\n", split[1].c_str());
+			return;
+		}
+
+		const std::lock_guard guard(cmdMutex);
+		compatOps.emplace_back
+		(
+			CompatOp_t
+			{
+				CompatOp_t::OpType::Set,
+				appId,
+				split.size() > 2 ? split[2].c_str() : "" //Empty string to clear compat tool
+			}
+		);
+	}
+
+	//Application Manager
+	else if (strcmp(split[0].c_str(), "install") == 0 && split.size() > 2)
 	{
 		AppId_t appId;
 		uint32_t library;
@@ -66,7 +132,7 @@ void SLSAPI::onFileChange()
 		(
 			InstallOp_t
 			{
-				InstallOp_t::InstallType::Install,
+				InstallOp_t::OpType::Install,
 				appId,
 				library
 			}
@@ -78,7 +144,7 @@ void SLSAPI::onFileChange()
 		AppId_t appId;
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
-			LOG_ERROR("Failed to install %s (not a number)!\n", split[1].c_str());
+			LOG_ERROR("Failed to uninstall %s (not a number)!\n", split[1].c_str());
 			return;
 		}
 
@@ -87,29 +153,9 @@ void SLSAPI::onFileChange()
 		(
 			InstallOp_t
 			{
-				InstallOp_t::InstallType::Uninstall,
+				InstallOp_t::OpType::Uninstall,
 				appId,
 				0 //No library index for uninstall needed
-			}
-		);
-	}
-
-	else if (strcmp(split[0].c_str(), "setcompat") == 0 && split.size() > 1)
-	{
-		AppId_t appId;
-		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
-		{
-			LOG_ERROR("Failed to set compat for %s (not a number)!\n", split[1].c_str());
-			return;
-		}
-
-		const std::lock_guard guard(cmdMutex);
-		compatOps.emplace_back
-		(
-			SetCompatOp_t
-			{
-				appId,
-				split.size() > 2 ? split[2].c_str() : "" //Empty string to clear compat tool
 			}
 		);
 	}
@@ -148,9 +194,56 @@ void SLSAPI::runCompatOps()
 	{
 		const auto op = compatOps.begin();
 
-		//Steam calls them with the same values
-		g_pClientCompat->specifyCompatTool(op->appId, op->tool.c_str(), "", 250);
-		LOG_DEBUG("Set compatibility tool for %u to %s\n", op->appId, op->tool.c_str());
+		switch(op->type)
+		{
+			case CompatOp_t::OpType::Dump:
+			{
+				CUtlVector<const char*> tools { }; //Do not allocate anything, the function does for us.
+				g_pClientCompat->getCompatToolsForApp(op->appId, &tools);
+
+				std::ostringstream toolsSS;
+				for (size_t i = 0; i < tools.size; i++)
+				{
+					const char* name = *tools.at(i);
+					const char* displayName = g_pClientCompat->getDisplayName(name);
+
+					if (toolsSS.str().size() > 0)
+					{
+						toolsSS << ", ";
+					}
+
+					toolsSS << "\"" << displayName << "\" (" << name << ")";
+				}
+
+				const auto str = toolsSS.str();
+				LOG_API("Dump compatibility tools for %u: %s\n", op->appId, str.c_str());
+				break;
+			}
+
+			case CompatOp_t::OpType::Get:
+			{
+				if (!g_pClientCompat->isCompatToolEnabled(op->appId))
+				{
+					LOG_API("Get compatibility tool for %u: Compatibility tool is disabled!\n", op->appId);
+					break;
+				}
+
+				const char* name = g_pClientCompat->getCompatToolName(op->appId);
+				const char* displayName = g_pClientCompat->getDisplayName(name);
+
+				LOG_API("Get compatibility tool for %u: \"%s\" (%s)\n", op->appId, displayName, name);
+				break;
+			}
+
+			case CompatOp_t::OpType::Set:
+			{
+				//Steam calls them with the same values
+				g_pClientCompat->specifyCompatTool(op->appId, op->tool.c_str(), "", 250);
+				LOG_DEBUG("Set compatibility tool for %u to %s\n", op->appId, op->tool.c_str());
+				break;
+			}
+		}
+
 
 		compatOps.erase(op);
 	}
@@ -172,12 +265,12 @@ void SLSAPI::runInstallOps()
 
 		switch(op->type)
 		{
-			case InstallOp_t::InstallType::Install:
+			case InstallOp_t::OpType::Install:
 				appManager->installApp(op->appId, op->libraryIndex);
 				LOG_DEBUG("Installed %u to %u\n", op->appId, op->libraryIndex);
 				break;
 
-			case InstallOp_t::InstallType::Uninstall:
+			case InstallOp_t::OpType::Uninstall:
 				appManager->uninstallApp(op->appId);
 				LOG_DEBUG("Uninstalled %u\n", op->appId);
 				break;

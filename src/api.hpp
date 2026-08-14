@@ -12,23 +12,31 @@ class CFileWatcher;
 
 namespace SLSAPI
 {
+	struct CompatOp_t
+	{
+		enum class OpType
+		{
+			Dump,
+			Get,
+			Set
+		};
+
+		OpType type;
+		AppId_t appId;
+		std::string tool;
+	};
+
 	struct InstallOp_t
 	{
-		enum class InstallType
+		enum class OpType
 		{
 			Install,
 			Uninstall
 		};
 
-		InstallType type;
+		OpType type;
 		AppId_t appId;
 		uint32_t libraryIndex;
-	};
-
-	struct SetCompatOp_t
-	{
-		AppId_t appId;
-		std::string tool;
 	};
 
 	extern const char* path;
@@ -37,8 +45,8 @@ namespace SLSAPI
 
 	extern std::mutex cmdMutex;
 
+	extern std::vector<CompatOp_t> compatOps;
 	extern std::vector<InstallOp_t> installOps;
-	extern std::vector<SetCompatOp_t> compatOps;
 
 	bool isEnabled();
 	void onFileChange();

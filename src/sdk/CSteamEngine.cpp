@@ -163,7 +163,7 @@ CUser* CSteamEngine::getUser(const uint32_t index)
 		return nullptr;
 	}
 
-	return *(&vec->memory.base[index * 2] + 1);
+	return *(&vec->mem.base[index * 2] + 1);
 
 	//const auto ppUserMap = *reinterpret_cast<uint8_t**>(this + offset);
 	//const auto ppUser = ppUserMap + index * 8;

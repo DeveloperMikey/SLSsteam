@@ -316,7 +316,7 @@ static void hkCMInterface_RecvPkt(CCMInterface* pCMInterface, CNetPacket* pNetPa
 //I don't like forward declerations, but with the current style & hooks layout it's a necessity
 static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId);
 
-static uint32_t hkSteamEngine_ProcessIPCFrame(CSteamEngine* pSteamEngine, HSteamPipe hPipe, CUtlBuffer<uint8_t>* pBufIn, CUtlBuffer<uint8_t>* pBufOut)
+static uint32_t hkSteamEngine_ProcessIPCFrame(CSteamEngine* pSteamEngine, HSteamPipe hPipe, CUtlBuffer* pBufIn, CUtlBuffer* pBufOut)
 {
 	if (!g_pSteamEngine)
 	{
