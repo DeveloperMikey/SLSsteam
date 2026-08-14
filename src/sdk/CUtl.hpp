@@ -73,6 +73,57 @@ public:
 	bool resize(const size_t newSize);
 }; //0x2C
 
+//I have no clue if this & the map is actually right
+//Works for the CPackageInfoCache::m_mapPackages, needs testing on others
+template<typename T, typename T2>
+class CUtlRBTree
+{
+public:
+	struct Element_t
+	{
+		uint8_t __pad0x0[0x10];		//0x0
+		T key;						//0x10
+		T2* value;					//0x14
+	}; //0x18
+
+	uint8_t __pad0x0[0x20];		//0x0
+	uint32_t size;				//0x20
+	uint8_t __pad0x28[0x4];		//0x24
+	Element_t* elements;		//0x28
+
+	T2* find(const T key)
+	{
+		for (size_t i = 0; i < size; i++)
+		{
+			const auto elem = elements[i];
+			if (elem.key == key)
+			{
+				return elem.value;
+			}
+		}
+
+		return nullptr;
+	}
+};
+
+template<typename T, typename T2>
+class CUtlMap
+{
+public:
+	CUtlRBTree<T, T2> tree;		//0x0
+
+	T2* at(size_t key)
+	{
+		const auto val = tree.find(key);
+		if (val)
+		{
+			return val;
+		}
+
+		return nullptr;
+	}
+};
+
 //Null terminated wrapper
 class CUtlString
 {
