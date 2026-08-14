@@ -164,16 +164,16 @@ void SLSAPI::runCompatOps()
 		{
 			case CompatOp_t::OpType::Dump:
 			{
-				//Actually CUtlVector<CUtlString>
+				//Actually CUtlVector<CUtlString*>
 				//So we do not allocate anything, it'll just mess up
 				//Luckily the function allocates for us
-				CUtlVector<const char*> tools { };
+				CUtlVector<CUtlString> tools { };
 				g_pClientCompat->getCompatToolsForApp(op->appId, &tools);
 
 				std::ostringstream toolsSS;
 				for (size_t i = 0; i < tools.size; i++)
 				{
-					const char* name = *tools.at(i);
+					const char* name = tools.at(i)->get();
 					const char* displayName = g_pClientCompat->getDisplayName(name);
 
 					if (toolsSS.str().size() > 0)

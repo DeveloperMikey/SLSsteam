@@ -22,6 +22,7 @@ public:
 		alloc = 0;
 		growSize = 0;
 	}
+
 	~CUtlMemory()
 	{
 		if (base)
@@ -30,7 +31,7 @@ public:
 		}
 	};
 
-	constexpr bool resize(const size_t newSize)
+	bool resize(const size_t newSize)
 	{
 		void* mem;
 
@@ -48,7 +49,6 @@ public:
 			return false;
 		}
 
-		alloc = newSize;
 		base = reinterpret_cast<T*>(mem);
 		return true;
 	}
@@ -70,16 +70,25 @@ public:
 	CUtlBuffer_Resize_t resizeFn;		//0x24
 	int32_t field28;					//0x28
 
-	constexpr bool resize(const size_t newSize)
-	{
-		if (!mem.resize(newSize))
-		{
-			return false;
-		}
-
-		return true;
-	}
+	bool resize(const size_t newSize);
 }; //0x2C
+
+//Null terminated wrapper
+class CUtlString
+{
+public:
+	char* str;
+
+	~CUtlString();
+
+	constexpr const char* get()
+	{
+		return str;
+	}
+
+	bool resize(const size_t newSize);
+	void setValue(const char* newStr);
+};
 
 template<typename T>
 class CUtlVector

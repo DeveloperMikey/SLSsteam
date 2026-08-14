@@ -11,7 +11,7 @@ class IClientCompat
 public:
 	bool isCompatToolEnabled(const AppId_t appId);
 	const char* getDisplayName(const char* name);
-	void getCompatToolsForApp(const AppId_t appId, CUtlVector<const char*>* pVecTools);
+	void getCompatToolsForApp(const AppId_t appId, CUtlVector<CUtlString>* pVecTools);
 	const char* getCompatToolName(const AppId_t appId);
 
 	//Set name to "" to unset

@@ -27,9 +27,9 @@ const char* IClientCompat::getDisplayName(const char* name)
 	);
 }
 
-void IClientCompat::getCompatToolsForApp(const AppId_t appId, CUtlVector<const char*>* pVecTools)
+void IClientCompat::getCompatToolsForApp(const AppId_t appId, CUtlVector<CUtlString>* pVecTools)
 {
-	MemHlp::callVFunc<void(*)(void*, CUtlVector<const char*>*, AppId_t)>
+	MemHlp::callVFunc<void(*)(void*, CUtlVector<CUtlString>*, AppId_t)>
 	(
 		VFTIndexes::IClientCompat::GetAvailableCompatToolsForApp.index,
 		this,
