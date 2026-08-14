@@ -85,13 +85,13 @@ void SLSAPI::onFileChange()
 		compatOps.emplace_back(CompatOp_t { CompatOp_t::OpType::Set, appId, split.size() > 2 ? split[2].c_str() : "" } );
 	}
 
+	//Application Manager
 	else if (strcmp(split[0].c_str(), "dumplibraries") == 0)
 	{
 		const std::lock_guard guard(cmdMutex);
 		libraryOps.emplace_back(LibraryOp_t { LibraryOp_t::OpType::Dump, 0, 0 } );
 	}
 
-	//Application Manager
 	else if (strcmp(split[0].c_str(), "install") == 0 && split.size() > 2)
 	{
 		AppId_t appId;
@@ -164,7 +164,10 @@ void SLSAPI::runCompatOps()
 		{
 			case CompatOp_t::OpType::Dump:
 			{
-				CUtlVector<const char*> tools { }; //Do not allocate anything, the function does for us.
+				//Actually CUtlVector<CUtlString>
+				//So we do not allocate anything, it'll just mess up
+				//Luckily the function allocates for us
+				CUtlVector<const char*> tools { };
 				g_pClientCompat->getCompatToolsForApp(op->appId, &tools);
 
 				std::ostringstream toolsSS;
