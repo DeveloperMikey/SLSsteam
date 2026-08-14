@@ -19,7 +19,7 @@ namespace SLSAPI
 	std::mutex cmdMutex;
 
 	std::vector<CompatOp_t> compatOps;
-	std::vector<InstallOp_t> installOps;
+	std::vector<LibraryOp_t> libraryOps;
 }
 
 bool SLSAPI::isEnabled()
@@ -56,15 +56,7 @@ void SLSAPI::onFileChange()
 		}
 
 		const std::lock_guard guard(cmdMutex);
-		compatOps.emplace_back
-		(
-			CompatOp_t
-			{
-				CompatOp_t::OpType::Dump,
-				appId,
-				""
-			}
-		);
+		compatOps.emplace_back(CompatOp_t { CompatOp_t::OpType::Dump, appId, "" } );
 	}
 
 	else if (strcmp(split[0].c_str(), "getcompat") == 0 && split.size() > 1)
@@ -77,15 +69,7 @@ void SLSAPI::onFileChange()
 		}
 
 		const std::lock_guard guard(cmdMutex);
-		compatOps.emplace_back
-		(
-			CompatOp_t
-			{
-				CompatOp_t::OpType::Get,
-				appId,
-				""
-			}
-		);
+		compatOps.emplace_back(CompatOp_t { CompatOp_t::OpType::Get, appId, "" } );
 	}
 
 	else if (strcmp(split[0].c_str(), "setcompat") == 0 && split.size() > 1)
@@ -98,15 +82,13 @@ void SLSAPI::onFileChange()
 		}
 
 		const std::lock_guard guard(cmdMutex);
-		compatOps.emplace_back
-		(
-			CompatOp_t
-			{
-				CompatOp_t::OpType::Set,
-				appId,
-				split.size() > 2 ? split[2].c_str() : "" //Empty string to clear compat tool
-			}
-		);
+		compatOps.emplace_back(CompatOp_t { CompatOp_t::OpType::Set, appId, split.size() > 2 ? split[2].c_str() : "" } );
+	}
+
+	else if (strcmp(split[0].c_str(), "dumplibraries") == 0)
+	{
+		const std::lock_guard guard(cmdMutex);
+		libraryOps.emplace_back(LibraryOp_t { LibraryOp_t::OpType::Dump, 0, 0 } );
 	}
 
 	//Application Manager
@@ -128,15 +110,7 @@ void SLSAPI::onFileChange()
 		}
 
 		const std::lock_guard guard(cmdMutex);
-		installOps.emplace_back
-		(
-			InstallOp_t
-			{
-				InstallOp_t::OpType::Install,
-				appId,
-				library
-			}
-		);
+		libraryOps.emplace_back(LibraryOp_t { LibraryOp_t::OpType::Install, appId, library } );
 	}
 
 	else if (strcmp(split[0].c_str(), "uninstall") == 0 && split.size() > 1)
@@ -149,15 +123,7 @@ void SLSAPI::onFileChange()
 		}
 
 		const std::lock_guard guard(cmdMutex);
-		installOps.emplace_back
-		(
-			InstallOp_t
-			{
-				InstallOp_t::OpType::Uninstall,
-				appId,
-				0 //No library index for uninstall needed
-			}
-		);
+		libraryOps.emplace_back(LibraryOp_t { LibraryOp_t::OpType::Uninstall, appId, 0 } );
 	}
 }
 
@@ -217,6 +183,7 @@ void SLSAPI::runCompatOps()
 
 				const auto str = toolsSS.str();
 				LOG_API("Dump compatibility tools for %u: %s\n", op->appId, str.c_str());
+
 				break;
 			}
 
@@ -232,6 +199,7 @@ void SLSAPI::runCompatOps()
 				const char* displayName = g_pClientCompat->getDisplayName(name);
 
 				LOG_API("Get compatibility tool for %u: \"%s\" (%s)\n", op->appId, displayName, name);
+
 				break;
 			}
 
@@ -240,6 +208,7 @@ void SLSAPI::runCompatOps()
 				//Steam calls them with the same values
 				g_pClientCompat->specifyCompatTool(op->appId, op->tool.c_str(), "", 250);
 				LOG_DEBUG("Set compatibility tool for %u to %s\n", op->appId, op->tool.c_str());
+
 				break;
 			}
 		}
@@ -259,25 +228,55 @@ void SLSAPI::runInstallOps()
 
 	const auto appManager = usr->getAppManager();
 
-	while (installOps.size())
+	while (libraryOps.size())
 	{
-		const auto op = installOps.begin();
+		const auto op = libraryOps.begin();
 
 		switch(op->type)
 		{
-			case InstallOp_t::OpType::Install:
+			case LibraryOp_t::OpType::Dump:
+			{
+				const size_t num = appManager->getNumLibraryFolders();
+				char pathBuf[0x1000]; //Same size steam passes
+				char labelBuf[0x80]; //Same size steam passes
+				
+				std::ostringstream outSS;
+				for (size_t i = 0; i < num; i++)
+				{
+					size_t pathLen = appManager->getLibraryFolderPath(i, pathBuf, sizeof(pathBuf));
+					size_t labelLen = appManager->getLibraryFolderLabel(i, labelBuf, sizeof(labelBuf));
+
+					if (labelLen)
+					{
+						LOG_API("Library \"%s\" at \"%s\" has index %u\n", std::string(labelBuf, labelLen).c_str(), std::string(pathBuf, pathLen).c_str(), i);
+					}
+					else
+					{
+						LOG_API("Library at \"%s\" has index %u\n", std::string(pathBuf, pathLen).c_str(), i);
+					}
+				}
+
+				break;
+			}
+
+			case LibraryOp_t::OpType::Install:
+			{
 				appManager->installApp(op->appId, op->libraryIndex);
 				LOG_DEBUG("Installed %u to %u\n", op->appId, op->libraryIndex);
-				break;
 
-			case InstallOp_t::OpType::Uninstall:
+				break;
+			}
+
+			case LibraryOp_t::OpType::Uninstall:
+			{
 				appManager->uninstallApp(op->appId);
 				LOG_DEBUG("Uninstalled %u\n", op->appId);
-				break;
 
+				break;
+			}
 		}
 
-		installOps.erase(op);
+		libraryOps.erase(op);
 	}
 }
 

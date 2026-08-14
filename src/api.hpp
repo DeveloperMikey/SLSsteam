@@ -26,10 +26,11 @@ namespace SLSAPI
 		std::string tool;
 	};
 
-	struct InstallOp_t
+	struct LibraryOp_t
 	{
 		enum class OpType
 		{
+			Dump,
 			Install,
 			Uninstall
 		};
@@ -46,7 +47,7 @@ namespace SLSAPI
 	extern std::mutex cmdMutex;
 
 	extern std::vector<CompatOp_t> compatOps;
-	extern std::vector<InstallOp_t> installOps;
+	extern std::vector<LibraryOp_t> libraryOps;
 
 	bool isEnabled();
 	void onFileChange();
