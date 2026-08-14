@@ -34,6 +34,8 @@ std::string ELogLevel_ToString(const unsigned int lvlFlags)
 				return "Notify";
 			case k_ELogLevelNotifyLong:
 				return "Notify Long";
+			case k_ELogLevelAPI:
+				return "API";
 
 			default:
 				return "Unknown";
@@ -332,6 +334,14 @@ void CLog::notifyError(const char* file, const char* function, const int line, c
 	va_start(vArgs, msg);
 	//Notify type doesn't really matter, since critical stays until clicked
 	__log(k_ELogLevelNotifyLong | k_ELogLevelError, file, function, line, msg, vArgs);
+	va_end(vArgs);
+}
+void CLog::api(const char* file, const char* function, const int line, const char* msg, ...)
+{
+	va_list vArgs;
+	va_start(vArgs, msg);
+	//Notify type doesn't really matter, since critical stays until clicked
+	__log(k_ELogLevelAPI, file, function, line, msg, vArgs);
 	va_end(vArgs);
 }
 void CLog::custom(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, ...)

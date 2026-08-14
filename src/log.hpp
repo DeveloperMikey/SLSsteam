@@ -22,10 +22,11 @@
 #define LOG_NOTIFYLONG(fmt, ...) g_pLog->notifyLong(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
 #define LOG_NOTIFYWARN(fmt, ...) g_pLog->notifyWarn(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
 #define LOG_NOTIFYERROR(fmt, ...) g_pLog->notifyError(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOG_API(fmt, ...) g_pLog->api(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
 
 #define LOG_CUSTOM(lvl, fmt, ...) g_pLog->custom(lvl, __FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
 
-constexpr unsigned int ELogLevelCount = 8;
+constexpr unsigned int ELogLevelCount = 9;
 
 enum ELogLevel : uint32_t
 {
@@ -37,6 +38,8 @@ enum ELogLevel : uint32_t
 	k_ELogLevelInfo = 1 << 5, //Log for users/external tools
 	k_ELogLevelNotifyShort = 1 << 6,
 	k_ELogLevelNotifyLong = 1 << 7,
+
+	k_ELogLevelAPI = 1 << 8 //Used by API. Not togglable via config, gets set by API yes/no
 };
 
 std::string ELogLevel_ToString(unsigned int lvlFlags);
@@ -82,6 +85,8 @@ public:
 	void notifyWarn(const char* file, const char* function, const int line, const char* msg, ...);
 	__attribute__((__format__(__printf__, 5, 6)))
 	void notifyError(const char* file, const char* function, const int line, const char* msg, ...);
+	__attribute__((__format__(__printf__, 5, 6)))
+	void api(const char* file, const char* function, const int line, const char* msg, ...);
 	__attribute__((__format__(__printf__, 6, 7)))
 	void custom(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, ...);
 

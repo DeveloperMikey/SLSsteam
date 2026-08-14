@@ -286,7 +286,7 @@ void Apps::postAppLicensesChanged(const std::unordered_set<AppId_t>& apps)
 		appsLog << (appsLog.str().size() ? ", " : "") << app;
 	}
 
-	LOG_INFO("AppLicensesChanged callback invoked for %s!\n", appsLog.str().c_str());
+	LOG_API("AppLicensesChanged callback invoked for %s!\n", appsLog.str().c_str());
 }
 
 void Apps::runIPCFrame()

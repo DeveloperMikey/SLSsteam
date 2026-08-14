@@ -155,6 +155,11 @@ bool CConfig::loadSettings(bool firstLoad)
 	
 	//Parse logLevels first, otherwise settings won't get logged
 	logLevels = getSetting<uint32_t>(node, "LogLevels", 0xff, true);
+	api = getSetting<bool>(node, "API", true);
+	if (api.get())
+	{
+		logLevels = logLevels.get() | k_ELogLevelAPI;
+	}
 
 	//This is shitty, but to do it properly have to do something even shittier
 	LOG_CUSTOM
@@ -171,7 +176,6 @@ bool CConfig::loadSettings(bool firstLoad)
 	safeMode = getSetting<bool>(node, "SafeMode", false);
 	warnHashMissmatch = getSetting<bool>(node, "WarnHashMissmatch", false);
 	notifyInit = getSetting<bool>(node, "NotifyInit", true);
-	api = getSetting<bool>(node, "API", true);
 	fakeName = getSetting<std::string>(node, "FakeName", "");
 	fakeEmail = getSetting<std::string>(node, "FakeEmail", "");
 	fakeWalletBalance = getSetting<int32_t>(node, "FakeWalletBalance", 0);
