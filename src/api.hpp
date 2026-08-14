@@ -14,6 +14,13 @@ namespace SLSAPI
 {
 	struct InstallCommand_t
 	{
+		enum class InstallType
+		{
+			Install,
+			Uninstall
+		};
+
+		InstallType type;
 		AppId_t appId;
 		uint32_t libraryIndex;
 	};
@@ -22,13 +29,14 @@ namespace SLSAPI
 	extern std::fstream fstream;
 	extern CFileWatcher* watcher;
 
-	extern std::mutex executionMutex;
+	extern std::mutex cmdMutex;
+
 	extern std::vector<InstallCommand_t> installs;
-	extern std::vector<AppId_t> uninstalls;
 
 	bool isEnabled();
 	void onFileChange();
 	void init();
 
+	void runInstallCommands();
 	void runIPCFrame();
 }

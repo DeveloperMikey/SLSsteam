@@ -15,9 +15,9 @@ namespace SLSAPI
 	std::fstream fstream;
 	CFileWatcher* watcher;
 
-	std::mutex executionMutex;
+	std::mutex cmdMutex;
+
 	std::vector<InstallCommand_t> installs;
-	std::vector<AppId_t> uninstalls;
 }
 
 bool SLSAPI::isEnabled()
@@ -45,32 +45,52 @@ void SLSAPI::onFileChange()
 	const auto split = Utils::strsplit(cmd, "|");
 	if (strcmp(split[0].c_str(), "install") == 0 && split.size() > 2)
 	{
-		try
+		if (!Utils::isNumber(split[1].c_str()))
 		{
-			const AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
-			const uint32_t library = std::strtoul(split[2].c_str(), nullptr, 10);
+			LOG_ERROR("Failed to run install API command, %s is not a number!\n", split[1].c_str());
+			return;
+		}
 
-			const std::lock_guard guard(executionMutex);
-			installs.emplace_back(InstallCommand_t { appId, library } );
-		}
-		catch(...)
+		if (!Utils::isNumber(split[2].c_str()))
 		{
-			LOG_INFO("API Failed to parse %s or %s!\n", split[1].c_str(), split[2].c_str());
+			LOG_ERROR("Failed to run install API command, %s is not a number!\n", split[2].c_str());
+			return;
 		}
+
+		const AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
+		const uint32_t library = std::strtoul(split[2].c_str(), nullptr, 10);
+
+		const std::lock_guard guard(cmdMutex);
+		installs.emplace_back
+		(
+			InstallCommand_t
+			{
+				InstallCommand_t::InstallType::Install,
+				appId,
+				library
+			}
+		);
 	}
 	else if (strcmp(split[0].c_str(), "uninstall") == 0 && split.size() > 1)
 	{
-		try
+		if (!Utils::isNumber(split[1].c_str()))
 		{
-			const AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
+			LOG_ERROR("Failed to run install API command, %s is not a number!\n", split[1].c_str());
+			return;
+		}
 
-			const std::lock_guard guard(executionMutex);
-			uninstalls.emplace_back(appId);
-		}
-		catch(...)
-		{
-			LOG_INFO("API Failed to parse %s!\n", split[1].c_str());
-		}
+		const AppId_t appId = std::strtoul(split[1].c_str(), nullptr, 10);
+
+		const std::lock_guard guard(cmdMutex);
+		installs.emplace_back
+		(
+			InstallCommand_t
+			{
+				InstallCommand_t::InstallType::Uninstall,
+				appId,
+				0 //No library index for uninstall needed
+			}
+		);
 	}
 }
 
@@ -96,13 +116,8 @@ void SLSAPI::init()
 	LOG_DEBUG("SLSsteam API initialized!\n");
 }
 
-void SLSAPI::runIPCFrame()
+void SLSAPI::runInstallCommands()
 {
-	if (!installs.size() && !uninstalls.size()) //No need to lock mutex when no commands are queued
-	{
-		return;
-	}
-
 	const auto usr = g_pSteamEngine->getUser();
 	if (!usr)
 	{
@@ -111,23 +126,31 @@ void SLSAPI::runIPCFrame()
 
 	const auto appManager = usr->getAppManager();
 
-	const std::lock_guard guard(executionMutex);
-
 	while(installs.size())
 	{
 		const auto app = installs.begin();
-		appManager->installApp(app->appId, app->libraryIndex);
+
+		switch(app->type)
+		{
+			case InstallCommand_t::InstallType::Install:
+				appManager->installApp(app->appId, app->libraryIndex);
+				LOG_DEBUG("Installed %u to %u\n", app->appId, app->libraryIndex);
+				break;
+
+			case InstallCommand_t::InstallType::Uninstall:
+				appManager->uninstallApp(app->appId);
+				LOG_DEBUG("Uninstalled %u\n", app->appId);
+				break;
+
+		}
+
 		installs.erase(app);
-
-		LOG_DEBUG("Installed %u to %u\n", app->appId, app->libraryIndex);
 	}
+}
 
-	while(uninstalls.size())
-	{
-		const auto app = uninstalls.begin();
-		appManager->uninstallApp(*app);
-		uninstalls.erase(app);
+void SLSAPI::runIPCFrame()
+{
+	const std::lock_guard guard(cmdMutex);
 
-		LOG_DEBUG("Uninstalled %u\n", *app);
-	}
+	runInstallCommands();
 }
