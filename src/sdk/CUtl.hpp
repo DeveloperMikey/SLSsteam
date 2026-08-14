@@ -1,6 +1,9 @@
 #pragma once
 
+#include "steam.hpp"
+
 #include <cstdint>
+#include <cstring>
 
 
 template<typename T>
@@ -11,6 +14,24 @@ public:
 	T* base;
 	uint32_t alloc;
 	uint32_t growSize;
+
+	CUtlMemory() : CUtlMemory(0x16) { }
+
+	CUtlMemory(unsigned int size)
+	{
+		alloc = size;
+		growSize = 0;
+
+		base = reinterpret_cast<T*>(Steam::Plat_Alloc(this->alloc * sizeof(T)));
+	}
+
+	~CUtlMemory()
+	{
+		if (base)
+		{
+			Steam::Plat_Free(base);
+		}
+	}
 };
 
 template<typename T>
@@ -46,14 +67,23 @@ public:
 	}
 };
 
+template<typename T>
 class CUtlBuffer
 {
 	typedef int(*CUtlBuffer_Function1_t)(void*);
 	typedef bool(*CUtlBuffer_Resize_t)(void*, int32_t);
 
 public:
+	CUtlBuffer() : CUtlBuffer(0x16) { }
 
-	CUtlMemory<uint8_t> mem;			//0x0
+	CUtlBuffer(unsigned int size)
+	{
+		//Never ever not zero the buffer, unless you want steam to implode
+		memset(reinterpret_cast<void*>(this), 0, sizeof(CUtlBuffer));
+		mem = CUtlMemory<T>(size);
+	}
+
+	CUtlMemory<T> mem;					//0x0
 	int32_t get;						//0xC
 	int32_t put;						//0x10
 	int32_t offset;						//0x14
