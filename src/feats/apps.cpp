@@ -172,7 +172,7 @@ void Apps::getLegacyCDKey(const AppId_t appId)
 		
 		//Don't forget null terminator since we
 		//do not pass a size argument to SetLegacyCDKey
-		newKey.resize(KEY_SIZE + 1);
+		newKey.resize(KEY_SIZE);
 
 		srand(g_currentSteamId.steamId.accountId + appId);
 
@@ -188,7 +188,6 @@ void Apps::getLegacyCDKey(const AppId_t appId)
 			newKey[i] = CHARS[num];
 		}
 
-		newKey[newKey.size() - 1] = '\0';
 		LOG_DEBUG("Generated random key %s for %u\n", newKey.c_str(), appId);
 	}
 
