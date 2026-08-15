@@ -13,6 +13,8 @@ class CFileWatcher
 	pthread_t watchThread;
 
 public:
+	constexpr static int WATCH_MASK = IN_CLOSE_WRITE | IN_MOVED_TO;
+
 	int notifyFd;
 	std::unordered_map<int, std::filesystem::path> fileFdMap;
 

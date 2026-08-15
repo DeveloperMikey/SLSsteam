@@ -44,7 +44,7 @@ void* watchLoop(void* args)
 
 			auto path = watcher->fileFdMap[event->wd];
 			
-			if (!(event->mask & IN_CLOSE_WRITE))
+			if (!(event->mask & (CFileWatcher::WATCH_MASK)))
 			{
 				continue;
 			}
@@ -99,7 +99,7 @@ int CFileWatcher::addFile(const char* path)
 	//Watching seperate files does not seem to work very well, since the file descriptor becomes useless
 	//on some operations
 	const std::filesystem::path p(path);
-	int fd = inotify_add_watch(notifyFd, p.parent_path().c_str(), IN_CLOSE_WRITE);
+	int fd = inotify_add_watch(notifyFd, p.parent_path().c_str(), WATCH_MASK);
 	if (fd == -1)
 	{
 		return fd;
