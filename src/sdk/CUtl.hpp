@@ -88,7 +88,7 @@ public:
 
 	uint8_t __pad0x0[0x20];		//0x0
 	uint32_t size;				//0x20
-	uint8_t __pad0x28[0x4];		//0x24
+	uint8_t __pad0x24[0x4];		//0x24
 	Element_t* elements;		//0x28
 
 	T2* find(const T key)
@@ -148,6 +148,16 @@ public:
 	CUtlMemory<T> mem;
 	uint32_t size;
 
+	constexpr T* at(uint32_t index)
+	{
+		if (index >= size)
+		{
+			return nullptr;
+		}
+
+		return &mem.base[index];
+	};
+
 	constexpr bool resize(size_t newSize)
 	{
 		if (!mem.resize(newSize))
@@ -158,16 +168,6 @@ public:
 		size = newSize;
 		return true;
 	}
-
-	constexpr T* at(uint32_t index)
-	{
-		if (index >= size)
-		{
-			return nullptr;
-		}
-
-		return &mem.base[index];
-	};
 
 	constexpr bool swap(uint32_t index, uint32_t index2)
 	{
