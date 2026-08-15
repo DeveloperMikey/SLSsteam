@@ -14,5 +14,5 @@
 #include "IClientFriends.hpp"
 #include "IClientUser.hpp"
 #include "IClientUtils.hpp"
-
+#include "steam.hpp"
 #include "types.hpp"
