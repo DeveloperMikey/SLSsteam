@@ -73,8 +73,7 @@ public:
 	bool resize(const size_t newSize);
 }; //0x2C
 
-//I have no clue if this & the map is actually right
-//Works for the CPackageInfoCache::m_mapPackages, needs testing on others
+
 template<typename T, typename T2>
 class CUtlRBTree
 {
