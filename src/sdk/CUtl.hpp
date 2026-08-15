@@ -81,24 +81,46 @@ class CUtlRBTree
 public:
 	struct Element_t
 	{
-		uint8_t __pad0x0[0x10];		//0x0
+		int32_t leftIndex;			//0x0
+		int32_t rightIndex;			//0x4
+		uint8_t __pad0x0[0x8];		//0x8
 		T key;						//0x10
 		T2* value;					//0x14
 	}; //0x18
 
-	uint8_t __pad0x0[0x20];		//0x0
+	uint8_t __pad0x0[0x14];		//0x0
+	int32_t rootNodeIndex;		//0x14
+	uint32_t allocated;			//0x18
+	uint8_t __pad0x1C[0x4];		//0x1C
 	uint32_t size;				//0x20
 	uint8_t __pad0x24[0x4];		//0x24
 	Element_t* elements;		//0x28
 
-	T2* find(const T key)
+	Element_t* find(const T key)
 	{
-		for (size_t i = 0; i < size; i++)
+		int32_t index = rootNodeIndex;
+
+		for (;;)
 		{
-			const auto elem = elements[i];
-			if (elem.key == key)
+			const auto node = &elements[index];
+
+			if (node->key == key)
 			{
-				return elem.value;
+				return node;
+			}
+
+			if (key > node->key)
+			{
+				index = node->rightIndex;
+			}
+			else
+			{
+				index = node->leftIndex;
+			}
+
+			if (index == -1)
+			{
+				break;
 			}
 		}
 
@@ -114,10 +136,10 @@ public:
 
 	T2* at(size_t key)
 	{
-		const auto val = tree.find(key);
-		if (val)
+		const auto node = tree.find(key);
+		if (node)
 		{
-			return val;
+			return node->value;
 		}
 
 		return nullptr;
