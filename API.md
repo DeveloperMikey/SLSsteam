@@ -7,7 +7,7 @@ Arguments written in square brackets \[\] are optional
 The current commands are:
 
 ### Application Manager
-dumplibraries : Lists all available libraries' their label, their path & their index
+dumplibraries : Lists all available libraries' label, their path & their index
 install|appId|libraryIndex : Installs appId into library at libraryIndex
 uninstall|appId : Uninstalls appId
 
