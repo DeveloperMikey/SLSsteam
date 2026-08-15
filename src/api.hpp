@@ -43,6 +43,7 @@ namespace SLSAPI
 	extern const char* path;
 	extern std::fstream fstream;
 	extern CFileWatcher* watcher;
+	extern bool initialized;
 
 	extern std::mutex cmdMutex;
 

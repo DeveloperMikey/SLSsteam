@@ -15,6 +15,7 @@ namespace SLSAPI
 
 	std::fstream fstream;
 	CFileWatcher* watcher;
+	bool initialized;
 
 	std::mutex cmdMutex;
 
@@ -24,7 +25,7 @@ namespace SLSAPI
 
 bool SLSAPI::isEnabled()
 {
-	return g_config.api.get() && fstream.is_open();
+	return g_config.api.get() && initialized;
 }
 
 void SLSAPI::onFileChange()
@@ -35,50 +36,56 @@ void SLSAPI::onFileChange()
 		return;
 	}
 
-	//Shitty way to reopen the stream. We have to do this, otherwise the fstream gets invalidated when running echo >
-	fstream.close();
+	//Reopen stream, since it gets invalidated when our file gets replaced
 	fstream.open(path, std::fstream::in);
 
-	char cmd[128];
-	fstream.getline(cmd, sizeof(cmd));
+	if (!fstream.is_open())
+	{
+		LOG_ERROR("Failed to open %s for parsing the next cmd!\n", path);
+		return;
+	}
 
-	LOG_DEBUG("API Running %s\n", cmd);
-	const auto split = Utils::strsplit(cmd, "|");
+	std::string cmd;
+	cmd.resize(128);
+	fstream.getline(cmd.data(), cmd.size());
+
+	LOG_DEBUG("API Running %s\n", cmd.c_str());
+	const auto split = Utils::strsplit(const_cast<char*>(cmd.c_str()), "|");
 
 	//Compatibility Manager
-	if (strcmp(split[0].c_str(), "dumpcompat") == 0 && split.size() > 1)
+	if (split[0] == "dumpcompat" && split.size() > 1)
 	{
 		AppId_t appId;
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
 			LOG_ERROR("Failed to dump compat for %s (not a number)!\n", split[1].c_str());
-			return;
+			goto done;
 		}
 
 		const std::lock_guard guard(cmdMutex);
 		compatOps.emplace_back(CompatOp_t { CompatOp_t::OpType::Dump, appId, "" } );
 	}
 
-	else if (strcmp(split[0].c_str(), "getcompat") == 0 && split.size() > 1)
+	else if (split[0] == "getcompat" && split.size() > 1)
 	{
 		AppId_t appId;
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
 			LOG_ERROR("Failed to get compat for %s (not a number)!\n", split[1].c_str());
-			return;
+			goto done;
 		}
 
 		const std::lock_guard guard(cmdMutex);
 		compatOps.emplace_back(CompatOp_t { CompatOp_t::OpType::Get, appId, "" } );
 	}
 
-	else if (strcmp(split[0].c_str(), "setcompat") == 0 && split.size() > 1)
+	else if (split[0] == "setcompat" && split.size() > 1)
 	{
 		AppId_t appId;
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
 			LOG_ERROR("Failed to set compat for %s (not a number)!\n", split[1].c_str());
-			return;
+			goto done;
 		}
 
 		const std::lock_guard guard(cmdMutex);
@@ -86,13 +93,13 @@ void SLSAPI::onFileChange()
 	}
 
 	//Application Manager
-	else if (strcmp(split[0].c_str(), "dumplibraries") == 0)
+	else if (split[0] == "dumplibraries")
 	{
 		const std::lock_guard guard(cmdMutex);
 		libraryOps.emplace_back(LibraryOp_t { LibraryOp_t::OpType::Dump, 0, 0 } );
 	}
 
-	else if (strcmp(split[0].c_str(), "install") == 0 && split.size() > 2)
+	else if (split[0] == "install" && split.size() > 2)
 	{
 		AppId_t appId;
 		uint32_t library;
@@ -100,31 +107,34 @@ void SLSAPI::onFileChange()
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
 			LOG_ERROR("Failed to install %s (not a number)!\n", split[1].c_str());
-			return;
+			goto done;
 		}
 
 		if (!Utils::tryConvertToNumber(split[2].c_str(), library))
 		{
 			LOG_ERROR("Failed to install %u to %s (not a number)!\n", appId, split[2].c_str());
-			return;
+			goto done;
 		}
 
 		const std::lock_guard guard(cmdMutex);
 		libraryOps.emplace_back(LibraryOp_t { LibraryOp_t::OpType::Install, appId, library } );
 	}
 
-	else if (strcmp(split[0].c_str(), "uninstall") == 0 && split.size() > 1)
+	else if (split[0] == "uninstall" && split.size() > 1)
 	{
 		AppId_t appId;
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
 			LOG_ERROR("Failed to uninstall %s (not a number)!\n", split[1].c_str());
-			return;
+			goto done;
 		}
 
 		const std::lock_guard guard(cmdMutex);
 		libraryOps.emplace_back(LibraryOp_t { LibraryOp_t::OpType::Uninstall, appId, 0 } );
 	}
+
+done:
+	fstream.close();
 }
 
 void SLSAPI::init()
@@ -137,6 +147,9 @@ void SLSAPI::init()
 		return;
 	}
 
+	//Close stream, onFileChange reopens then closes it for us
+	fstream.close();
+
 	watcher = new CFileWatcher(onFileChange);
 	const int fd = watcher->addFile(path);
 	if (fd == -1)
@@ -144,6 +157,8 @@ void SLSAPI::init()
 		LOG_NOTIFYWARN("Failed to watch %s!\n API will be unavailable", path);
 		return;
 	}
+
+	initialized = true;
 
 	watcher->start();
 	LOG_DEBUG("SLSsteam API initialized!\n");
@@ -164,8 +179,7 @@ void SLSAPI::runCompatOps()
 		{
 			case CompatOp_t::OpType::Dump:
 			{
-				//Actually CUtlVector<CUtlString*>
-				//So we do not allocate anything, it'll just mess up
+				//We do not allocate anything, it'll just mess up
 				//Luckily the function allocates for us
 				CUtlVector<CUtlString> tools { };
 				g_pClientCompat->getCompatToolsForApp(op->appId, &tools);
