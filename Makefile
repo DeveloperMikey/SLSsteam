@@ -6,8 +6,6 @@ CXX := g++
 
 libs := $(wildcard lib/*.a)
 srcs := $(shell find src/ -type f -iname "*.cpp")
-objs := $(srcs:src/%.cpp=obj/%.o)
-deps := $(objs:%.o=%.d)
 
 CXXFLAGS := -O3 -flto=auto -fPIC -m32 -std=c++20 -Wall -Wextra -Wpedantic -Wno-error=format-security -D_GLIBCXX_USE_CXX11_ABI=0
 CXXFLAGS += -floop-block -fgraphite-identity -floop-parallelize-all -pipe -fopenmp -fomit-frame-pointer
@@ -43,20 +41,31 @@ ifeq ($(shell type mold &> /dev/null && echo "found"),found)
 	LDFLAGS += -fuse-ld=mold
 endif
 
+FLAGSSHA := $(shell echo "$(CXXFLAGS) & $(LDFLAGS)" | sha256sum | cut -d " " -f 1)
+SLSSTEAMSO := bin/SLSsteam-$(FLAGSSHA).so
+objs := $(srcs:src/%.cpp=obj/$(FLAGSSHA)/%.o)
+deps := $(objs:%.o=%.d)
+
 audit-libs:
-	$(MAKE) -j $(JOBS) bin/SLSsteam.so bin/library-inject.so
+	$(MAKE) -j $(JOBS) $(SLSSTEAMSO) bin/library-inject.so
+	$(MAKE) link-bins
 
 tools:
 	$(MAKE) -j 2 schema-grabber ticket-grabber
 
-bin/SLSsteam.so: $(objs) $(libs)
+link-bins:
+	-ln -f $(SLSSTEAMSO) bin/SLSsteam.so
+	-ln -f tools/library-inject/library-inject.so bin/library-inject.so
+
+$(SLSSTEAMSO): $(objs) $(libs)
 	@mkdir -p bin
-	$(CXX) $(CXXFLAGS) $^ -o bin/SLSsteam.so $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $^ -o $(SLSSTEAMSO) $(LDFLAGS)
+	$(MAKE) link-bins
 
 bin/library-inject.so:
 	@mkdir -p bin
 	$(MAKE) -C tools/library-inject
-	ln tools/library-inject/library-inject.so bin/library-inject.so
+	$(MAKE) link-bins
 
 schema-grabber:
 	$(MAKE) -C tools/schema-grabber
@@ -65,19 +74,19 @@ ticket-grabber:
 	$(MAKE) -C tools/ticket-grabber
 
 -include $(deps)
-obj/update.o: src/update.cpp res/version.txt
+obj/$(FLAGSSHA)/update.o: src/update.cpp res/version.txt
 	$(shell ./embed-version.sh)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -isysteminclude -MMD -MP -c $< -o $@
 
 -include $(deps)
-obj/config.o: src/config.cpp res/config.yaml
+obj/$(FLAGSSHA)/config.o: src/config.cpp res/config.yaml
 	$(shell ./embed-config.sh)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -isysteminclude -MMD -MP -c $< -o $@
 
 -include $(deps)
-obj/%.o : src/%.cpp
+obj/$(FLAGSSHA)/%.o : src/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -isysteminclude -MMD -MP -c $< -o $@
 
@@ -138,6 +147,7 @@ release: rebuild zips
 .PHONY: \
 	audit-libs \
 	tools \
+	link-bins \
 	schema-grabber \
 	ticket-grabber \
 	clean-libs \
