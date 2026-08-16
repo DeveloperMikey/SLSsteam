@@ -83,15 +83,15 @@ enum class EIPCInterface : uint8_t
 
 std::string EIPCInterface_ToString(const EIPCInterface interface);
 
-class IPCProcessPipe { };
-class CCrossProcessPipe : IPCProcessPipe { };
-class CSingleProcessPipe : IPCProcessPipe { };
+class IProcessPipe { };
+class CCrossProcessPipe : IProcessPipe { };
+class CSingleProcessPipe : IProcessPipe { };
 
 SDK_Class CServerPipe
 {
 public:
-	IPCProcessPipe* internalPipe;		//0x0
-	IPCProcessPipe* singleProcessPipe;	//0x4
+	IProcessPipe* internalPipe;		//0x0
+	IProcessPipe* singleProcessPipe;	//0x4
 	uint32_t pipeHandle;				//0x8
 	uint8_t __pad0xC[8];				//0xC
 	int32_t pid;						//0x14
@@ -104,7 +104,7 @@ public:
 	uint8_t __pad0x30[8];				//0x30
 	uint32_t numQueuedCallbacks;		//0x38
 	uint8_t __pad0x3C[20];				//0x3C
-	CUtlVector<void>debugText;			//0x50
+	CUtlVector<void> debugText;			//0x50
 }; //0x60
 
 SDK_Class CSteamEngine
