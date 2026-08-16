@@ -24,7 +24,7 @@ make_release()
 		mkdir -p "$DIR"
 	fi
 
-	sh docker/build.sh release
+	sh docker/build.sh zips
 	mv zips/* $DIR
 	rename "SLSsteam" "SLSsteam-Any-$NAME" $DIR/*
 
