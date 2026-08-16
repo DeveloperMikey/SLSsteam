@@ -87,7 +87,7 @@ class IPCProcessPipe { };
 class CCrossProcessPipe : IPCProcessPipe { };
 class CSingleProcessPipe : IPCProcessPipe { };
 
-class CServerPipe
+SDK_Class CServerPipe
 {
 public:
 	IPCProcessPipe* internalPipe;		//0x0
@@ -105,9 +105,9 @@ public:
 	uint32_t numQueuedCallbacks;		//0x38
 	uint8_t __pad0x3C[20];				//0x3C
 	CUtlVector<void>debugText;			//0x50
-};//0x60
+}; //0x60
 
-class CSteamEngine
+SDK_Class CSteamEngine
 {
 public:
 	CServerPipe* getServerPipe(const HSteamPipe pipe);

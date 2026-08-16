@@ -1,5 +1,7 @@
 #pragma once
 
+#include "types.hpp"
+
 #include <cstdint>
 
 
@@ -9,7 +11,7 @@ enum EWebSocketConnectionSendType : uint32_t
 };
 
 
-class CWebSocketConnection
+SDK_Class CWebSocketConnection
 {
 public:
 	bool buildAndAsyncSendFrame(const EWebSocketConnectionSendType type, void* data, const uint32_t dataSize);

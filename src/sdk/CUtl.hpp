@@ -1,5 +1,6 @@
 #pragma once
 
+#include "types.hpp"
 #include "steam.hpp"
 
 #include <cstddef>
@@ -9,7 +10,7 @@
 constexpr static size_t CUTL_DEFAULT_ALLOC = 0x16;
 
 template<typename T>
-class CUtlMemory
+SDK_Class CUtlMemory
 {
 public:
 	T* base;
@@ -54,7 +55,7 @@ public:
 	}
 };
 
-class CUtlBuffer
+SDK_Class CUtlBuffer
 {
 	typedef int(*CUtlBuffer_Function1_t)(void*);
 	typedef bool(*CUtlBuffer_Resize_t)(void*, int32_t);
@@ -75,7 +76,7 @@ public:
 
 
 template<typename T, typename T2>
-class CUtlRBTree
+SDK_Class CUtlRBTree
 {
 public:
 	struct Element_t
@@ -128,7 +129,7 @@ public:
 };
 
 template<typename T, typename T2>
-class CUtlMap
+SDK_Class CUtlMap
 {
 public:
 	CUtlRBTree<T, T2> tree;		//0x0
@@ -146,7 +147,7 @@ public:
 };
 
 //Null terminated wrapper
-class CUtlString
+SDK_Class CUtlString
 {
 public:
 	char* str;
@@ -163,7 +164,7 @@ public:
 };
 
 template<typename T>
-class CUtlVector
+SDK_Class CUtlVector
 {
 public:
 	CUtlMemory<T> mem;

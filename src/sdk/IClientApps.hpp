@@ -34,7 +34,7 @@ enum EAppInfoSection
 	k_EAppInfoSectionAlbummetadata = 0x14
 };
 
-class IClientApps
+SDK_Class IClientApps
 {
 public:
 	int32_t getAppData(const AppId_t appId, const char* name, const char* pChOut, const uint32_t outSize);

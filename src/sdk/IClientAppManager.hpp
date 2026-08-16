@@ -30,7 +30,7 @@ enum EAppState : uint32_t
 	k_EAppStateUpdatedDisabledbyapp = 0x80000
 };
 
-struct DepotInfo_t
+SDK_Struct DepotInfo_t
 {
 	AppId_t depotId;			//0x0
 	AppId_t appId;				//0x4
@@ -38,7 +38,7 @@ struct DepotInfo_t
 	uint8_t __pad0x10[0x10];	//0x10
 }; //0x20
 
-class IClientAppManager
+SDK_Class IClientAppManager
 {
 public:
 	uint32_t getNumLibraryFolders();
