@@ -45,6 +45,6 @@ public:
 	uint32_t getLibraryFolderLabel(const uint32_t index, char* pChLabel, const uint32_t labelSize);
 	uint32_t getLibraryFolderPath(const uint32_t index, char* pChPath, const uint32_t pathSize);
 	EAppState getAppInstallState(const AppId_t appId);
-	bool installApp(const AppId_t appId, const uint32_t librarIndex);
+	bool installApp(const AppId_t appId, const uint32_t libraryIndex);
 	uint32_t uninstallApp(const AppId_t appId);
 };
