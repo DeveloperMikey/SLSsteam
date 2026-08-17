@@ -1376,6 +1376,9 @@ void Hooks::placeVFTHooks()
 	static std::mutex mutex;
 	std::lock_guard guard(mutex);
 
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+
 	LOG_DEBUG("CUser at %p\n", reinterpret_cast<void*>(usr));
 
 	{
@@ -1457,6 +1460,8 @@ void Hooks::placeVFTHooks()
 
 		LOG_DEBUG("IClientUtils->vft at %p\n", reinterpret_cast<void*>(vft->vtable));
 	}
+
+	#pragma GCC diagnostic pop
 
 	hooked = true;
 }
