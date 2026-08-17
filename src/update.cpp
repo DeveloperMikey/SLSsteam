@@ -39,7 +39,7 @@ bool Updater::init()
 		res = Curl::getString(url, data);
 		LOG_INFO("Curl Res: %u for %s with len %i\n", res, url, data.size());
 
-		if (res == 0 && data.size() > 0) //User reported empty responses
+		if (res == 0 && data.starts_with("SafeModeHashes:\n")) //User reported empty responses
 		{
 			downloadSuccess = true;
 			break;
