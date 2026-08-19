@@ -50,7 +50,7 @@ class CLog
 	std::unordered_set<std::string> msgHist {};
 	std::shared_mutex mutex;
 
-	bool shouldLog(const unsigned int flags);
+	bool shouldNotify(const unsigned int flags);
 	std::string buildNotification(const unsigned int flags, const char* msg);
 	void __log(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs);
 

@@ -62,15 +62,29 @@ std::string ELogLevel_ToString(const unsigned int lvlFlags)
 	return lvlStr.str();
 }
 
+bool CLog::shouldNotify(const unsigned int flags)
+{
+	const unsigned int configLevels = g_config.logLevels.get();
+	if ((flags & k_ELogLevelNotifyLong) && (configLevels & k_ELogLevelNotifyLong))
+	{
+		return true;
+	}
+
+	if ((flags & k_ELogLevelNotifyShort) && (configLevels & k_ELogLevelNotifyShort))
+	{
+		return true;
+	}
+
+	return false;
+}
+
 std::string CLog::buildNotification(const unsigned int flags, const char* msg)
 {
-	const bool notifyShort = flags & k_ELogLevelNotifyShort;
-	const bool notifyLong = flags & k_ELogLevelNotifyLong;
-
-	if (!notifyShort && !notifyLong)
+	if (!shouldNotify(flags))
 	{
 		return "";
 	}
+
 	const bool warn = flags & k_ELogLevelWarn;
 	const bool error = flags & k_ELogLevelError;
 	std::ostringstream notifySS;
@@ -109,9 +123,7 @@ std::string CLog::buildNotification(const unsigned int flags, const char* msg)
 
 void CLog::__log(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
 {
-	const unsigned int enabledLevels = g_config.logLevels.get();
-
-	if (!(enabledLevels & flags))
+	if (!(g_config.logLevels.get() & flags))
 	{
 		return;
 	}
@@ -121,14 +133,15 @@ void CLog::__log(const unsigned int flags, const char* file, const char* functio
 	formatted.resize(size);
 	vsnprintf(formatted.data(), size, msg, vArgs);
 
-	//Notifications do not get a newline ending, so we add our own
-	//Use built string to check further down
-	const auto notification = buildNotification(flags, formatted.c_str());
-
-	if ((enabledLevels & (k_ELogLevelNotifyLong | k_ELogLevelNotifyLong)) && notification.size() > 0)
+	if (shouldNotify(flags))
 	{
+		const auto notification = buildNotification(flags, formatted.c_str());
+
 		system(notification.c_str());
 		debug(file, function, line, "system(\"%s\")\n", notification.c_str());
+
+		//Notifications do not get a newline ending, so we add our own
+		formatted.insert(formatted.end(), '\n');
 	}
 
 	std::ostringstream prefixSS;
@@ -168,12 +181,6 @@ void CLog::__log(const unsigned int flags, const char* file, const char* functio
 	//ofstream << prefix << std::setfill(' ') << std::setw(80 - prefix.size()) << " " << formatted.c_str();
 	//Padding makes things nicer, but basically unreadable
 	ofstream << prefix << " " << formatted.c_str();
-
-	if (notification.size() > 0)
-	{
-		ofstream << "\n";
-	}
-
 	ofstream.flush();
 }
 
