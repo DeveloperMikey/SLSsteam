@@ -80,7 +80,10 @@ bool CLog::shouldNotify(const unsigned int flags)
 
 std::string CLog::buildNotification(const unsigned int flags, const char* msg)
 {
-	if (!shouldNotify(flags))
+	const bool notifyShort = flags & k_ELogLevelNotifyShort;
+	const bool notifyLong = flags & k_ELogLevelNotifyLong;
+
+	if (!notifyShort && !notifyLong)
 	{
 		return "";
 	}
@@ -133,15 +136,14 @@ void CLog::__log(const unsigned int flags, const char* file, const char* functio
 	formatted.resize(size);
 	vsnprintf(formatted.data(), size, msg, vArgs);
 
-	if (shouldNotify(flags))
-	{
-		const auto notification = buildNotification(flags, formatted.c_str());
+	//Notifications do not get a newline ending, so we add our own
+	//Use built string to check further down
+	const auto notification = buildNotification(flags, formatted.c_str());
 
+	if (shouldNotify(flags) && notification.size() > 0)
+	{
 		system(notification.c_str());
 		debug(file, function, line, "system(\"%s\")\n", notification.c_str());
-
-		//Notifications do not get a newline ending, so we add our own
-		formatted.insert(formatted.end(), '\n');
 	}
 
 	std::ostringstream prefixSS;
@@ -181,6 +183,12 @@ void CLog::__log(const unsigned int flags, const char* file, const char* functio
 	//ofstream << prefix << std::setfill(' ') << std::setw(80 - prefix.size()) << " " << formatted.c_str();
 	//Padding makes things nicer, but basically unreadable
 	ofstream << prefix << " " << formatted.c_str();
+
+	if (notification.size() > 0)
+	{
+		ofstream << "\n";
+	}
+
 	ofstream.flush();
 }
 
