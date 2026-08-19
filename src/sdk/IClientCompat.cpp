@@ -9,7 +9,7 @@
 
 bool IClientCompat::isCompatToolEnabled(const AppId_t appId)
 {
-	return MemHlp::callVFunc<const char*(*)(void*, AppId_t)>
+	return MemHlp::callVFunc<bool(*)(void*, AppId_t)>
 	(
 		VFTIndexes::IClientCompat::BIsCompatibilityToolEnabled.index,
 		this,

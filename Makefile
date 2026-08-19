@@ -54,8 +54,8 @@ tools:
 	$(MAKE) -j 2 schema-grabber ticket-grabber
 
 link-bins:
-	-ln -f $(SLSSTEAMSO) bin/SLSsteam.so
-	-ln -f tools/library-inject/library-inject.so bin/library-inject.so
+	-test -f "$(SLSSTEAMSO)" && ln -f "$(SLSSTEAMSO)" "bin/SLSsteam.so"
+	-test -f "tools/library-inject/library-inject.so" && ln -f "tools/library-inject/library-inject.so" "bin/library-inject.so"
 
 $(SLSSTEAMSO): $(objs) $(libs)
 	@mkdir -p bin

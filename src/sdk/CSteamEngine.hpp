@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CUtl.hpp"
 #include "types.hpp"
 
 #include <cstdint>
@@ -82,18 +83,31 @@ enum class EIPCInterface : uint8_t
 
 std::string EIPCInterface_ToString(const EIPCInterface interface);
 
-class CServerPipe
+class IProcessPipe { };
+class CCrossProcessPipe : IProcessPipe { };
+class CSingleProcessPipe : IProcessPipe { };
+
+SDK_Class CServerPipe
 {
 public:
-	uint8_t __pad0x0[0x8];		//0x0
-	HSteamPipe pipe;			//0x8
-	uint8_t __pad0xC[0x8];		//0xC
-	uint32_t pid;				//0x14
-	uint8_t __pad0x18[0x8];		//0x18
-	HSteamUser user;			//0x21
-};
+	IProcessPipe* internalPipe;		//0x0
+	IProcessPipe* singleProcessPipe;	//0x4
+	uint32_t pipeHandle;				//0x8
+	uint8_t __pad0xC[0x8];				//0xC
+	int32_t pid;						//0x14
+	int32_t threadId;					//0x18
+	CUtlString processName;				//0x1C - Was empty on the stuff I tried, maybe it's defunct on linux?
+	uint8_t __pad0x20[0x1];				//0x20
+	int32_t userHandle;					//0x21
+	uint8_t __pad0x25[0x7];				//0x25
+	void* queueCallbackMsg;				//0x2C
+	uint8_t __pad0x30[0x8];				//0x30
+	uint32_t numQueuedCallbacks;		//0x38
+	uint8_t __pad0x3C[0x14];			//0x3C
+	CUtlVector<void> debugText;			//0x50
+}; //0x60
 
-class CSteamEngine
+SDK_Class CSteamEngine
 {
 public:
 	CServerPipe* getServerPipe(const HSteamPipe pipe);

@@ -9,11 +9,7 @@ TIMESTAMP="$(date "+%Y%m%d%H%M%S")"
 VERSION="$(cat res/version.txt)"
 
 ARCH_PKG_DIR="pkg/slssteam"
-RELEASE_DIR="releases"
-
-if [ -d "$RELEASE_DIR" ]; then
-	rm -rv "$RELEASE_DIR"
-fi
+RELEASE_DIR="releases/$TIMESTAMP"
 
 make_release()
 {
@@ -24,17 +20,21 @@ make_release()
 		mkdir -p "$DIR"
 	fi
 
-	sh docker/build.sh release
+	sh docker/build.sh zips
 	mv zips/* $DIR
-	rename "SLSsteam" "SLSsteam-Any-$NAME" $DIR/*
+	#zips are named SLSsteam VERSION
+	rename "SLSsteam $VERSION" "SLSsteam-Any-$NAME" $DIR/*
 
 	cd "$ARCH_PKG_DIR"
 	makepkg -Ccf
 	cd "$SCRIPT_DIR"
 	mv pkg/slssteam/*.pkg.tar.zst "$DIR"
-	rename "slssteam" "SLSsteam-Arch-$NAME" $DIR/*
+	#name for package is slssteam-pkgver-pkgrel-arch
+	#We do not replace arch, for future proofing
+	rename "slssteam-$VERSION-1" "SLSsteam-Arch-$NAME" $DIR/*
 
-	rename "$VERSION" "$TIMESTAMP" $DIR/*
+	mv $DIR/* "$RELEASE_DIR"
+	rm -r "$DIR"
 }
 
 DEBUG=1 make_release "debug"

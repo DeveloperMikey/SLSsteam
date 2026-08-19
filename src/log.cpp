@@ -109,7 +109,9 @@ std::string CLog::buildNotification(const unsigned int flags, const char* msg)
 
 void CLog::__log(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
 {
-	if (!(g_config.logLevels.get() & flags))
+	const unsigned int enabledLevels = g_config.logLevels.get();
+
+	if (!(enabledLevels & flags))
 	{
 		return;
 	}
@@ -123,7 +125,7 @@ void CLog::__log(const unsigned int flags, const char* file, const char* functio
 	//Use built string to check further down
 	const auto notification = buildNotification(flags, formatted.c_str());
 
-	if (notification.size() > 0)
+	if ((enabledLevels & (k_ELogLevelNotifyLong | k_ELogLevelNotifyLong)) && notification.size() > 0)
 	{
 		system(notification.c_str());
 		debug(file, function, line, "system(\"%s\")\n", notification.c_str());

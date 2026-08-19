@@ -1,3 +1,6 @@
+#pragma once
+
+
 namespace Steam
 {
 	typedef void*(*Plat_Alloc_t)(int);

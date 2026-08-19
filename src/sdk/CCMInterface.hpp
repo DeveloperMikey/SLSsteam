@@ -1,9 +1,10 @@
 #pragma once
 
 #include "CNetPacket.hpp"
+#include "types.hpp"
 
 
-class CCMInterface
+SDK_Class CCMInterface
 {
 public:
 	//Before using make sure to:

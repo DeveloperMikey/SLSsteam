@@ -13,7 +13,7 @@
 
 
 //Helper class to make calculations more legible
-class CNetPacketBody
+SDK_Class CNetPacketBody
 {
 public:
 
@@ -23,7 +23,7 @@ public:
 	//Body[CNetPacket->size - headerSize - sizeof(CNetPacketBody)]
 };
 
-class CNetPacket
+SDK_Class CNetPacket
 {
 public:
 	uint8_t __pad0x0[0x4];			//0x0
