@@ -53,7 +53,7 @@ AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
 
 	if (ifstream.is_open())
 	{
-		std::copy(std::istreambuf_iterator(ifstream), std::istreambuf_iterator<char>(), std::back_inserter(exeName));
+		exeName = std::string(std::istreambuf_iterator(ifstream), {});
 		if (exeName.ends_with("\n"))
 		{
 			exeName = exeName.substr(0, exeName.size() - 1);
@@ -72,19 +72,18 @@ AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
 	const auto environPath = pathSS.str();
 	ifstream = std::ifstream(environPath);
 
+	AppId_t appId = 0;
+
 	if (!ifstream.is_open())
 	{
 		LOG_ERROR("Failed to open %s for %s to get 0x%x's appId!\n", environPath.c_str(), exeName.c_str(), pipe);
+		fakeAppIdMap[pipe] = 0;
 		return 0;
 	}
 
-	std::string environ;
-	std::copy(std::istreambuf_iterator(ifstream), std::istreambuf_iterator<char>(), std::back_inserter(environ));
-
+	std::string environ = std::string(std::istreambuf_iterator(ifstream), {});
 	auto reAppId = std::regex("SteamAppId=[0-9]+");
 	std::smatch appIdMatch;
-
-	AppId_t appId = 0;
 
 	if (std::regex_search(environ, appIdMatch, reAppId))
 	{
