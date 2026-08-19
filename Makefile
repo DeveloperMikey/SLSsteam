@@ -54,7 +54,7 @@ tools:
 	$(MAKE) -j 2 schema-grabber ticket-grabber
 
 link-bins:
-	-test -f "$(SLSSTEAMSO)"  && ln -f "$(SLSSTEAMSO)" "bin/SLSsteam.so"
+	-test -f "$(SLSSTEAMSO)" && ln -f "$(SLSSTEAMSO)" "bin/SLSsteam.so"
 	-test -f "tools/library-inject/library-inject.so" && ln -f "tools/library-inject/library-inject.so" "bin/library-inject.so"
 
 $(SLSSTEAMSO): $(objs) $(libs)
