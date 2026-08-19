@@ -9,6 +9,9 @@ TIMESTAMP="$(date "+%Y%m%d%H%M%S")"
 VERSION="$(cat res/version.txt)"
 
 ARCH_PKG_DIR="pkg/slssteam"
+PKG_VER="$(grep "pkgver=.*" "$ARCH_PKG_DIR/PKGBUILD" | cut -d "=" -f 2)"
+PKG_REL="$(grep "pkgrel=.*" "$ARCH_PKG_DIR/PKGBUILD" | cut -d "=" -f 2)"
+
 RELEASE_DIR="releases/$TIMESTAMP"
 
 make_release()
@@ -27,11 +30,12 @@ make_release()
 
 	cd "$ARCH_PKG_DIR"
 	makepkg -Ccf
+
 	cd "$SCRIPT_DIR"
 	mv pkg/slssteam/*.pkg.tar.zst "$DIR"
 	#name for package is slssteam-pkgver-pkgrel-arch
 	#We do not replace arch, for future proofing
-	rename "slssteam-$VERSION-1" "SLSsteam-Arch-$NAME" $DIR/*
+	rename "slssteam-$PKG_VER-$PKG_REL" "SLSsteam-Arch-$NAME" $DIR/*
 
 	mv $DIR/* "$RELEASE_DIR"
 	rm -r "$DIR"
