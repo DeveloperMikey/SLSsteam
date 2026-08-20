@@ -45,12 +45,24 @@ void SLSAPI::onFileChange()
 		return;
 	}
 
-	std::string cmd;
-	cmd.resize(128);
-	fstream.getline(cmd.data(), cmd.size());
+	const auto content = std::string(std::istreambuf_iterator(fstream), {});
 
+	fstream.close();
+
+	const auto cmds = Utils::strsplit(const_cast<char*>(content.c_str()), "\n");
+	for (const auto& cmd : cmds)
+	{
+		parseCmd(cmd);
+	}
+}
+
+void SLSAPI::parseCmd(const std::string& cmd)
+{
 	LOG_DEBUG("API Running %s\n", cmd.c_str());
+
 	const auto split = Utils::strsplit(const_cast<char*>(cmd.c_str()), "|");
+
+	const std::lock_guard guard(cmdMutex);
 
 	//Compatibility Manager
 	if (split[0] == "dumpcompat" && split.size() > 1)
@@ -59,10 +71,9 @@ void SLSAPI::onFileChange()
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
 			LOG_ERROR("Failed to dump compat for %s (not a number)!\n", split[1].c_str());
-			goto done;
+			return;
 		}
 
-		const std::lock_guard guard(cmdMutex);
 		compatOps.emplace_back(CompatOp_t { CompatOp_t::OpType::Dump, appId, "" } );
 	}
 
@@ -72,10 +83,9 @@ void SLSAPI::onFileChange()
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
 			LOG_ERROR("Failed to get compat for %s (not a number)!\n", split[1].c_str());
-			goto done;
+			return;
 		}
 
-		const std::lock_guard guard(cmdMutex);
 		compatOps.emplace_back(CompatOp_t { CompatOp_t::OpType::Get, appId, "" } );
 	}
 
@@ -85,17 +95,15 @@ void SLSAPI::onFileChange()
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
 			LOG_ERROR("Failed to set compat for %s (not a number)!\n", split[1].c_str());
-			goto done;
+			return;
 		}
 
-		const std::lock_guard guard(cmdMutex);
 		compatOps.emplace_back(CompatOp_t { CompatOp_t::OpType::Set, appId, split.size() > 2 ? split[2].c_str() : "" } );
 	}
 
 	//Application Manager
 	else if (split[0] == "dumplibraries")
 	{
-		const std::lock_guard guard(cmdMutex);
 		libraryOps.emplace_back(LibraryOp_t { LibraryOp_t::OpType::Dump, 0, 0 } );
 	}
 
@@ -107,16 +115,15 @@ void SLSAPI::onFileChange()
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
 			LOG_ERROR("Failed to install %s (not a number)!\n", split[1].c_str());
-			goto done;
+			return;
 		}
 
 		if (!Utils::tryConvertToNumber(split[2].c_str(), library))
 		{
 			LOG_ERROR("Failed to install %u to %s (not a number)!\n", appId, split[2].c_str());
-			goto done;
+			return;
 		}
 
-		const std::lock_guard guard(cmdMutex);
 		libraryOps.emplace_back(LibraryOp_t { LibraryOp_t::OpType::Install, appId, library } );
 	}
 
@@ -126,15 +133,11 @@ void SLSAPI::onFileChange()
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
 		{
 			LOG_ERROR("Failed to uninstall %s (not a number)!\n", split[1].c_str());
-			goto done;
+			return;
 		}
 
-		const std::lock_guard guard(cmdMutex);
 		libraryOps.emplace_back(LibraryOp_t { LibraryOp_t::OpType::Uninstall, appId, 0 } );
 	}
-
-done:
-	fstream.close();
 }
 
 void SLSAPI::init()
@@ -224,7 +227,7 @@ void SLSAPI::runCompatOps()
 			{
 				//Steam calls them with the same values
 				g_pClientCompat->specifyCompatTool(op->appId, op->tool.c_str(), "", 250);
-				LOG_DEBUG("Set compatibility tool for %u to %s\n", op->appId, op->tool.c_str());
+				LOG_API("Set compatibility tool for %u to %s\n", op->appId, op->tool.c_str());
 
 				break;
 			}
@@ -279,7 +282,7 @@ void SLSAPI::runInstallOps()
 			case LibraryOp_t::OpType::Install:
 			{
 				appManager->installApp(op->appId, op->libraryIndex);
-				LOG_DEBUG("Installed %u to %u\n", op->appId, op->libraryIndex);
+				LOG_API("Installed %u to %u\n", op->appId, op->libraryIndex);
 
 				break;
 			}
@@ -287,7 +290,7 @@ void SLSAPI::runInstallOps()
 			case LibraryOp_t::OpType::Uninstall:
 			{
 				appManager->uninstallApp(op->appId);
-				LOG_DEBUG("Uninstalled %u\n", op->appId);
+				LOG_API("Uninstalled %u\n", op->appId);
 
 				break;
 			}

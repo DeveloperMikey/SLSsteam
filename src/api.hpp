@@ -54,6 +54,7 @@ namespace SLSAPI
 	void onFileChange();
 	void init();
 
+	void parseCmd(const std::string& cmd);
 	void runCompatOps();
 	void runInstallOps();
 	void runIPCFrame();
