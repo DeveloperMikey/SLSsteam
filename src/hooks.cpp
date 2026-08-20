@@ -975,20 +975,18 @@ static bool hkClientUser_GetLegacyCDKey(IClientUser* pClientUser, AppId_t appId,
 	return Hooks::IClientUser_GetLegacyCDKey.originalFn.fn(pClientUser, appId, pChKey, keySize);
 }
 
-static uint8_t hkClientUser_IsUserSubscribedAppInTicket(IClientUser* pClientUser, uint32_t steamId, uint32_t a2, uint32_t a3, AppId_t appId)
+static uint8_t hkClientUser_IsUserSubscribedAppInTicket(IClientUser* pClientUser, uint64_t steamId, AppId_t appId)
 {
 	LOG_TRACE("Calling original\n");
-	const uint8_t ticketState = Hooks::IClientUser_IsUserSubscribedAppInTicket.originalFn.fn(pClientUser, steamId, a2, a3, appId);
+	const uint8_t ticketState = Hooks::IClientUser_IsUserSubscribedAppInTicket.originalFn.fn(pClientUser, steamId, appId);
 	//LOG_ONCE("IClientUser::IsUserSubscribedAppInTicket(0x%x, %u, %u, %u, %u) -> %i\n", pClientUser, steamId, a2, a3, appId, ticketState);
 	//Don't log the steamId, protect users from themselves and stuff
 	LOG_ONCE
 	(
-		"%s(%p, %u, %u, %u) -> %i\n",
+		"%s(%p, %u) -> %i\n",
 
 		Hooks::IClientUser_IsUserSubscribedAppInTicket.name.c_str(),
 		reinterpret_cast<void*>(pClientUser),
-		a2,
-		a3,
 		appId,
 		ticketState
 	);

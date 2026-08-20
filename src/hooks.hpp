@@ -150,7 +150,7 @@ namespace Hooks
 	typedef uint32_t(*IClientUser_GetAppOwnershipTicketExtendedData_t)(IClientUser*, uint32_t, void*, uint32_t, uint32_t*, uint32_t*, uint32_t*, uint32_t*);
 	typedef bool(*IClientUser_GetEncryptedAppTicket_t)(IClientUser*, void*, uint32_t, uint32_t*);
 	typedef bool(*IClientUser_GetLegacyCDKey_t)(IClientUser*, AppId_t, char*, uint32_t);
-	typedef uint8_t(*IClientUser_IsUserSubscribedAppInTicket_t)(IClientUser*, uint32_t, uint32_t, uint32_t, AppId_t);
+	typedef uint8_t(*IClientUser_IsUserSubscribedAppInTicket_t)(IClientUser*, uint64_t, AppId_t);
 
 	typedef AppId_t(*IClientUtils_GetAppId_t)(IClientUtils*);
 	typedef bool(*IClientUtils_GetOfflineMode_t)(IClientUtils*);
