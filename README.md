@@ -24,6 +24,7 @@ Contributors:
 - [DeveloperMikey](https://github.com/DeveloperMikey): Added Nix support
 - [skrimix](https://github.com/skrimix): Added flatpak support
 - thismanq: Informing me that DisableFamilyShareLockForOthers is possible
+- [Linux-pro-developer](https://github.com/Linux-pro-developer): Informing me that you can bypass ingame limitations by hiding the family share status
 
 Others:
 - All the staff members of the Anti Denuvo Sanctuary for all their hard work they do. They also found a way to use SLSsteam I didn't even intend to, so shoutout to them
