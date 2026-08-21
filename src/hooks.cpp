@@ -14,6 +14,7 @@
 #include "log.hpp"
 #include "memhlp.hpp"
 #include "patterns.hpp"
+#include "process.hpp"
 #include "vftableinfo.hpp"
 
 #include "libmem/libmem.h"
@@ -423,9 +424,20 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(CSteamEngine* pSteamEngine, HSteam
 		ret = Hooks::CSteamEngine_ProcessIPCFrame.tramp.fn(pSteamEngine, hPipe, pBufIn, pBufOut);
 	}
 
+	if (cmd == EIPCCmd::ConnectPipe)
+	{
+		const auto serverPipe = g_pSteamEngine->getServerPipe(hPipe);
+		auto& proc = g_processMap[serverPipe->pipeHandle];
+		proc.init(serverPipe->pid, serverPipe->pipeHandle);
+	}
+
 	if (cmd == EIPCCmd::ClosePipe)
 	{
-		FakeAppIds::closePipe(hPipe);
+		if (g_processMap.contains(hPipe))
+		{
+			LOG_DEBUG("Deleting g_processMap mapping %u for 0x%x\n", g_processMap.at(hPipe).appId, hPipe);
+			g_processMap.erase(hPipe);
+		}
 	}
 
 	//LOG_DEBUG("In\n%s\n", MemHlp::hexdump(pBufIn->mem.base, pBufIn->offset).c_str());

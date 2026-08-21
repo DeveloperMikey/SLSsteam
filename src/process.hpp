@@ -1,0 +1,30 @@
+#pragma once
+
+#include "sdk/types.hpp"
+
+#include <filesystem>
+#include <sys/types.h>
+#include <unordered_map>
+#include <vector>
+
+
+struct Process_t
+{
+	pid_t pid;
+	std::filesystem::path exe;
+	std::vector<std::string> cmdLine;
+	std::string environ;
+
+	AppId_t appId;
+	HSteamPipe pipeHandle;
+
+	std::filesystem::path getPath(const char* fileName);
+	std::string readFile(const char* fileName);
+
+	AppId_t getAppIdFromEnv();
+	std::filesystem::path getRealExe();
+
+	bool init(const pid_t pid, const HSteamPipe pipeHandle);
+};
+
+extern std::unordered_map<HSteamPipe, Process_t> g_processMap;

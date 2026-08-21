@@ -18,7 +18,6 @@ namespace FakeAppIds
 	bool shouldUseRealAppIdForInterface(const EIPCInterface type);
 
 	//General functionality
-	void closePipe(const HSteamPipe pipe);
 	void setAppIdForCurrentPipe(AppId_t& appId);
 	void runIPCFrame(const bool post, const EIPCInterface interface);
 

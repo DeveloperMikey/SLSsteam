@@ -1,12 +1,8 @@
 #include "fakeappid.hpp"
 
 #include "../config.hpp"
+#include "../process.hpp"
 
-#include <algorithm>
-#include <fstream>
-#include <iterator>
-#include <regex>
-#include <string>
 
 
 std::unordered_map<HSteamPipe, AppId_t> FakeAppIds::fakeAppIdMap = std::unordered_map<HSteamPipe, AppId_t>();
@@ -31,77 +27,12 @@ AppId_t FakeAppIds::getFakeAppId(const AppId_t appId)
 
 AppId_t FakeAppIds::getRealAppIdFromEnv(const HSteamPipe pipe)
 {
-	if (fakeAppIdMap.contains(pipe))
+	if (g_processMap.contains(pipe))
 	{
-		return fakeAppIdMap.at(pipe);
+		return g_processMap.at(pipe).appId;
 	}
 
-	const auto serverPipe = g_pSteamEngine->getServerPipe(pipe);
-	if (!serverPipe)
-	{
-		LOG_ERROR("ServerPipe for %p is null!\n", reinterpret_cast<void*>(pipe));
-		return 0;
-	}
-
-	std::ostringstream pathSS;
-
-	pathSS << "/proc/" << serverPipe->pid << "/comm";
-	const auto commPath = pathSS.str();
-
-	std::string exeName;
-	auto ifstream = std::ifstream(commPath);
-
-	if (ifstream.is_open())
-	{
-		exeName = std::string(std::istreambuf_iterator(ifstream), {});
-		if (exeName.ends_with("\n"))
-		{
-			exeName = exeName.substr(0, exeName.size() - 1);
-		}
-	}
-	else
-	{
-		exeName = "Unknown";
-		LOG_WARN("Failed to read %s! ExeName will be unknown in logs\n", commPath.c_str());
-	}
-
-	pathSS.str("");
-	pathSS.clear();
-	pathSS << "/proc/" << serverPipe->pid << "/environ";
-
-	const auto environPath = pathSS.str();
-	ifstream = std::ifstream(environPath);
-
-	AppId_t appId = 0;
-
-	if (!ifstream.is_open())
-	{
-		LOG_ERROR("Failed to open %s for %s to get 0x%x's appId!\n", environPath.c_str(), exeName.c_str(), pipe);
-		fakeAppIdMap[pipe] = 0;
-		return 0;
-	}
-
-	std::string environ = std::string(std::istreambuf_iterator(ifstream), {});
-	auto reAppId = std::regex("SteamAppId=[0-9]+");
-	std::smatch appIdMatch;
-
-	if (std::regex_search(environ, appIdMatch, reAppId))
-	{
-		reAppId = std::regex("[0-9]+");
-		environ = appIdMatch.str();
-		std::regex_search(environ, appIdMatch, reAppId);
-
-		appId = std::stoul(appIdMatch.str());
-	}
-	else
-	{
-		LOG_ERROR("No SteamAppId in %s for %s! Using 0\n", environPath.c_str(), exeName.c_str());
-	}
-
-	fakeAppIdMap[pipe] = appId;
-
-	LOG_DEBUG("AppId for process %s in 0x%x is %u\n", exeName.c_str(), pipe, appId);
-	return appId;
+	return 0;
 }
 
 AppId_t FakeAppIds::getRealAppIdForCurrentPipe(const bool fallback)
@@ -183,15 +114,6 @@ bool FakeAppIds::shouldUseRealAppIdForInterface(const EIPCInterface type)
 
 		default:
 			return false;
-	}
-}
-
-void FakeAppIds::closePipe(const HSteamPipe pipe)
-{
-	if (fakeAppIdMap.contains(pipe))
-	{
-		LOG_DEBUG("Deleting fake appId mapping %u for 0x%x\n", fakeAppIdMap.at(pipe), pipe);
-		fakeAppIdMap.erase(pipe);
 	}
 }
 
