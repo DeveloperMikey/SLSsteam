@@ -94,7 +94,6 @@ enum EReleaseState : uint32_t
 	k_EAppReleaseStateDisabled = 0x5
 };
 
-
 enum class ERemoteStorageSyncState
 {
 	Disabled = 0x0,
