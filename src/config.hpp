@@ -64,6 +64,7 @@ public:
 	MTVariable<bool> disableFamilyLock;
 	MTVariable<bool> useWhiteList;
 	MTVariable<uint32_t> maxSchemaTries;
+	MTVariable<bool> smartTickets;
 	MTVariable<bool> safeMode;
 	MTVariable<bool> warnHashMissmatch;
 	MTVariable<bool> notifyInit;

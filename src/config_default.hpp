@@ -88,6 +88,11 @@ DenuvoGames:
 #Either set to SteamId or to 0 to use the SteamId in the cached AppOwnershipTicket
 SteamIdOverride:
 
+#Makes steamId spoofing a lot smarter than the default by analyzing
+#an executable that freshly connected to the Steamclient. This might slow down game
+#startup times on slower disks
+SmartTickets: no
+
 #Automatically grab Achievement schemas from Steams CDN which makes them always up to date
 #Slows down game's loading page the first time you click them
 #If you don't want this set it to 0 and use tools/schema-grabber instead to grab them outside of steam

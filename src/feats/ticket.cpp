@@ -2,6 +2,7 @@
 
 #include "../config.hpp"
 #include "../globals.hpp"
+#include "../process.hpp"
 
 #include "fakeappid.hpp"
 
@@ -18,6 +19,7 @@
 std::unordered_map<AppId_t, CSteamId> Ticket::oneTimeSteamIdSpoof = std::unordered_map<AppId_t, CSteamId>();
 std::unordered_map<AppId_t, Ticket::SavedTicket> Ticket::ticketMap = std::unordered_map<AppId_t, SavedTicket>();
 std::unordered_map<AppId_t, Ticket::SavedTicket> Ticket::encryptedTicketMap = std::unordered_map<AppId_t, SavedTicket>();
+std::unordered_map<AppId_t, unsigned int> Ticket::pipesCreated = std::unordered_map<AppId_t, unsigned int>();
 
 std::string Ticket::getTicketDir()
 {
@@ -100,8 +102,44 @@ bool Ticket::saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse& re
 	return true;
 }
 
+void Ticket::connectPipe(const HSteamPipe pipe)
+{
+	if (!g_config.smartTickets.get())
+	{
+		return;
+	}
+
+	const auto& proc = g_processMap.at(pipe);
+
+	if (proc.denuvo)
+	{
+		unsigned int& created = pipesCreated[proc.appId];
+		created++;
+
+		LOG_DEBUG("pipesCreated[%u] = %u\n", proc.appId, created);
+	}
+
+	if (!proc.steamDRM)
+	{
+		return;
+	}
+
+	const SavedTicket* ticket = getCachedTicket(proc.appId);
+	if (!ticket)
+	{
+		return;
+	}
+
+	oneTimeSteamIdSpoof[proc.appId] = ticket->steamId;
+}
+
 void Ticket::launchApp(const AppId_t appId)
 {
+	if (g_config.smartTickets.get())
+	{
+		pipesCreated[appId] = 0;
+	}
+
 	auto ticket = getCachedTicket(appId);
 	if (!ticket)
 	{
@@ -126,6 +164,12 @@ void Ticket::getEncryptedAppTicket(const AppId_t appId)
 
 void Ticket::getTicketOwnershipExtendedData(const AppId_t appId)
 {
+	if (g_config.smartTickets.get())
+	{
+		//Handled in connectPipe
+		return;
+	}
+
 	const SavedTicket* cached = Ticket::getCachedTicket(appId);
 	if (!cached)
 	{
@@ -145,11 +189,12 @@ std::string Ticket::getEncryptedTicketPath(const AppId_t appId)
 
 Ticket::SavedTicket* Ticket::getCachedEncryptedTicket(const AppId_t appId)
 {
-	const AppId_t realAppId = FakeAppIds::getRealAppIdForCurrentPipe();
+	const AppId_t fakeAppId = FakeAppIds::getFakeAppId(appId);
+	const bool smartTickets = g_config.smartTickets.get();
 
-	if (realAppId != appId)
+	if (!smartTickets && appId && fakeAppId && fakeAppId != appId)
 	{
-		LOG_DEBUG("Returning empty cached encrypted Ticket for %u because it's running as %u\n", realAppId, appId);
+		LOG_DEBUG("Returning empty cached encrypted Ticket for %u because it's running as %u\n", appId, fakeAppId);
 		return nullptr;
 	}
 

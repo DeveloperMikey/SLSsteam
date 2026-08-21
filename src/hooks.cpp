@@ -429,6 +429,8 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(CSteamEngine* pSteamEngine, HSteam
 		const auto serverPipe = g_pSteamEngine->getServerPipe(hPipe);
 		auto& proc = g_processMap[serverPipe->pipeHandle];
 		proc.init(serverPipe->pid, serverPipe->pipeHandle);
+
+		Ticket::connectPipe(hPipe);
 	}
 
 	if (cmd == EIPCCmd::ClosePipe)
@@ -1069,14 +1071,31 @@ static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 		return newId;
 	}
 
-	//Use pipe AppId, getCachedEncryptedTicket handles FakeAppIds internally
-	const auto ticket = Ticket::getCachedEncryptedTicket(utils->getAppId());
-	if (ticket)
+	const auto ticket = Ticket::getCachedEncryptedTicket(realAppId);
+	if (!ticket)
 	{
-		return ticket->steamId;
+		return steamId;
 	}
 
-	return steamId;
+	if (g_config.smartTickets.get() && Ticket::pipesCreated.contains(realAppId))
+	{
+		const unsigned int pipes = Ticket::pipesCreated.at(realAppId);
+		//First pipe steam.exe
+		//Second pipe game.exe -> Denuvo
+		//Third+ pipe game.exe -> Game itself
+		//Counter only increases when protected executable ConnectsPipe
+		//TODO: Investigate native denuvo enabled game (do these exist?)
+		if (pipes == 1)
+		{
+			return ticket->steamId;
+		}
+		else
+		{
+			return steamId;
+		}
+	}
+
+	return ticket->steamId;
 }
 
 static AppId_t hkClientUtils_GetAppId(IClientUtils* pClientUtils)
