@@ -1,14 +1,34 @@
 #include "utils.hpp"
 
 #include <cctype>
+#include <cmath>
 #include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <openssl/sha.h>
 
+
+double Utils::calculateEntropy(const std::vector<uint8_t>& bytes)
+{
+	auto countMap = std::unordered_map<uint8_t, size_t>();
+	for (const auto& byte : bytes)
+	{
+		countMap[byte]++;
+	}
+
+	double val = 0.0;
+	for (const auto& count : countMap)
+	{
+		double freq = static_cast<double>(count.second) / bytes.size();
+		val += freq * log2(freq);
+	}
+
+	return -val;
+}
 
 bool Utils::isNumber(const char* str)
 {

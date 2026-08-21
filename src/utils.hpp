@@ -7,6 +7,7 @@
 
 namespace Utils
 {
+	double calculateEntropy(const std::vector<uint8_t>& bytes);
 	bool isNumber(const char* str);
 
 	template<typename T>
