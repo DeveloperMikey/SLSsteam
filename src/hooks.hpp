@@ -142,6 +142,7 @@ namespace Hooks
 	typedef bool(*IClientAppManager_BCanRemotePlayTogether_t)(IClientAppManager*, AppId_t);
 	typedef bool(*IClientAppManager_BIsDlcEnabled_t)(IClientAppManager*, AppId_t, AppId_t, void*);
 	typedef bool(*IClientAppManager_GetAppUpdateInfo_t)(IClientAppManager*, AppId_t, uint32_t*);
+	typedef bool(*IClientAppManager_GetAppStateInfo_t)(IClientAppManager*, AppId_t, AppStateInfo_t*);
 	typedef void*(*IClientAppManager_LaunchApp_t)(IClientAppManager*, AppId_t*, void*, void*, void*);
 	typedef bool(*IClientAppManager_IsAppDlcInstalled_t)(IClientAppManager*, AppId_t, AppId_t);
 
@@ -158,6 +159,7 @@ namespace Hooks
 	extern VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 	extern VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;
 	extern VFTHook<IClientAppManager_GetAppUpdateInfo_t> IClientAppManager_GetAppUpdateInfo;
+	extern VFTHook<IClientAppManager_GetAppStateInfo_t> IClientAppManager_GetAppStateInfo;
 	extern VFTHook<IClientAppManager_LaunchApp_t> IClientAppManager_LaunchApp;
 	extern VFTHook<IClientAppManager_IsAppDlcInstalled_t> IClientAppManager_IsAppDlcInstalled;
 

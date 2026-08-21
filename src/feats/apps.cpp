@@ -141,6 +141,36 @@ bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
 	return true;
 }
 
+void Apps::getAppStateInfo(const AppId_t appId, AppStateInfo_t* info)
+{
+	if (!g_config.disableFamilyLock.get())
+	{
+		return;
+	}
+
+	if (g_config.shouldExcludeAppId(appId))
+	{
+		return;
+	}
+
+	const auto utils = g_pSteamEngine->getUtils();
+	if (!utils)
+	{
+		return;
+	}
+
+	if (!utils->getAppId())
+	{
+		return;
+	}
+	
+	info->ownerAccountId = g_currentSteamId.accountId();
+	info->realOwner = 0;
+	info->ownershipFlags = static_cast<EAppOwnershipFlags>(info->ownershipFlags & ~k_EAppOwnershipFlagsBorrowed);
+
+	LOG_ONCE("Spoof ownership from %u\n", appId);
+}
+
 void Apps::getLegacyCDKey(const AppId_t appId)
 {
 	const auto user = g_pSteamEngine->getUser();

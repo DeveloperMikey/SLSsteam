@@ -19,6 +19,82 @@ constexpr uint64_t GAME_TYPE_SHORTCUT = 0x2000000ULL;
 constexpr ENetPacket INVALID_NETPACKET_TYPE = -1;
 constexpr ENetPacket PROTOBUF_TYPE_MASK = 0x80000000;
 
+enum EAppOwnershipFlags : uint32_t
+{
+	k_EAppOwnershipFlagsNone = 0x0,
+	k_EAppOwnershipFlagsSubscribed = 0x1,
+	k_EAppOwnershipFlagsFree = 0x2,
+	k_EAppOwnershipFlagsRegionrestricted = 0x4,
+	k_EAppOwnershipFlagsLowViolence = 0x8,
+	k_EAppOwnershipFlagsInvalidPlatform = 0x10,
+	k_EAppOwnershipFlagsBorrowed = 0x20,
+	k_EAppOwnershipFlagsFreeWeekend = 0x40,
+	k_EAppOwnershipFlagsRetail = 0x80,
+	k_EAppOwnershipFlagsLocked = 0x100,
+	k_EAppOwnershipFlagsPending = 0x200,
+	k_EAppOwnershipFlagsExpired = 0x400,
+	k_EAppOwnershipFlagsPermanent = 0x800,
+	k_EAppOwnershipFlagsRecurring = 0x1000,
+	k_EAppOwnershipFlagsCanceled = 0x2000,
+	k_EAppOwnershipFlagsAutoGrant = 0x4000,
+	k_EAppOwnershipFlagsPendingGift = 0x8000,
+	//k_EAppOwnershipFlagsUnknown = 0x10000,
+	//k_EAppOwnershipFlagsUnknown = 0x20000,
+	k_EAppOwnershipFlagsSiteLicense = 0x40000,
+	k_EAppOwnershipFlagsLegacyFreeSub = 0x80000,
+	k_EAppOwnershipFlagsInvalidOSType = 0x100000,
+	k_EAppOwnershipFlagsTimedTrial = 0x200000
+};
+
+enum ELicenseFlags : uint32_t
+{
+	k_ELicenseFlagsRenewnextperiod = 0x1,
+	k_ELicenseFlagsRenewfailed = 0x2,
+	k_ELicenseFlagsPending = 0x4,
+	k_ELicenseFlagsExpired = 0x8,
+	k_ELicenseFlagsCancelledbyUser = 0x10,
+	k_ELicenseFlagsCancelledbyAdmin = 0x20,
+	k_ELicenseFlagsLowViolence = 0x40,
+	k_ELicenseFlagsLicenseImportedFromSteam2 = 0x80,
+	k_ELicenseFlagsForceRunRestriction = 0x100,
+	k_ELicenseFlagsRegionRestrictionExpired = 0x200,
+	k_ELicenseFlagsCancelledbyFriendlyFraudLock = 0x400,
+	k_ELicenseFlagsNotactivated = 0x800,
+	k_ELicenseFlagsLocked = 0x1000,
+	k_ELicenseFlagsPendingRefund = 0x2000,
+	k_ELicenseFlagsBorrowed = 0x4000,
+	k_ELicenseFlagsReleaseStateOverride = 0x8000,
+	k_ELicenseFlagsAutoGrant = 0x10000,
+	k_ELicenseFlagsTimedTrial = 0x20000,
+	k_ELicenseFlagsCancelledbyPartner = 0x40000,
+	k_ELicenseFlagsNonPermanent = 0x80000,
+	k_ELicenseFlagsPreferredOwner = 0x100000,
+};
+
+enum ELicenseType : uint32_t
+{
+	k_ELicenseFlagsNone = 0x0,
+	k_ELicenseTypeNone = 0x0,
+	k_ELicenseTypeSinglePurchase = 0x1,
+	k_ELicenseTypeSinglePurchaseLimitedUse = 0x2,
+	k_ELicenseTypeRecurringCharge = 0x3,
+	//k_ELicenseTypeUnknown = 0x4,
+	//k_ELicenseTypeUnknown = 0x5,
+	k_ELicenseTypeRecurringpaymentoption = 0x6,
+	k_ELicenseTypeLimiteduseDelayedActivation = 0x7
+};
+
+enum EReleaseState : uint32_t
+{
+	k_EAppReleaseStateUnknown = 0x0,
+	k_EAppReleaseStateUnavailable = 0x1,
+	k_EAppReleaseStatePrerelease = 0x2,
+	k_EAppReleaseStatePreloadonly = 0x3,
+	k_EAppReleaseStateReleased = 0x4,
+	k_EAppReleaseStateDisabled = 0x5
+};
+
+
 enum class ERemoteStorageSyncState
 {
 	Disabled = 0x0,

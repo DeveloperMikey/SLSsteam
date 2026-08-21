@@ -781,6 +781,18 @@ static bool hkClientAppManager_GetUpdateInfo(IClientAppManager* pAppManager, App
 	return success;
 }
 
+static bool hkClientAppManager_GetAppStateInfo(IClientAppManager* pAppManager, AppId_t appId, AppStateInfo_t* pInfo)
+{
+	const bool success = Hooks::IClientAppManager_GetAppStateInfo.originalFn.fn(pAppManager, appId, pInfo);
+
+	if (success)
+	{
+		Apps::getAppStateInfo(appId, pInfo);
+	}
+
+	return success;
+}
+
 static unsigned int hkClientApps_GetDLCCount(IClientApps* pClientApps, AppId_t appId)
 {
 	LOG_TRACE("Calling original\n");
@@ -1194,6 +1206,7 @@ namespace Hooks
 	VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
 	VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;
 	VFTHook<IClientAppManager_GetAppUpdateInfo_t> IClientAppManager_GetAppUpdateInfo;
+	VFTHook<IClientAppManager_GetAppStateInfo_t> IClientAppManager_GetAppStateInfo;
 	VFTHook<IClientAppManager_LaunchApp_t> IClientAppManager_LaunchApp;
 	VFTHook<IClientAppManager_IsAppDlcInstalled_t> IClientAppManager_IsAppDlcInstalled;
 
@@ -1401,12 +1414,14 @@ void Hooks::placeVFTHooks()
 		Hooks::IClientAppManager_BCanRemotePlayTogether.setup(vft, VFTIndexes::IClientAppManager::BCanRemotePlayTogether, hkClientAppManager_BCanRemotePlayTogether);
 		Hooks::IClientAppManager_BIsDlcEnabled.setup(vft, VFTIndexes::IClientAppManager::BIsDlcEnabled, hkClientAppManager_BIsDlcEnabled);
 		Hooks::IClientAppManager_GetAppUpdateInfo.setup(vft, VFTIndexes::IClientAppManager::GetUpdateInfo, hkClientAppManager_GetUpdateInfo);
+		Hooks::IClientAppManager_GetAppStateInfo.setup(vft, VFTIndexes::IClientAppManager::GetAppStateInfo, hkClientAppManager_GetAppStateInfo);
 		Hooks::IClientAppManager_LaunchApp.setup(vft, VFTIndexes::IClientAppManager::LaunchApp, hkClientAppManager_LaunchApp);
 		Hooks::IClientAppManager_IsAppDlcInstalled.setup(vft, VFTIndexes::IClientAppManager::IsAppDlcInstalled, hkClientAppManager_IsAppDlcInstalled);
 
 		Hooks::IClientAppManager_BCanRemotePlayTogether.place();
 		Hooks::IClientAppManager_BIsDlcEnabled.place();
 		Hooks::IClientAppManager_GetAppUpdateInfo.place();
+		Hooks::IClientAppManager_GetAppStateInfo.place();
 		Hooks::IClientAppManager_LaunchApp.place();
 		Hooks::IClientAppManager_IsAppDlcInstalled.place();
 
@@ -1517,6 +1532,7 @@ void Hooks::remove()
 	IClientAppManager_BCanRemotePlayTogether.remove();
 	IClientAppManager_BIsDlcEnabled.remove();
 	IClientAppManager_GetAppUpdateInfo.remove();
+	IClientAppManager_GetAppStateInfo.remove();
 	IClientAppManager_LaunchApp.remove();
 	IClientAppManager_IsAppDlcInstalled.remove();
 
