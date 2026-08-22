@@ -13,6 +13,7 @@
 struct SectionHdr_t
 {
 	std::string name;
+	uint64_t rva;
 	uint64_t offset;
 	uint64_t size;
 };
@@ -64,7 +65,7 @@ public:
 	constexpr static size_t ELF_SHEADER32_SIZE = sizeof(Elf32_Shdr);
 	constexpr static size_t ELF_SHEADER64_SIZE = sizeof(Elf64_Shdr);
 
-	bool parseElf32Headers(const Elf64_Ehdr& hdr);
+	bool parseElf32Headers(const Elf32_Ehdr& hdr);
 	bool parseElf64Headers(const Elf64_Ehdr& hdr);
 	virtual bool parseSections();
 };

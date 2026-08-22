@@ -48,8 +48,8 @@ lm_address_t MemHlp::patternScan(const char* pattern, const lm_module_t targetMo
 		return LM_ADDRESS_BAD;
 	}
 
-	const lm_address_t start = targetModule.base + shText->sh_addr;
-	const lm_address_t end = start + shText->sh_size;
+	const lm_address_t start = targetModule.base + shText->rva;
+	const lm_address_t end = start + shText->size;
 
 	lm_address_t address = LM_ADDRESS_BAD;
 	unsigned int matches = 0;
