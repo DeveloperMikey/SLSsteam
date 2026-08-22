@@ -2,6 +2,7 @@
 
 #include "../sdk/sdk.hpp"
 
+#include <chrono>
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -11,12 +12,15 @@
 namespace Achievements
 {
 	constexpr const char* GET_PLAYER_STATS_SERVICE_NAME = "Player.GetUserStats#1";
+	constexpr unsigned int COOLDOWN_MINUTES = 10;
 
+	extern std::unordered_map<AppId_t, std::chrono::time_point<std::chrono::system_clock>> fetchCooldowns;
 	extern std::unordered_map<AppId_t, uint64_t> preferredOwners;
 	extern std::unordered_map<AppId_t, std::unordered_set<uint64_t>> ownerBlacklist;
 
 	std::string getReviewUrl(const AppId_t appId);
 	std::unordered_set<uint64_t> getReviewersForGame(const AppId_t appId);
+	void setCooldown(const AppId_t appId);
 
 	uint32_t tryGetPlayerStats
 	(
