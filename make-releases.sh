@@ -12,7 +12,17 @@ ARCH_PKG_DIR="pkg/slssteam"
 PKG_VER="$(grep "pkgver=.*" "$ARCH_PKG_DIR/PKGBUILD" | cut -d "=" -f 2)"
 PKG_REL="$(grep "pkgrel=.*" "$ARCH_PKG_DIR/PKGBUILD" | cut -d "=" -f 2)"
 
-RELEASE_DIR="releases/$TIMESTAMP"
+BRANCH="$(git branch | grep "\*" | cut -d " " -f 2)"
+RELEASE_DIR="releases/$BRANCH/$TIMESTAMP"
+
+BUILD_PKG="1"
+
+for arg in "$@"
+do
+	if [ "$arg" == "--skip-pkg" ]; then
+		BUILD_PKG="0"
+	fi
+done
 
 make_release()
 {
@@ -28,14 +38,16 @@ make_release()
 	#zips are named SLSsteam VERSION
 	rename "SLSsteam $VERSION" "SLSsteam-Any-$NAME" $DIR/*
 
-	cd "$ARCH_PKG_DIR"
-	makepkg -Ccf
+	if [ "$BUILD_PKG" == "1" ]; then
+		cd "$ARCH_PKG_DIR"
+		makepkg -Ccf
 
-	cd "$SCRIPT_DIR"
-	mv pkg/slssteam/*.pkg.tar.zst "$DIR"
-	#name for package is slssteam-pkgver-pkgrel-arch
-	#We do not replace arch, for future proofing
-	rename "slssteam-$PKG_VER-$PKG_REL" "SLSsteam-Arch-$NAME" $DIR/*
+		cd "$SCRIPT_DIR"
+		mv pkg/slssteam/*.pkg.tar.zst "$DIR"
+		#name for package is slssteam-pkgver-pkgrel-arch
+		#We do not replace arch, for future proofing
+		rename "slssteam-$PKG_VER-$PKG_REL" "SLSsteam-Arch-$NAME" $DIR/*
+	fi
 
 	mv $DIR/* "$RELEASE_DIR"
 	rm -r "$DIR"
