@@ -37,7 +37,7 @@ SDK_Struct AppLicensesChanged_t
 
 SDK_Struct AppOwnershipInfo_t {
     AppId_t subId;
-    EReleaseState releaseState;
+    EAppReleaseState releaseState;
     uint32_t owner;
     AppId_t masterSubscriptionAppId;
     uint32_t trialTime;

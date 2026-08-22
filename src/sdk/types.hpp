@@ -9,6 +9,8 @@
 typedef uint32_t AppId_t;
 typedef uint64_t GameId_t;
 
+typedef uint32_t PackageId_t;
+
 typedef int32_t ENetPacket;
 
 typedef uint32_t HSteamPipe;
@@ -18,6 +20,8 @@ constexpr uint64_t GAME_TYPE_SHORTCUT = 0x2000000ULL;
 
 constexpr ENetPacket INVALID_NETPACKET_TYPE = -1;
 constexpr ENetPacket PROTOBUF_TYPE_MASK = 0x80000000;
+
+typedef uint32_t AppOwnershipFlags_t;
 
 enum EAppOwnershipFlags : uint32_t
 {
@@ -46,8 +50,21 @@ enum EAppOwnershipFlags : uint32_t
 	k_EAppOwnershipFlagsTimedTrial = 0x200000
 };
 
-enum ELicenseFlags : uint32_t
+enum EConfigStore : uint32_t
 {
+	Invalid = 0,
+	Install = 1,
+	UserRoaming = 2,
+	UserLocal = 3,
+	MachineUser = 4,
+	Max = 5
+};
+
+typedef uint32_t LicenseFlags_t;
+
+enum ELicenseFlags : LicenseFlags_t
+{
+	k_ELicenseFlagsNone = 0x0,
 	k_ELicenseFlagsRenewnextperiod = 0x1,
 	k_ELicenseFlagsRenewfailed = 0x2,
 	k_ELicenseFlagsPending = 0x4,
@@ -71,27 +88,24 @@ enum ELicenseFlags : uint32_t
 	k_ELicenseFlagsPreferredOwner = 0x100000,
 };
 
-enum ELicenseType : uint32_t
+enum class ELicenseType : uint32_t
 {
-	k_ELicenseFlagsNone = 0x0,
-	k_ELicenseTypeNone = 0x0,
-	k_ELicenseTypeSinglePurchase = 0x1,
-	k_ELicenseTypeSinglePurchaseLimitedUse = 0x2,
-	k_ELicenseTypeRecurringCharge = 0x3,
-	//k_ELicenseTypeUnknown = 0x4,
-	//k_ELicenseTypeUnknown = 0x5,
-	k_ELicenseTypeRecurringpaymentoption = 0x6,
-	k_ELicenseTypeLimiteduseDelayedActivation = 0x7
+	None = 0x0,
+	SinglePurchase = 0x1,
+	SinglePurchaseLimitedUse = 0x2,
+	RecurringCharge = 0x3,
+	Recurringpaymentoption = 0x6,
+	LimiteduseDelayedActivation = 0x7
 };
 
-enum EReleaseState : uint32_t
+enum class EAppReleaseState : uint32_t
 {
-	k_EAppReleaseStateUnknown = 0x0,
-	k_EAppReleaseStateUnavailable = 0x1,
-	k_EAppReleaseStatePrerelease = 0x2,
-	k_EAppReleaseStatePreloadonly = 0x3,
-	k_EAppReleaseStateReleased = 0x4,
-	k_EAppReleaseStateDisabled = 0x5
+	Unknown = 0x0,
+	Unavailable = 0x1,
+	Prerelease = 0x2,
+	Preloadonly = 0x3,
+	Released = 0x4,
+	Disabled = 0x5
 };
 
 enum class ERemoteStorageSyncState
@@ -107,7 +121,9 @@ enum class ERemoteStorageSyncState
 	NotInitialized = 0x8,
 };
 
-enum EResult
+typedef uint32_t Result_t;
+
+enum EResult : Result_t
 {
 	k_EResultNoResult = 0x0,
 	k_EResultOK = 0x1,

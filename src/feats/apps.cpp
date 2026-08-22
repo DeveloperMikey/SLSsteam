@@ -34,7 +34,7 @@ bool Apps::unlockApp(const AppId_t appId, AppOwnershipInfo_t* info, const CSteam
 	info->licensePending = false;
 	info->licenseLocked = false;
 
-	info->releaseState = k_EAppReleaseStateReleased;
+	info->releaseState = EAppReleaseState::Released;
 	info->ownsLicense = true;
 
 	info->lowViolence = false;

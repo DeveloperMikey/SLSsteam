@@ -36,7 +36,7 @@ enum EAppInfoSection
 
 SDK_Struct AppStateInfo_t
 {
-    EReleaseState releaseState;			//0x0
+    EAppReleaseState releaseState;			//0x0
     EAppOwnershipFlags ownershipFlags;	//0x4
     uint8_t __pad0x8[0x4];				//0x8
     uint32_t ownerAccountId;			//0xC
