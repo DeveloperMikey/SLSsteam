@@ -192,6 +192,41 @@ void CLog::__log(const LogLevelFlags_t flags, const char* file, const char* func
 	ofstream.flush();
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void CLog::__trace(const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
+{
+#ifdef TRACE
+	__log(k_ELogLevelTrace, file, function, line, msg, vArgs);
+#endif
+}
+void CLog::__traceOnce(const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
+{
+#ifdef TRACE
+	__log(k_ELogLevelTrace | k_ELogLevelOnce, file, function, line, msg, vArgs);
+#endif
+}
+
+void CLog::__once(const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
+{
+#ifdef DEBUG
+	__log(k_ELogLevelOnce, file, function, line, msg, vArgs);
+#endif
+}
+void CLog::__debug(const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
+{
+#ifdef DEBUG
+	__log(k_ELogLevelDebug, file, function, line, msg, vArgs);
+#endif
+}
+void CLog::__debugOnce(const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
+{
+#ifdef DEBUG
+	__log(k_ELogLevelDebug | k_ELogLevelOnce, file, function, line, msg, vArgs);
+#endif
+}
+#pragma GCC diagnostic pop
+
 CLog::CLog(const char* path) : path(path)
 {
 	ofstream = std::ofstream(path);
@@ -210,98 +245,55 @@ CLog::~CLog()
 	}
 }
 
-#ifdef TRACE
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void CLog::trace(const char* file, const char* function, const int line, const char* msg, ...)
 {
+#ifdef TRACE
 	va_list vArgs;
 	va_start(vArgs, msg);
-	__log(k_ELogLevelTrace, file, function, line, msg, vArgs);
+	__trace(file, function, line, msg, vArgs);
 	va_end(vArgs);
+#endif
 }
 void CLog::traceOnce(const char* file, const char* function, const int line, const char* msg, ...)
 {
+#ifdef TRACE
 	va_list vArgs;
 	va_start(vArgs, msg);
-	__log(k_ELogLevelTrace | k_ELogLevelOnce, file, function, line, msg, vArgs);
+	__traceOnce(file, function, line, msg, vArgs);
 	va_end(vArgs);
-}
-#else
-void CLog::trace
-(
-	__attribute__((unused)) const char* file,
-	__attribute__((unused)) const char* function,
-	__attribute__((unused)) const int line,
-	__attribute__((unused)) const char* msg,
-	...
-)
-{
-}
-void CLog::traceOnce
-(
-	__attribute__((unused)) const char* file,
-	__attribute__((unused)) const char* function,
-	__attribute__((unused)) const int line,
-	__attribute__((unused)) const char* msg,
-	...
-)
-{
-}
 #endif
+}
 
-#ifdef DEBUG
 void CLog::once(const char* file, const char* function, const int line, const char* msg, ...)
 {
+#ifdef DEBUG
 	va_list vArgs;
 	va_start(vArgs, msg);
-	__log(k_ELogLevelOnce, file, function, line, msg, vArgs);
+	__once(file, function, line, msg, vArgs);
 	va_end(vArgs);
+#endif
 }
 void CLog::debug(const char* file, const char* function, const int line, const char* msg, ...)
 {
+#ifdef DEBUG
 	va_list vArgs;
 	va_start(vArgs, msg);
-	__log(k_ELogLevelDebug, file, function, line, msg, vArgs);
+	__debug(file, function, line, msg, vArgs);
 	va_end(vArgs);
+#endif
 }
 void CLog::debugOnce(const char* file, const char* function, const int line, const char* msg, ...)
 {
+#ifdef DEBUG
 	va_list vArgs;
 	va_start(vArgs, msg);
-	__log(k_ELogLevelDebug | k_ELogLevelOnce, file, function, line, msg, vArgs);
+	__debugOnce(file, function, line, msg, vArgs);
 	va_end(vArgs);
-}
-#else
-void CLog::once
-(
-	__attribute__((unused)) const char* file,
-	__attribute__((unused)) const char* function,
-	__attribute__((unused)) const int line,
-	__attribute__((unused)) const char* msg,
-	...
-)
-{
-}
-void CLog::debug
-(
-	__attribute__((unused)) const char* file,
-	__attribute__((unused)) const char* function,
-	__attribute__((unused)) const int line,
-	__attribute__((unused)) const char* msg,
-	...
-)
-{
-}
-void CLog::debugOnce
-(
-	__attribute__((unused)) const char* file,
-	__attribute__((unused)) const char* function,
-	__attribute__((unused)) const int line,
-	__attribute__((unused)) const char* msg,
-	...
-)
-{
-}
 #endif
+}
+#pragma GCC diagnostic pop
 
 void CLog::warn(const char* file, const char* function, const int line, const char* msg, ...)
 {
@@ -365,7 +357,33 @@ void CLog::custom(const unsigned int flags, const char* file, const char* functi
 {
 	va_list vArgs;
 	va_start(vArgs, msg);
-	__log(flags, file, function, line, msg, vArgs);
+
+	//Obviously these calls will not get fully optimized out
+	if (flags == k_ELogLevelTrace)
+	{
+		__trace(file, function, line, msg, vArgs);
+	}
+	else if (flags == (k_ELogLevelTrace | k_ELogLevelOnce))
+	{
+		__traceOnce(file, function, line, msg, vArgs);
+	}
+	if (flags == k_ELogLevelOnce)
+	{
+		__once(file, function, line, msg, vArgs);
+	}
+	else if (flags == k_ELogLevelDebug)
+	{
+		__debug(file, function, line, msg, vArgs);
+	}
+	else if (flags == (k_ELogLevelDebug | k_ELogLevelOnce))
+	{
+		__debugOnce(file, function, line, msg, vArgs);
+	}
+	else
+	{
+		__log(flags, file, function, line, msg, vArgs);
+	}
+
 	va_end(vArgs);
 }
 
