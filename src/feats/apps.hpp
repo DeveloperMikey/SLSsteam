@@ -25,6 +25,7 @@ namespace Apps
 	void getSubscribedApps(AppId_t* appList, const uint32_t size, uint32_t& count);
 	void parseProductInfoFromResponse(CMsgClientPICSProductInfoResponse* msg);
 	void runIPCFrame();
+	void spawnGame(const GameId_t* gameId, std::string& cmd, std::string& cmdline);
 
 	void postAppLicensesChanged(const std::unordered_set<AppId_t>& apps);
 

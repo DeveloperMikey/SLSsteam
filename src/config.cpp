@@ -226,6 +226,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	gameTitles = getMap<AppId_t, std::string>(node, "GameTitles");
 	subscriptionTimestamps = getMap<AppId_t, uint32_t>(node, "SubscriptionTimestamps");
 	steamIdOverride = getMap<AppId_t, uint64_t>(node, "SteamIdOverride");
+	launchOptions = getMap<AppId_t, std::string>(node, "LaunchOptions");
 
 	//Do not log the keys themself
 	for (const auto& key : cdKeys.get())

@@ -104,6 +104,12 @@ SmartTickets: 0x1
 #the offline cache (appcache/stats) when a GetUserStats request fails
 MaxSchemaTries: 10
 
+#Override commands right in CUser::SpawnGame. Use %command% as special string, just like in Steam itself
+#Two special keys exist:
+#4294967294: Sets the launch option for all unowned apps
+#4294967295: Sets the launch option for all apps (gets overwritten by the unowned one, if it exists)
+LaunchOptions:
+
 #Automatically disable SLSsteam when steamclient.so does not match a predefined file hash that is known to work
 #You should enable this if you're planing to use SLSsteam with Steam Deck's gamemode
 SafeMode: no

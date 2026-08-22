@@ -639,6 +639,46 @@ static uint32_t hkUser_PostCallbackToAppId(CUser* pUser, AppId_t appId, uint32_t
 	return ret;
 }
 
+static uint32_t hkUser_SpawnGameId
+(
+	void* pUser,
+	const char* exe,
+	const char* cmd,
+	const char* workingDir,
+	GameId_t* pGameId,
+	const char* title,
+	int32_t a6,
+	int32_t a7,
+	int32_t a8,
+	int32_t a9,
+	void* a10
+)
+{
+	std::string newExe = exe;
+	std::string newCmd = cmd;
+
+	Apps::spawnGame(pGameId, newExe, newCmd);
+
+	LOG_DEBUG("Launching gameId %llu with cmd %s as %s\n", *pGameId, newExe.c_str(), newCmd.c_str());
+
+	const uint32_t ret = Hooks::CUser_SpawnGameId.tramp.fn
+	(
+		pUser,
+		newExe.c_str(),
+		newCmd.c_str(),
+		workingDir,
+		pGameId,
+		title,
+		a6,
+		a7,
+		a8,
+		a9,
+		a10
+	);
+
+	return ret;
+}
+
 static bool hkUserAppManager_BuildDepotDependency
 (
 	IClientAppManager* pAppManager,
@@ -1210,6 +1250,7 @@ namespace Hooks
 	DetourHook<CUser_CheckAppOwnership_t> CUser_CheckAppOwnership;
 	DetourHook<CUser_GetSubscribedApps_t> CUser_GetSubscribedApps;
 	DetourHook<CUser_PostCallbackToAppId_t> CUser_PostCallbackToAppId;
+	DetourHook<CUser_SpawnGameId_t> CUser_SpawnGameId;
 
 	DetourHook<CUserAppManager_BuildDepotDependency_t> CUserAppManager_BuildDepotDependency;
 
@@ -1346,6 +1387,7 @@ bool Hooks::setup()
 		&& CUser_CheckAppOwnership.setup(Patterns::CUser::CheckAppOwnership, hkUser_CheckAppOwnership)
 		&& CUser_GetSubscribedApps.setup(Patterns::CUser::GetSubscribedApps, hkUser_GetSubscribedApps)
 		&& CUser_PostCallbackToAppId.setup(Patterns::CUser::PostCallbackToAppId, hkUser_PostCallbackToAppId)
+		&& CUser_SpawnGameId.setup(Patterns::CUser::SpawnGameId, hkUser_SpawnGameId)
 
 		&& CUserAppManager_BuildDepotDependency.setup(Patterns::CUserAppManager::BuildDepotDependency, hkUserAppManager_BuildDepotDependency)
 
@@ -1384,6 +1426,7 @@ void Hooks::place()
 	CUser_CheckAppOwnership.place();
 	CUser_GetSubscribedApps.place();
 	CUser_PostCallbackToAppId.place();
+	CUser_SpawnGameId.place();
 
 	CUserAppManager_BuildDepotDependency.place();
 
@@ -1532,6 +1575,7 @@ void Hooks::remove()
 	CUser_CheckAppOwnership.remove();
 	CUser_GetSubscribedApps.remove();
 	CUser_PostCallbackToAppId.remove();
+	CUser_SpawnGameId.remove();
 
 	CUserAppManager_BuildDepotDependency.remove();
 

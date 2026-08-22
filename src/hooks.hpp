@@ -91,6 +91,7 @@ namespace Hooks
 	typedef uint32_t(*CUser_CheckAppOwnership_t)(CUser*, AppId_t, AppOwnershipInfo_t*);
 	typedef uint32_t(*CUser_GetSubscribedApps_t)(CUser*, AppId_t*, uint32_t, uint8_t);
 	typedef uint32_t(*CUser_PostCallbackToAppId_t)(CUser*, AppId_t, uint32_t, void*, uint32_t);
+	typedef uint32_t(*CUser_SpawnGameId_t)(void*, const char*, const char*, const char*, GameId_t*, const char*, int32_t, int32_t, int32_t, int32_t, void*);
 
 	typedef bool(*CUserAppManager_BuildDepotDependency_t)(IClientAppManager*, AppId_t, void*, CUtlVector<DepotInfo_t>*, CUtlVector<DepotInfo_t>*, void*, uint32_t*, bool*);
 
@@ -123,6 +124,7 @@ namespace Hooks
 	extern DetourHook<CUser_CheckAppOwnership_t> CUser_CheckAppOwnership;
 	extern DetourHook<CUser_GetSubscribedApps_t> CUser_GetSubscribedApps;
 	extern DetourHook<CUser_PostCallbackToAppId_t> CUser_PostCallbackToAppId;
+	extern DetourHook<CUser_SpawnGameId_t> CUser_SpawnGameId;
 
 	extern DetourHook<CUserAppManager_BuildDepotDependency_t> CUserAppManager_BuildDepotDependency;
 

@@ -69,6 +69,8 @@ public:
 	MTVariable<std::unordered_map<uint64_t, std::unordered_set<AppId_t>>> denuvoGames;
 	MTVariable<std::unordered_map<AppId_t, uint64_t>> steamIdOverride;
 
+	MTVariable<std::unordered_map<AppId_t, std::string>> launchOptions;
+
 	MTVariable<bool> disableFamilyLock;
 	MTVariable<bool> useWhiteList;
 	MTVariable<uint32_t> maxSchemaTries;

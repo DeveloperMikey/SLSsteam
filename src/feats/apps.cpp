@@ -376,6 +376,57 @@ void Apps::runIPCFrame()
 	g_config.newApps.clear();
 }
 
+
+void Apps::spawnGame(const GameId_t* gameId, std::string& cmd, std::string& cmdline)
+{
+	if (!gameId)
+	{
+		return;
+	}
+
+	if (*gameId & GAME_TYPE_SHORTCUT)
+	{
+		return;
+	}
+
+	const auto options = g_config.launchOptions.get();
+	std::string option;
+
+	if (options.contains(*gameId))
+	{
+		option = options.at(*gameId);
+	}
+	else if (options.contains(UINT32_MAX - 1) && !g_pSteamEngine->getUser()->isSubscribed(*gameId))
+	{
+		option = options.at(UINT32_MAX - 1);
+	}
+	else if (options.contains(UINT32_MAX))
+	{
+		option = options.at(UINT32_MAX);
+	}
+
+	if (option.size() < 1)
+	{
+		return;
+	}
+
+	static const auto CMD_ARG = std::string("%command%");
+	const size_t cmdPos = option.find(CMD_ARG);
+
+	//Find and replace
+	if (cmdPos != std::string::npos)
+	{
+		option.replace(cmdPos, CMD_ARG.size(), cmdline);
+		cmdline = option;
+	}
+	else
+	{
+		cmdline = option;
+	}
+
+	cmd = cmdline.substr(0, cmdline.find_first_of(" "));
+}
+
 bool Apps::shouldDisableCloud(const AppId_t appId)
 {
 	if (!g_config.disableCloud.get())
