@@ -25,7 +25,7 @@ IExecutableFile::~IExecutableFile()
 	}
 }
 
-bool IExecutableFile::load(const std::string filePath)
+bool IExecutableFile::load(const std::string& filePath)
 {
 	path = filePath;
 	file = fopen(path.c_str(), "r");
@@ -33,6 +33,11 @@ bool IExecutableFile::load(const std::string filePath)
 	if (!file)
 	{
 		LOG_ERROR("Failed to open %s!\n", path.c_str());
+		return false;
+	}
+
+	if (!checkMagic())
+	{
 		return false;
 	}
 
@@ -46,8 +51,12 @@ bool IExecutableFile::load(const std::string filePath)
 
 bool IExecutableFile::hasSteamDRM()
 {
+	if (!(g_config.smartTickets.get() & CConfig::k_ESmartTicketsSteamDRM))
+	{
+		return false;
+	}
 	//SteamDRM appends .bind section with very high entropy (usually 7.9+)
-	//
+
 	const auto& last = sections.at(sections.size() - 1);
 
 	if (last.name == ".bind")
@@ -159,9 +168,30 @@ std::vector<uint8_t> IExecutableFile::readSection(const SectionHdr_t& section)
 	return bytes;
 }
 
-bool CPortableExecutableFile::parseSections()
+std::unique_ptr<IExecutableFile> IExecutableFile::create(const std::string& path)
 {
-	LOG_DEBUG("Parsing PE %s\n", path.filename().c_str());
+	std::unique_ptr<IExecutableFile> file = std::make_unique<CPortableExecutableFile>();
+	if (file->load(path))
+	{
+		return file;
+	}
+
+	file = std::make_unique<CELFExecutableFile>();
+	if (file->load(path))
+	{
+		return file;
+	}
+
+	return nullptr;
+}
+
+bool CPortableExecutableFile::checkMagic()
+{
+	if (fseek(file, 0, SEEK_SET) != 0)
+	{
+		LOG_ERROR("Failed to seek to magic!\n");
+		return false;
+	}
 
 	std::string magic;
 	magic.resize(2);
@@ -174,9 +204,20 @@ bool CPortableExecutableFile::parseSections()
 
 	if (magic != "MZ")
 	{
-		LOG_ERROR("Uknown PE magic %s!\n", magic.c_str());
 		return false;
 	}
+
+	return true;
+}
+
+bool CPortableExecutableFile::parseSections()
+{
+	if (!checkMagic())
+	{
+		return false;
+	}
+
+	LOG_DEBUG("Parsing PE %s\n", path.filename().c_str());
 
 	if (fseek(file, 0x3C, SEEK_SET) != 0)
 	{
@@ -384,14 +425,48 @@ bool CELFExecutableFile::parseElf64Headers(const Elf64_Ehdr& hdr)
 	return true;
 }
 
+bool CELFExecutableFile::checkMagic()
+{
+	uint8_t magic[4] { };
+
+	if (fseek(file, 0, SEEK_SET) != 0)
+	{
+		LOG_ERROR("Failed to seek to Magic!\n");
+		return false;
+	}
+
+	if (fread(magic, sizeof(magic), 1, file) < 1)
+	{
+		LOG_ERROR("Failed to read magic!\n");
+		return false;
+	}
+	
+	if
+	(
+		magic[EI_MAG0] != ELFMAG0
+		|| magic[EI_MAG1] != ELFMAG1
+		|| magic[EI_MAG2] != ELFMAG2
+		|| magic[EI_MAG3] != ELFMAG3
+	)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 bool CELFExecutableFile::parseSections()
 {
+	if (!checkMagic())
+	{
+		return false;
+	}
+
 	LOG_DEBUG("Parsing ELF %s\n", path.filename().c_str());
 
-	FILE* file = fopen(path.c_str(), "r");
-	if (!file)
+	if (fseek(file, 0, SEEK_SET) != 0)
 	{
-		LOG_ERROR("Failed to open file for parsing Elf headers!\n");
+		LOG_ERROR("Failed to seek to file beginning!\n");
 		return false;
 	}
 
@@ -402,37 +477,24 @@ bool CELFExecutableFile::parseSections()
 		return false;
 	}
 
-	if
-	(
-		hdr64.e_ident[EI_MAG0] != ELFMAG0
-		|| hdr64.e_ident[EI_MAG1] != ELFMAG1
-		|| hdr64.e_ident[EI_MAG2] != ELFMAG2
-		|| hdr64.e_ident[EI_MAG3] != ELFMAG3
-	)
+	if (hdr64.e_ident[EI_CLASS] == ELFCLASS32 && hdr64.e_machine == ISA_X86)
 	{
-		LOG_ERROR("ELF magic unknown!\n");
-		return false;
-	}
-
-	//LOG_DEBUG("shsstrndx %u\n", hdr64.e_shstrndx);
-
-	if (hdr64.e_ident[EI_CLASS] == ELFCLASS32)
-	{
-		LOG_DEBUG("Parsing %s as 32 bit file\n", path.c_str());
+		LOG_DEBUG("Parsing as 32 bit file\n");
 
 		//Headers are the same till e_entry. The 64bit version is longer
 		//so we can just recast it
 		Elf32_Ehdr hdr32 = *reinterpret_cast<Elf32_Ehdr*>(&hdr64);
 		parseElf32Headers(hdr32);
 	}
-	else if (hdr64.e_ident[EI_CLASS] == ELFCLASS64)
+	else if (hdr64.e_ident[EI_CLASS] == ELFCLASS64 && hdr64.e_machine == ISA_AMD64)
 	{
-		LOG_DEBUG("Parsing %s as 64 bit file\n", path.c_str());
+		LOG_DEBUG("Parsing as 64 bit file\n");
 		parseElf64Headers(hdr64);
 	}
 	else
 	{
-		LOG_ERROR("Unknown ELFCLASS %u!\n", hdr64.e_ident[EI_CLASS]);
+		LOG_ERROR("Unknown ELFCLASS/e_machine %u | %u!\n", hdr64.e_ident[EI_CLASS], hdr64.e_machine);
+		return false;
 	}
 
 	return true;
@@ -533,21 +595,11 @@ std::filesystem::path Process_t::getRealExe()
 bool Process_t::analyse()
 {
 	const auto startTime = std::chrono::system_clock::now();
-	std::unique_ptr<IExecutableFile> exeFile = nullptr;
+	const auto exeFile = IExecutableFile::create(exe);
 
-	//TODO: Dynamically probe file header to check wheter
-	//it's a an executable instead of relying on easily changeable file endings
-	if (exe.extension() == ".exe")
+	if (!exeFile)
 	{
-		exeFile = std::make_unique<CPortableExecutableFile>();
-	}
-	else
-	{
-		exeFile = std::make_unique<CELFExecutableFile>();
-	}
-
-	if (!exeFile->load(exe))
-	{
+		LOG_ERROR("Failed to parse %s!\n", exe.filename().c_str());
 		return false;
 	}
 
@@ -558,26 +610,9 @@ bool Process_t::analyse()
 	//So we check all of them
 	for (const auto& file : getOpenFiles())
 	{
-		std::unique_ptr<IExecutableFile> executable = nullptr;
-
-		//TODO: Dynamically probe file header to check wheter
-		//it's a link library instead of relying on easily changeable file endings
-		if (file.string().ends_with(".dll"))
+		const auto executable = IExecutableFile::create(file);
+		if (!executable)
 		{
-			executable = std::make_unique<CPortableExecutableFile>();
-		}
-		else if (file.string().ends_with(".so"))
-		{
-			executable = std::make_unique<CELFExecutableFile>();
-		}
-		else
-		{
-			continue;
-		}
-
-		if (!executable->load(file))
-		{
-			//Unlike main executable not fatal. Also will happen (manoghud shim being a prime example)
 			continue;
 		}
 
