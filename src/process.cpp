@@ -99,6 +99,8 @@ bool IExecutableFile::hasDenuvo()
 
 		".xcode",
 		".xtext",
+
+		".text1",
 	};
 
 	constexpr double MIN_ENTROPY = 6.25;
