@@ -90,8 +90,12 @@ SteamIdOverride:
 
 #Makes steamId spoofing a lot smarter than the default by analyzing
 #an executable that freshly connected to the Steamclient. This might slow down game
-#startup times on slower disks
-SmartTickets: no
+#startup times on slower disks (less than 10ms for SteamDRM, up to 20-2000ms for Denuvo on my SSD)
+#Requires access to /proc/gamepid
+#Created the same way as LogLevels
+#SteamDRM = 0x1
+#Denuvo = 0x2
+SmartTickets: 0x1
 
 #Automatically grab Achievement schemas from Steams CDN which makes them always up to date
 #Slows down game's loading page the first time you click them
