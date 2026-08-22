@@ -154,7 +154,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	__loadErrors = std::string("");
 	
 	//Parse logLevels first, otherwise settings won't get logged
-	logLevels = getSetting<uint32_t>(node, "LogLevels", 0xff, true);
+	logLevels = getSetting<LogLevelFlags>(node, "LogLevels", 0xff, true);
 	api = getSetting<bool>(node, "API", true);
 	if (api.get())
 	{

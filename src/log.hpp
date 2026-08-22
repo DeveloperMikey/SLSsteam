@@ -26,9 +26,9 @@
 
 #define LOG_CUSTOM(lvl, fmt, ...) g_pLog->custom(lvl, __FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
 
-constexpr unsigned int ELogLevelCount = 9;
+typedef unsigned int LogLevelFlags;
 
-enum ELogLevel : uint32_t
+enum ELogLevel : LogLevelFlags
 {
 	k_ELogLevelTrace = 1 << 0, //Tracing for debug
 	k_ELogLevelOnce = 1 << 1, //Only log once
@@ -42,7 +42,9 @@ enum ELogLevel : uint32_t
 	k_ELogLevelAPI = 1 << 8 //Used by API. Not togglable via config, gets set by API yes/no
 };
 
-std::string ELogLevel_ToString(unsigned int lvlFlags);
+constexpr unsigned int ELogLevelCount = 9;
+
+std::string ELogLevel_ToString(LogLevelFlags lvlFlags);
 
 class CLog
 {
@@ -50,9 +52,9 @@ class CLog
 	std::unordered_set<std::string> msgHist {};
 	std::shared_mutex mutex;
 
-	bool shouldNotify(const unsigned int flags);
-	std::string buildNotification(const unsigned int flags, const char* msg);
-	void __log(const unsigned int flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs);
+	bool shouldNotify(const LogLevelFlags flags);
+	std::string buildNotification(const LogLevelFlags flags, const char* msg);
+	void __log(const LogLevelFlags flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs);
 
 public:
 	std::string path;
