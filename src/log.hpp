@@ -55,6 +55,7 @@ class CLog
 	std::string buildNotification(const LogLevelFlags_t flags, const char* msg);
 	void __log(const LogLevelFlags_t flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs);
 
+	//Calls to these will fully disappear from the release build
 	void __trace(const char* file, const char* function, const int line, const char* msg, const va_list& vArgs);
 	void __traceOnce(const char* file, const char* function, const int line, const char* msg, const va_list& vArgs);
 	void __once(const char* file, const char* function, const int line, const char* msg, const va_list& vArgs);
@@ -67,7 +68,7 @@ public:
 	CLog(const char* path);
 	~CLog();
 
-	//Do not include config.hpp in this header, otherwise things will break :) (proly due to recursive inclusion)
+	//Calls to these will fully disappear from the release build
 	__attribute__((__format__(__printf__, 5, 6)))
 	void trace(const char* file, const char* function, const int line, const char* msg, ...);
 	__attribute__((__format__(__printf__, 5, 6)))

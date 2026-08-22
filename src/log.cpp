@@ -349,7 +349,6 @@ void CLog::api(const char* file, const char* function, const int line, const cha
 {
 	va_list vArgs;
 	va_start(vArgs, msg);
-	//Notify type doesn't really matter, since critical stays until clicked
 	__log(k_ELogLevelAPI, file, function, line, msg, vArgs);
 	va_end(vArgs);
 }
