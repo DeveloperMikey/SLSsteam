@@ -154,7 +154,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	__loadErrors = std::string("");
 	
 	//Parse logLevels first, otherwise settings won't get logged
-	logLevels = getSetting<LogLevelFlags>(node, "LogLevels", 0xff, true);
+	logLevels = getSetting<LogLevelFlags_t>(node, "LogLevels", 0xff, true);
 	api = getSetting<bool>(node, "API", true);
 	if (api.get())
 	{
@@ -173,7 +173,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	disableFamilyLock = getSetting<bool>(node, "DisableFamilyShareLock", true);
 	useWhiteList = getSetting<bool>(node, "UseWhitelist", false);
 	maxSchemaTries = getSetting<uint32_t>(node, "MaxSchemaTries", 10);
-	smartTickets = getSetting<SmartTicketsFlags>(node, "SmartTickets", 1);
+	smartTickets = getSetting<SmartTicketsFlags_t>(node, "SmartTickets", 1);
 	safeMode = getSetting<bool>(node, "SafeMode", false);
 	warnHashMissmatch = getSetting<bool>(node, "WarnHashMissmatch", false);
 	notifyInit = getSetting<bool>(node, "NotifyInit", true);

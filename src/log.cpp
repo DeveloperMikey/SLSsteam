@@ -12,7 +12,7 @@
 #include <sstream>
 
 
-std::string ELogLevel_ToString(const LogLevelFlags lvlFlags)
+std::string ELogLevel_ToString(const LogLevelFlags_t lvlFlags)
 {
 	constexpr static auto flagToString = [](const unsigned int flag)
 	{
@@ -62,7 +62,7 @@ std::string ELogLevel_ToString(const LogLevelFlags lvlFlags)
 	return lvlStr.str();
 }
 
-bool CLog::shouldNotify(const LogLevelFlags flags)
+bool CLog::shouldNotify(const LogLevelFlags_t flags)
 {
 	const unsigned int configLevels = g_config.logLevels.get();
 	if ((flags & k_ELogLevelNotifyLong) && (configLevels & k_ELogLevelNotifyLong))
@@ -78,7 +78,7 @@ bool CLog::shouldNotify(const LogLevelFlags flags)
 	return false;
 }
 
-std::string CLog::buildNotification(const LogLevelFlags flags, const char* msg)
+std::string CLog::buildNotification(const LogLevelFlags_t flags, const char* msg)
 {
 	const bool notifyShort = flags & k_ELogLevelNotifyShort;
 	const bool notifyLong = flags & k_ELogLevelNotifyLong;
@@ -124,7 +124,7 @@ std::string CLog::buildNotification(const LogLevelFlags flags, const char* msg)
 	return notifySS.str();
 }
 
-void CLog::__log(const LogLevelFlags flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
+void CLog::__log(const LogLevelFlags_t flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
 {
 	if (!(g_config.logLevels.get() & flags))
 	{
