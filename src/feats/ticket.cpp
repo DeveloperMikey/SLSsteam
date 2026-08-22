@@ -147,7 +147,7 @@ void Ticket::getTicketOwnershipExtendedData(const AppId_t appId)
 {
 	const auto utils = g_pSteamEngine->getUtils();
 
-	if ((g_config.smartTickets.get() & CConfig::k_ESmartTicketsSteamDRM))
+	if (g_config.smartTickets.get() & CConfig::k_ESmartTicketsSteamDRM)
 	{
 		const auto& proc = g_processMap.at(utils->getCurrentSteamPipe());
 		if (proc.steamDRM)
