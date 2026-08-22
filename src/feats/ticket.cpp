@@ -19,7 +19,6 @@
 std::unordered_map<AppId_t, CSteamId> Ticket::oneTimeSteamIdSpoof = std::unordered_map<AppId_t, CSteamId>();
 std::unordered_map<AppId_t, Ticket::SavedTicket> Ticket::ticketMap = std::unordered_map<AppId_t, SavedTicket>();
 std::unordered_map<AppId_t, Ticket::SavedTicket> Ticket::encryptedTicketMap = std::unordered_map<AppId_t, SavedTicket>();
-std::unordered_map<AppId_t, unsigned int> Ticket::pipesCreated = std::unordered_map<AppId_t, unsigned int>();
 
 std::string Ticket::getTicketDir()
 {
@@ -106,14 +105,6 @@ void Ticket::connectPipe(const HSteamPipe pipe)
 {
 	const auto& proc = g_processMap.at(pipe);
 
-	if (proc.denuvo)
-	{
-		unsigned int& created = pipesCreated[proc.appId];
-		created++;
-
-		LOG_DEBUG("pipesCreated[%u] = %u\n", proc.appId, created);
-	}
-
 	if (!proc.steamDRM)
 	{
 		return;
@@ -130,11 +121,6 @@ void Ticket::connectPipe(const HSteamPipe pipe)
 
 void Ticket::launchApp(const AppId_t appId)
 {
-	if (g_config.smartTickets.get())
-	{
-		pipesCreated[appId] = 0;
-	}
-
 	auto ticket = getCachedTicket(appId);
 	if (!ticket)
 	{
@@ -161,11 +147,15 @@ void Ticket::getTicketOwnershipExtendedData(const AppId_t appId)
 {
 	const auto utils = g_pSteamEngine->getUtils();
 
-	if ((g_config.smartTickets.get() & CConfig::k_ESmartTicketsSteamDRM) && g_processMap.at(utils->getCurrentSteamPipe()).steamDRM)
+	if ((g_config.smartTickets.get() & CConfig::k_ESmartTicketsSteamDRM))
 	{
-		//Handled in connectPipe
-		//For other ticket requests we fall through to spoofing the next GetSteamID call
-		return;
+		const auto& proc = g_processMap.at(utils->getCurrentSteamPipe());
+		if (proc.steamDRM)
+		{
+			//Handled in connectPipe
+			//For other ticket requests we fall through to spoofing the next GetSteamID call
+			return;
+		}
 	}
 
 	const SavedTicket* cached = Ticket::getCachedTicket(appId);

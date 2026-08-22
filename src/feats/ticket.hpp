@@ -23,7 +23,6 @@ public:
 	extern std::unordered_map<AppId_t, CSteamId> oneTimeSteamIdSpoof;
 	extern std::unordered_map<AppId_t, SavedTicket> ticketMap;
 	extern std::unordered_map<AppId_t, SavedTicket> encryptedTicketMap;
-	extern std::unordered_map<AppId_t, unsigned int> pipesCreated;
 
 	std::string getTicketDir();
 
