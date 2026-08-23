@@ -13,6 +13,8 @@ private:
 public:
 	MTVariable() : instance(empty()) { }
 	MTVariable(T instance) : instance(instance) { }
+	MTVariable(const MTVariable<T>& cpy) : instance(cpy.instance) { }
+	~MTVariable() { }
 
 	//Returns default instance
 	T empty()
@@ -27,13 +29,18 @@ public:
 		return T(instance);
 	}
 
-	void set(T value)
+	void set(const T& value)
 	{
 		const auto lock = std::lock_guard(mutex);
 		instance = value;
 	}
 
-	void operator=(MTVariable<T> other)
+	void operator=(const T& val)
+	{
+		set(val);
+	}
+
+	void operator=(const MTVariable<T>& other)
 	{
 		set(other.instance);
 	}
