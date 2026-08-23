@@ -86,20 +86,12 @@ bool CConfig::init()
 		return false;
 	}
 
-	watcher = new CFileWatcher(onFileChange);
+	watcher = std::make_unique<CFileWatcher>(onFileChange);
 	watcher->addFile(getPath().c_str());
 	watcher->start();
 
 	loadSettings(true);
 	return true;
-}
-
-CConfig::~CConfig()
-{
-	if (watcher)
-	{
-		delete watcher;
-	}
 }
 
 void CConfig::setError(const ELoadError err, const char* keyName)

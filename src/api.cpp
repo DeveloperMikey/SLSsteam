@@ -14,7 +14,7 @@ namespace SLSAPI
 	const char* path = "/tmp/SLSsteam.API";
 
 	std::fstream fstream;
-	CFileWatcher* watcher;
+	std::unique_ptr<CFileWatcher> watcher;
 	bool initialized;
 
 	std::mutex cmdMutex;
@@ -153,7 +153,7 @@ void SLSAPI::init()
 	//Close stream, onFileChange reopens then closes it for us
 	fstream.close();
 
-	watcher = new CFileWatcher(onFileChange);
+	watcher = std::make_unique<CFileWatcher>(onFileChange);
 	const int fd = watcher->addFile(path);
 	if (fd == -1)
 	{

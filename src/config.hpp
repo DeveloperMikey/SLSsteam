@@ -5,11 +5,10 @@
 #include "mtvar.hpp"
 #include "log.hpp"
 
-#include "yaml-cpp/exceptions.h"
-#include "yaml-cpp/node/node.h"
 #include "yaml-cpp/yaml.h"
 
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <pthread.h>
 #include <string>
@@ -93,9 +92,7 @@ public:
 	std::unordered_set<AppId_t> removedApps;
 
 	//Using incomplete class to avoid runtime linking errors
-	CFileWatcher* watcher;
-
-	~CConfig();
+	std::unique_ptr<CFileWatcher> watcher;
 
 	std::string getDir() const;
 	std::string getPath() const;
