@@ -135,7 +135,7 @@ public:
 
 			return val;
 		}
-		catch (YAML::BadConversion& er)
+		catch (...)
 		{
 			//LOG_NOTIFY("Failed to parse value of %s! Using default\n", name);
 			setError(ELoadError::ParsingException, name);

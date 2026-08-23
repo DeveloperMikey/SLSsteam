@@ -140,14 +140,9 @@ bool CConfig::loadSettings(bool firstLoad)
 	{
 		node = YAML::LoadFile(getPath());
 	}
-	catch (YAML::BadFile& bf)
+	catch (...)
 	{
-		LOG_NOTIFYLONG("Can not read config.yaml! %s\nUsing defaults", bf.msg.c_str());
-		node = YAML::Node(); //Create empty node and let defaults kick in
-	}
-	catch (YAML::ParserException& pe)
-	{
-		LOG_NOTIFYLONG("Error parsing config.yaml! %s\nUsing defaults", pe.msg.c_str());
+		LOG_NOTIFYLONG("Failed loading config file! Using defaults");
 		node = YAML::Node(); //Create empty node and let defaults kick in
 	}
 
