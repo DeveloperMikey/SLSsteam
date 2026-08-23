@@ -14,7 +14,15 @@
 #include <string>
 
 
-std::string CConfig::getDir() const
+static void onFileChange()
+{
+	g_config.loadSettings();
+	LOG_NOTIFY("Config reloaded!");
+}
+
+std::unique_ptr<CFileWatcher> CConfig::watcher = std::make_unique<CFileWatcher>(onFileChange);
+
+std::filesystem::path CConfig::getDir()
 {
 	std::ostringstream path;
 
@@ -36,9 +44,12 @@ std::string CConfig::getDir() const
 	return path.str();
 }
 
-std::string CConfig::getPath() const
+std::filesystem::path CConfig::getPath()
 {
-	return getDir() + "/config.yaml";
+	auto dir = getDir();
+	dir.append("config.yaml");
+
+	return dir;
 }
 
 bool CConfig::createFile() const
@@ -72,12 +83,6 @@ bool CConfig::createFile() const
 	return true;
 }
 
-static void onFileChange()
-{
-	g_config.loadSettings();
-	LOG_NOTIFY("Config reloaded!");
-}
-
 bool CConfig::init()
 {
 	if (!createFile())
@@ -86,7 +91,7 @@ bool CConfig::init()
 		return false;
 	}
 
-	watcher = std::make_unique<CFileWatcher>(onFileChange);
+	//TODO: Move to static init
 	watcher->addFile(getPath().c_str());
 	watcher->start();
 
@@ -172,36 +177,6 @@ bool CConfig::loadSettings(bool firstLoad)
 	dumpInterfaceMaps = getSetting<bool>(node, "DumpClientInterfaces", false);
 	extendedLogging = getSetting<bool>(node, "ExtendedLogging", false);
 
-	const std::lock_guard appsChanged(appsChangedMutex);
-	const auto prevAppIds = addedAppIds.get();
-	const auto _addedAppIds = getList<AppId_t>(node, "AdditionalApps");
-
-	if (!firstLoad)
-	{
-		for (const auto& appId : prevAppIds)
-		{
-			if (_addedAppIds.contains(appId))
-			{
-				continue;
-			}
-
-			removedApps.emplace(appId);
-			LOG_DEBUG("AppId %u removed from AdditionalApps\n", appId);
-		}
-		for (const auto& appId : _addedAppIds)
-		{
-			if (prevAppIds.contains(appId))
-			{
-				continue;
-			}
-
-			newApps.emplace(appId);
-			LOG_DEBUG("AppId %u added to AdditionalApps\n", appId);
-		}
-	}
-
-	addedAppIds = _addedAppIds;
-
 	appIds = getList<AppId_t>(node, "AppIds");
 	fakeOffline = getList<AppId_t>(node, "FakeOffline");
 	depotBlacklist = getList<AppId_t>(node, "DepotBlacklist");
@@ -214,6 +189,8 @@ bool CConfig::loadSettings(bool firstLoad)
 	subscriptionTimestamps = getMap<AppId_t, uint32_t>(node, "SubscriptionTimestamps");
 	steamIdOverride = getMap<AppId_t, uint64_t>(node, "SteamIdOverride");
 	launchOptions = getMap<AppId_t, std::string>(node, "LaunchOptions");
+
+	setAdditionalApps(getList<AppId_t>(node, "AdditionalApps"), firstLoad);
 
 	//Do not log the keys themself
 	for (const auto& key : cdKeys.get())
@@ -332,6 +309,41 @@ bool CConfig::loadSettings(bool firstLoad)
 bool CConfig::isAddedAppId(const AppId_t appId)
 {
 	return addedAppIds.get().contains(appId);
+}
+
+void CConfig::setAdditionalApps(const std::unordered_set<AppId_t>& appIds, const bool firstLoad)
+{
+	auto _newApps = newApps.empty();
+	auto _removedApps = removedApps.empty();
+	const auto prevAppIds = addedAppIds.get();
+
+	if (!firstLoad)
+	{
+		for (const auto& appId : prevAppIds)
+		{
+			if (appIds.contains(appId))
+			{
+				continue;
+			}
+
+			_removedApps.emplace(appId);
+			LOG_DEBUG("AppId %u removed from AdditionalApps\n", appId);
+		}
+		for (const auto& appId : appIds)
+		{
+			if (prevAppIds.contains(appId))
+			{
+				continue;
+			}
+
+			_newApps.emplace(appId);
+			LOG_DEBUG("AppId %u added to AdditionalApps\n", appId);
+		}
+	}
+
+	newApps = _newApps;
+	removedApps = _removedApps;
+	addedAppIds = appIds;
 }
 
 bool CConfig::shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditionalApps)

@@ -8,8 +8,8 @@
 #include "yaml-cpp/yaml.h"
 
 #include <cstdint>
+#include <filesystem>
 #include <memory>
-#include <mutex>
 #include <pthread.h>
 #include <string>
 #include <type_traits>
@@ -21,6 +21,12 @@ class CFileWatcher;
 
 class CConfig {
 public:
+	//Using incomplete class to avoid runtime linking errors
+	static std::unique_ptr<CFileWatcher> watcher;
+
+	static std::filesystem::path getDir();
+	static std::filesystem::path getPath();
+
 	typedef unsigned int SmartTicketsFlags_t;
 
 	enum ESmartTickets : SmartTicketsFlags_t
@@ -87,15 +93,9 @@ public:
 	MTVariable<bool> dumpInterfaceMaps;
 	MTVariable<bool> extendedLogging;
 
-	std::mutex appsChangedMutex;
-	std::unordered_set<AppId_t> newApps;
-	std::unordered_set<AppId_t> removedApps;
+	MTVariable<std::unordered_set<AppId_t>> newApps;
+	MTVariable<std::unordered_set<AppId_t>> removedApps;
 
-	//Using incomplete class to avoid runtime linking errors
-	std::unique_ptr<CFileWatcher> watcher;
-
-	std::string getDir() const;
-	std::string getPath() const;
 	bool createFile() const;
 	bool init();
 
@@ -234,6 +234,7 @@ public:
 
 	bool isAddedAppId(const AppId_t appId);
 	bool addAdditionalAppId(const AppId_t appId);
+	void setAdditionalApps(const std::unordered_set<AppId_t>& apps, const bool firstLoad = false);
 
 	bool shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditionalApps = false);
 	CSteamId getDenuvoGameOwner(const AppId_t appId);

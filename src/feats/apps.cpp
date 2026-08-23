@@ -326,18 +326,20 @@ void Apps::runIPCFrame()
 		return;
 	}
 
-	const std::lock_guard appsChanged(g_config.appsChangedMutex);
+	const auto addedApps = g_config.newApps.get();
+	const auto removedApps = g_config.removedApps.get();
+
 	const auto appInfo = usr->getClientApps();
 
-	if (g_config.removedApps.size())
+	if (removedApps.size())
 	{
-		postAppLicensesChanged(g_config.removedApps);
-		g_config.removedApps.clear();
+		postAppLicensesChanged(removedApps);
+		g_config.removedApps = g_config.removedApps.empty();
 	}
 
 	const auto added = g_config.newApps;
 
-	if (!added.size())
+	if (!addedApps.size())
 	{
 		return;
 	}
@@ -349,10 +351,10 @@ void Apps::runIPCFrame()
 	AppId_t apps[MAX_APPS_PER_REQUEST] { };
 
 	unsigned int i = 0;
-	for (; i < added.size(); i++)
+	for (; i < addedApps.size(); i++)
 	{
 		const unsigned int idx = i % MAX_APPS_PER_REQUEST;
-		const AppId_t appId = *std::next(added.begin(), i);
+		const AppId_t appId = *std::next(addedApps.begin(), i);
 
 		apps[idx] = appId;
 
@@ -373,7 +375,7 @@ void Apps::runIPCFrame()
 		appInfo->requestAppInfoUpdate(apps, idx);
 	}
 
-	g_config.newApps.clear();
+	g_config.newApps = g_config.newApps.empty();
 }
 
 

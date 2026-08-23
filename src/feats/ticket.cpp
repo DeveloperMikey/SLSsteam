@@ -20,26 +20,28 @@ std::unordered_map<AppId_t, CSteamId> Ticket::oneTimeSteamIdSpoof = std::unorder
 std::unordered_map<AppId_t, Ticket::SavedTicket> Ticket::ticketMap = std::unordered_map<AppId_t, SavedTicket>();
 std::unordered_map<AppId_t, Ticket::SavedTicket> Ticket::encryptedTicketMap = std::unordered_map<AppId_t, SavedTicket>();
 
-std::string Ticket::getTicketDir()
+std::filesystem::path Ticket::getTicketDir()
 {
-	std::ostringstream ss;
-	ss << g_config.getDir() << "/cache";
+	auto dir = g_config.getDir();
+	dir.append("cache");
 
-	const auto dir = ss.str();
 	if (!std::filesystem::exists(dir.c_str()))
 	{
 		std::filesystem::create_directory(dir.c_str());
 	}
 
-	return ss.str();
+	return dir;
 }
 
-std::string Ticket::getTicketPath(const AppId_t appId)
+std::filesystem::path Ticket::getTicketPath(const AppId_t appId)
 {
 	std::ostringstream ss;
-	ss << getTicketDir().c_str() << "/ticket_" << appId << ".yaml";
+	ss << "ticket_" << appId << ".yaml";
 
-	return ss.str();
+	auto dir = getTicketDir();
+	dir.append(ss.str());
+
+	return dir;
 }
 
 Ticket::SavedTicket* Ticket::getCachedTicket(const AppId_t appId)
@@ -167,12 +169,15 @@ void Ticket::getTicketOwnershipExtendedData(const AppId_t appId)
 	oneTimeSteamIdSpoof[appId] = cached->steamId;
 }
 
-std::string Ticket::getEncryptedTicketPath(const AppId_t appId)
+std::filesystem::path Ticket::getEncryptedTicketPath(const AppId_t appId)
 {
 	std::ostringstream ss;
-	ss << getTicketDir().c_str() << "/encryptedTicket_" << appId << ".yaml";
+	ss << "encryptedTicket_" << appId << ".yaml";
 
-	return ss.str();
+	auto dir = getTicketDir();
+	dir.append(ss.str());
+
+	return dir;
 }
 
 Ticket::SavedTicket* Ticket::getCachedEncryptedTicket(const AppId_t appId)

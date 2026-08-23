@@ -2,6 +2,7 @@
 
 #include "../sdk/sdk.hpp"
 
+#include <filesystem>
 #include <string>
 #include <unordered_map>
 
@@ -24,10 +25,10 @@ public:
 	extern std::unordered_map<AppId_t, SavedTicket> ticketMap;
 	extern std::unordered_map<AppId_t, SavedTicket> encryptedTicketMap;
 
-	std::string getTicketDir();
+	std::filesystem::path getTicketDir();
 
 	//TODO: Fill with error checks
-	std::string getTicketPath(const AppId_t appId);
+	std::filesystem::path getTicketPath(const AppId_t appId);
 	SavedTicket* getCachedTicket(const AppId_t appId);
 	bool saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse& resp);
 
@@ -37,7 +38,7 @@ public:
 	void getEncryptedAppTicket(const AppId_t appId);
 	void getTicketOwnershipExtendedData(const AppId_t appId);
 
-	std::string getEncryptedTicketPath(const AppId_t appId);
+	std::filesystem::path getEncryptedTicketPath(const AppId_t appId);
 	SavedTicket* getCachedEncryptedTicket(const AppId_t appId);
 	bool saveEncryptedTicketToCache(const CMsgClientRequestEncryptedAppTicketResponse& resp);
 
