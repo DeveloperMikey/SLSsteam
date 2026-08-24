@@ -22,7 +22,7 @@ VFTableInfo_t::VFTableInfo_t
 {
 	VFTIndexes::functions.emplace_back(this);
 
-	LOG_DEBUG("VFTableInfo_t(%s, %s, %u)\n", typeName, functionName, index);
+	LOG_DEBUG("VFTableInfo_t(%s, %s, %u, %u)\n", typeName, functionName, index, subClassIndex);
 }
 
 bool VFTableInfo_t::init()
@@ -50,7 +50,8 @@ bool VFTableInfo_t::init()
 		index = tbl.at(functionName);
 	}
 
-	auto& vft = Decompiler::vftables[typeName];
+	//Create copy
+	auto vft = Decompiler::vftables[typeName];
 	if (subClassIndex != NO_INDEX)
 	{
 		if (subClassIndex >= vft.subclasses.size())
