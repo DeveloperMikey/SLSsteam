@@ -11,14 +11,25 @@ If you want to dive right in without reading the docs check out the example.lua 
 LuaJIT doesn't have access to all of SLSsteam's internal typedefs. Currently the ones you need to be aware of are:
 
 lm_address_t -> uintptr_t
+LogLevelFlags_t -> unsigned int
 AppId_t -> uint32_t
 
 
 #### log:
 
+LogLevelTrace -> LogLevelFlags_t
+LogLevelOnce -> LogLevelFlags_t
+LogLevelDebug -> LogLevelFlags_t
+LogLevelWarn -> LogLevelFlags_t
+LogLevelError -> LogLevelFlags_t
+LogLevelInfo -> LogLevelFlags_t
+LogLevelNotify -> LogLevelFlags_t
+LogLevelNotifyLong -> LogLevelFlags_t
+
 log.debug(msg: string): Print debug string to log
 log.info(msg: string): Print info string to log
 log.notify(msg: string): Create notification via notify-send
+log.custom(flags: LogLevelFlags_t, msg: string): Create notification via notify-send
 
 
 #### lm_module_t:
@@ -32,7 +43,19 @@ end -> lm_address_t: Module end
 
 getModule(name: string) -> lm_module_t: Get module by name
 getJmpTarget(address: lm_address_t) -> lm_address_t: Get absolute address of relative jmp
+hexdump(address: lm_address_t, size: size_t) -> string: Get formatted hexdump
 findPrologue(address: lm_address_t, bytes: uint8_t[]) -> lm_address_t: Find prologue of function by going backwards until bytes match
+patternScan(pattern: string, module: lm_module_t) -> lm_address_t: Find a pattern in the specified modules .text section
+
+
+#### VFTableInfo_t
+
+VFTableInfo_t(typename: string, functionName: string, index: unsigned int, subClassIndex: unsigned int): Create new VFTableInfo_t. Pass 0xFFFFFFFF as index to use the decompiler to find it based on the type- & method name (only use this for IClientInterfaceMaps!). Pass the same to subClassIndex when you want the Main Class
+typeName -> string
+functionName -> string
+address -> lm_address_t: The resolved address in current memory
+init() -> bool: Initialize, returns true on success, false otherwise. Check the logs for errors
+getPrintName() -> string: Returns typeName::functionName
 
 
 #### LuaHook:
@@ -53,6 +76,33 @@ getAdditionalApps() -> AppId_t[]: Gets all AdditionalApps
 setAdditionalApps(appIds: AppId_t[]): Sets all AdditionalApps
 
 
+#### CSteamEngine
+
+getUser(index: int) -> CUser: Get the specified CUser instance. 0 is the global user
+getUtils() -> IClientUtils
+
+
+#### CUser
+getClientApps() -> IClientApps
+getClientUser() -> IClientUser
+getAppManager() -> IClientAppManager
+isSubscribed(appId: AppId_t) -> bool
+postCallback(type: uint32_t, pCallback: lm_address_t, callbackSize: size_t): Post a callback to the Steamengine & all open pipes
+
+
+#### IClientUtils
+
+getAppId() -> AppId_t: Return the appId for the currently active pipe
+getCurrentSteamPipe() -> HSteamPipe: Return the active pipe handle
+
+
 #### SLS
 
 config -> CConfig*: Gets SLSsteam config, see [CConfig](#cconfig)
+steamEngine -> CSteamEngine*: Gets the Global CSteamEngine instance
+registerCallback(name: string, function): Registers a callback, when it gets fired function will be invoked from SLSsteam
+
+
+#### Callbacks
+
+"SLSsteam::initialized": Fired when Steam has finished initializing CUser, making it safe to access

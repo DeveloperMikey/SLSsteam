@@ -52,19 +52,24 @@ namespace LuaConfig
 
 namespace LuaLog
 {
-	static void debug(const char* msg)
+	void debug(const char* msg)
 	{
 		LOG_DEBUG("%s\n", msg);
 	}
 
-	static void info(const char* msg)
+	void info(const char* msg)
 	{
 		LOG_INFO("%s\n", msg);
 	}
 
-	static void notify(const char* msg)
+	void notify(const char* msg)
 	{
 		LOG_NOTIFY("%s", msg);
+	}
+
+	void custom(const LogLevelFlags_t lvl, const char* msg)
+	{
+		LOG_CUSTOM(lvl, "%s", msg);
 	}
 }
 
@@ -111,9 +116,18 @@ void Lua::init()
 	luabridge::getGlobalNamespace(state)
 
 	.beginNamespace("log")
+		.addConstant("LogLevelTrace", 1 << 0)
+		.addConstant("LogLevelOnce", 1 << 1)
+		.addConstant("LogLevelDebug", 1 << 2)
+		.addConstant("LogLevelWarn", 1 << 3)
+		.addConstant("LogLevelError", 1 << 4)
+		.addConstant("LogLevelInfo", 1 << 5)
+		.addConstant("LogLevelNotify", 1 << 6)
+		.addConstant("LogLevelNotifyLong", 1 << 7)
 		.addFunction("debug", &LuaLog::debug)
 		.addFunction("info", &LuaLog::info)
 		.addFunction("notify", &LuaLog::notify)
+		.addFunction("custom", &LuaLog::custom)
 	.endNamespace()
 
 	.beginClass<lm_module_t>("lm_module_t")
@@ -131,7 +145,7 @@ void Lua::init()
 	.endNamespace()
 
 	.beginClass<VFTableInfo_t>("VFTableInfo_t")
-		.addConstructor<void(*)(const char*, const char*, unsigned int)>()
+		.addConstructor<void(*)(const char*, const char*, unsigned int, unsigned int)>()
 		.addProperty("typeName", &VFTableInfo_t::typeName)
 		.addProperty("functionName", &VFTableInfo_t::functionName)
 		.addProperty("address", &VFTableInfo_t::address)
