@@ -71,7 +71,7 @@ namespace LuaLog
 
 	void custom(const LogLevelFlags_t lvl, const char* msg)
 	{
-		LOG_CUSTOM(lvl, "%s", msg);
+		LOG_CUSTOM(lvl, "%s\n", msg);
 	}
 }
 
