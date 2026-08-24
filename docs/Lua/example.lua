@@ -11,7 +11,7 @@ local modSteamClient = memhlp.getModule("steamclient.so")
 
 local postCallbackPtr = memhlp.getJmpTarget(memhlp.patternScan("E8 ? ? ? ? 8B 75 ? 89 D8", modSteamClient))
 
-local trampFn;
+local trampFn
 
 local function hkPostCallback(user, type, pCallback, callbackSize, a4)
 	log.debug("PostCallback " .. type)
