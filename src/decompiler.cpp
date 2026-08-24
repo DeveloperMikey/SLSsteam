@@ -649,8 +649,10 @@ std::map<std::string, unsigned int> Decompiler::parseInterfaceMapBase(const char
 
 void Decompiler::cleanUp()
 {
+#ifndef DEBUG
 	sections.clear();
 	picThunks.clear();
 	strings.clear();
 	vftables.clear();
+#endif
 }

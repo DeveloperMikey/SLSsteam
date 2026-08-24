@@ -134,7 +134,7 @@ bool Updater::verifySafeModeHash()
 		return false;
 	}
 
-	const auto path = std::filesystem::path(g_modSteamClient.path);
+	const auto path = std::filesystem::path(g_modSteamClient->path);
 
 	try
 	{

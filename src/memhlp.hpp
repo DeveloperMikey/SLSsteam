@@ -1,5 +1,6 @@
 #pragma once
 
+#include "globals.hpp"
 #include "log.hpp"
 
 #include "libmem/libmem.h"
@@ -8,11 +9,14 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <unordered_map>
 #include <vector>
 
 
 namespace MemHlp
 {
+	extern std::unordered_map<std::string, std::unique_ptr<lm_module_t>> moduleMap;
+
 	enum class SigFollowMode
 	{
 		None,
@@ -58,15 +62,23 @@ namespace MemHlp
 		return success;
 	}
 
-	std::vector<int16_t> patternToBytes(const char* pattern);
-	lm_address_t patternScan(const char* pattern, const lm_module_t module);
+	lm_module_t* getModule(const std::string& name);
 
-	lm_address_t searchSignature(const char* name, const char* signature, const lm_module_t module, const SigFollowMode mode, const void* extraData, const size_t extraDataSize);
-	lm_address_t searchSignature(const char* name, const char* signature, const lm_module_t module, const SigFollowMode mode);
-	lm_address_t searchSignature(const char* name, const char* signature, const lm_module_t module);
+	std::vector<int16_t> patternToBytes(const char* pattern);
+	lm_address_t patternScan(const char* pattern, const lm_module_t& module);
+
+	lm_address_t searchSignature
+	(
+		const char* name,
+		const char* signature,
+		const lm_module_t& module = *g_modSteamClient,
+		const SigFollowMode mode = SigFollowMode::None,
+		const void* extraData = nullptr,
+		const size_t extraDataSize = 0
+	);
 
 	lm_address_t getJmpTarget(const lm_address_t address);
-	lm_address_t findPrologue(const lm_address_t address, const int16_t* prologueBytes, const lm_size_t prologueSize);
+	lm_address_t findPrologue(const lm_address_t address, const std::vector<int16_t>& prologueBytes);
 
 	//TODO: Create hooking wrapper that calls this automatically
 	bool fixPICThunkCall(const char* name, const lm_address_t fn, const lm_address_t tramp);

@@ -70,6 +70,22 @@ public:
 	void setup(std::shared_ptr<lm_vmt_t> vft, const VFTableInfo_t&, T hookFn);
 };
 
+class LuaHook
+{
+public:
+	std::string name;
+	lm_address_t fn;
+	lm_address_t hookFn;
+	lm_address_t tramp;
+	size_t size;
+
+	LuaHook(const char* name, const lm_address_t targetFn, const lm_address_t hookFn);
+	~LuaHook();
+
+	lm_address_t place();
+	bool remove();
+};
+
 namespace Hooks
 {
 	typedef void(*TraceIPC_t)(const char*, const char*);

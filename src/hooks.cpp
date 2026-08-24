@@ -32,35 +32,20 @@
 
 
 template<typename T>
-Hook<T>::Hook(const char* name)
-{
-	this->name = std::string(name);
-}
+Hook<T>::Hook(const char* name) : name(name) { }
 
 template<typename T>
-DetourHook<T>::DetourHook(const char* name) : Hook<T>::Hook(name)
-{
-	this->size = 0;
-}
+DetourHook<T>::DetourHook(const char* name) : Hook<T>::Hook(name), size(0) { }
 
 //TODO: Fix this ungodly mess
 template<typename T>
-DetourHook<T>::DetourHook() : DetourHook<T>("")
-{
-
-}
+DetourHook<T>::DetourHook() : DetourHook<T>("") { }
 
 template<typename T>
-VFTHook<T>::VFTHook(const char* name) : Hook<T>::Hook(name)
-{
-	this->hooked = false;
-}
+VFTHook<T>::VFTHook(const char* name) : Hook<T>::Hook(name), hooked(false) { }
 
 template<typename T>
-VFTHook<T>::VFTHook() : VFTHook<T>("")
-{
-
-}
+VFTHook<T>::VFTHook() : VFTHook<T>("") { }
 
 template<typename T>
 bool DetourHook<T>::setup(const char* name, const lm_address_t fn, T hookFn)
@@ -162,6 +147,48 @@ void VFTHook<T>::setup(std::shared_ptr<lm_vmt_t> vft, const VFTableInfo_t& info,
 
 	this->originalFn.address = LM_VmtGetOriginal(this->vft.get(), this->index);
 	this->hookFn.fn = hookFn;
+}
+
+LuaHook::LuaHook(const char* name, const lm_address_t targetFn, const lm_address_t hookFn)
+	:
+	name(name),
+	fn(targetFn),
+	hookFn(hookFn),
+	tramp(0),
+	size(0)
+{
+	LOG_DEBUG("Created LuaHook %s from 0x%x to 0x%x\n", name, targetFn, hookFn);
+}
+
+LuaHook::~LuaHook()
+{
+	remove();
+}
+
+lm_address_t LuaHook::place()
+{
+	size = LM_HookCode(fn, hookFn, &tramp);
+	if (!size)
+	{
+		return false;
+	}
+
+	MemHlp::fixPICThunkCall(name.c_str(), fn, tramp);
+	LOG_DEBUG("Placed LuaHook %s\n", name.c_str());
+	return tramp;
+}
+
+bool LuaHook::remove()
+{
+	if (!size)
+	{
+		return false;
+	}
+
+	LM_UnhookCode(fn, tramp, size);
+	size = 0;
+	LOG_DEBUG("Removed LuaHook %s\n", name.c_str());
+	return true;
 }
 
 __attribute__((hot))

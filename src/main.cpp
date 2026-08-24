@@ -5,7 +5,9 @@
 #include "decompiler.hpp"
 #include "globals.hpp"
 #include "hooks.hpp"
+#include "lua.hpp"
 #include "log.hpp"
+#include "memhlp.hpp"
 #include "patterns.hpp"
 #include "update.hpp"
 #include "utils.hpp"
@@ -147,12 +149,12 @@ static void load()
 		return;
 	}
 
-	if (!g_modSteamClient.base || !g_modSteamUI.base || !g_modTier0.base)
+	if (!g_modSteamClient || !g_modSteamUI || !g_modTier0)
 	{
 		return;
 	}
 
-	const auto path = std::filesystem::path(g_modSteamClient.path);
+	const auto path = std::filesystem::path(g_modSteamClient->path);
 	const auto dir = path.parent_path();
 
 	LOG_INFO
@@ -160,14 +162,14 @@ static void load()
 		"steamclient.so loaded from %s/%s at 0x%x to 0x%x\n",
 		dir.filename().c_str(),
 		path.filename().c_str(),
-		g_modSteamClient.base,
-		g_modSteamClient.end
+		g_modSteamClient->base,
+		g_modSteamClient->end
 	);
 	LOG_INFO
 	(
 		"steamui.so loaded at 0x%x to 0x%x\n",
-		g_modSteamUI.base,
-		g_modSteamUI.end
+		g_modSteamUI->base,
+		g_modSteamUI->end
 	);
 
 	if (!Updater::verifySafeModeHash())
@@ -208,6 +210,7 @@ static void load()
 		return;
 	}
 
+	Lua::init();
 	SLSAPI::init();
 	Decompiler::cleanUp();
 
@@ -240,8 +243,8 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 	if (name.ends_with("/steamclient.so"))
 	{
 		//Analyse modules before any relocations get applied
-		LM_FindModule("steamclient.so", &g_modSteamClient);
-		Decompiler::parseModule(g_modSteamClient);
+		g_modSteamClient = MemHlp::getModule("steamclient.so");
+		Decompiler::parseModule(*g_modSteamClient);
 		//This is wasteful, but we have to analyse right away otherwise the offset get turned into
 		//addresses messing up the analysis.
 		//We could workaround it by only loading after a late module has been loaded
@@ -255,8 +258,8 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 	if (name.ends_with("/steamui.so"))
 	{
 		//Analyse modules before any relocations get applied
-		LM_FindModule("steamui.so", &g_modSteamUI);
-		Decompiler::parseModule(g_modSteamUI);
+		g_modSteamUI = MemHlp::getModule("steamui.so");
+		Decompiler::parseModule(*g_modSteamUI);
 		//This is wasteful, but we have to analyse right away otherwise the offset get turned into
 		//addresses messing up the analysis.
 		//We could workaround it by only loading after a late module has been loaded
@@ -269,7 +272,7 @@ unsigned int la_objopen(struct link_map *map, __attribute__((unused)) Lmid_t lmi
 	}
 	if (name.ends_with("/libtier0_s.so"))
 	{
-		LM_FindModule("libtier0_s.so", &g_modTier0);
+		g_modTier0 = MemHlp::getModule("libtier0_s.so");
 
 		load();
 	}

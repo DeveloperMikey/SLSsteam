@@ -25,7 +25,7 @@ Pattern_t::Pattern_t(const char* name, const char* pattern, MemHlp::SigFollowMod
 
 bool Pattern_t::find()
 {
-	address = MemHlp::searchSignature(name.c_str(), pattern.c_str(), module ? *module : g_modSteamClient , followMode, &prologue[0], prologue.size());
+	address = MemHlp::searchSignature(name.c_str(), pattern.c_str(), module ? *module : *g_modSteamClient , followMode, &prologue[0], prologue.size());
 	return address != LM_ADDRESS_BAD;
 }
 

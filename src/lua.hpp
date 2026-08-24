@@ -2,6 +2,7 @@
 
 #include "filewatcher.hpp"
 
+#include <filesystem>
 #include <memory>
 
 extern "C"
@@ -16,5 +17,5 @@ namespace Lua
 	extern std::unique_ptr<CFileWatcher> watcher;
 
 	void init();
-	bool runLua(const std::string& path);
+	bool runLua(const std::filesystem::path& path);
 }

@@ -13,6 +13,30 @@
 #include <vector>
 
 
+std::unordered_map<std::string, std::unique_ptr<lm_module_t>> MemHlp::moduleMap = std::unordered_map<std::string, std::unique_ptr<lm_module_t>>();
+
+lm_module_t* MemHlp::getModule(const std::string& name)
+{
+	if (!moduleMap.contains(name.c_str()))
+	{
+		LOG_DEBUG("Searching module %s\n", name.c_str());
+
+		lm_module_t mod;
+		if (!LM_FindModule(name.c_str(), &mod))
+		{
+			LOG_ERROR("Module %s not found!\n", name.c_str());
+			moduleMap[name] = nullptr;
+		}
+		else
+		{
+			LOG_DEBUG("Module %s loaded at 0x%x with size 0x%x\n", mod.name, mod.base, mod.size);
+			moduleMap[name] = std::make_unique<lm_module_t>(mod);
+		}
+	}
+
+	return moduleMap.at(name).get();
+}
+
 std::vector<int16_t> MemHlp::patternToBytes(const char* pattern)
 {
 	auto bytes = std::vector<int16_t>();
@@ -37,7 +61,7 @@ std::vector<int16_t> MemHlp::patternToBytes(const char* pattern)
 	return bytes;
 }
 
-lm_address_t MemHlp::patternScan(const char* pattern, const lm_module_t targetModule)
+lm_address_t MemHlp::patternScan(const char* pattern, const lm_module_t& targetModule)
 {
 	const auto bytes = patternToBytes(pattern);
 
@@ -95,7 +119,7 @@ lm_address_t MemHlp::patternScan(const char* pattern, const lm_module_t targetMo
 	return address;
 }
 
-lm_address_t MemHlp::searchSignature(const char* name, const char* signature, const lm_module_t module, const SigFollowMode mode, const void* extraData, const size_t extraDataSize)
+lm_address_t MemHlp::searchSignature(const char* name, const char* signature, const lm_module_t& module, const SigFollowMode mode, const void* extraData, const size_t extraDataSize)
 {
 	//lm_address_t address = LM_SigScan(signature, module.base, module.size);
 	lm_address_t address = patternScan(signature, module);
@@ -113,9 +137,17 @@ lm_address_t MemHlp::searchSignature(const char* name, const char* signature, co
 				break;
 
 			case SigFollowMode::PrologueUpwards:
+			{
 				LOG_DEBUG("Searching function prologue of %s from 0x%x\n", name, address);
-				address = MemHlp::findPrologue(address, static_cast<const int16_t*>(extraData), extraDataSize);
+				auto bytes = std::vector<int16_t>();
+				for (unsigned int i = 0; i < extraDataSize; i++)
+				{
+					bytes.emplace_back(static_cast<const int16_t*>(extraData)[i]);
+				}
+
+				address = MemHlp::findPrologue(address, bytes);
 				break;
+			}
 
 			default:
 				break;
@@ -125,16 +157,6 @@ lm_address_t MemHlp::searchSignature(const char* name, const char* signature, co
 	}
 
 	return address;
-}
-
-lm_address_t MemHlp::searchSignature(const char* name, const char* signature, const lm_module_t module, const SigFollowMode mode)
-{
-	return MemHlp::searchSignature(name, signature, module, mode, nullptr, 0);
-}
-
-lm_address_t MemHlp::searchSignature(const char* name, const char* signature, const lm_module_t module)
-{
-	return searchSignature(name, signature, module, SigFollowMode::None);
 }
 
 lm_address_t MemHlp::getJmpTarget(const lm_address_t address)
@@ -156,14 +178,14 @@ lm_address_t MemHlp::getJmpTarget(const lm_address_t address)
 	return std::stoul(inst.op_str, nullptr, 16);
 }
 
-lm_address_t MemHlp::findPrologue(const lm_address_t address, const int16_t* prologueBytes, const lm_size_t prologueSize)
+lm_address_t MemHlp::findPrologue(const lm_address_t address, const std::vector<int16_t>& prologueBytes)
 {
 	constexpr unsigned int scanSize = 0x10000;
 
 	for (unsigned int i = 0u; i < scanSize; i++)
 	{
 		bool found = true;
-		for (unsigned int j = 0u; j < prologueSize; j++)
+		for (unsigned int j = 0u; j < prologueBytes.size(); j++)
 		{
 			if (prologueBytes[j] == -1)
 			{
@@ -179,7 +201,7 @@ lm_address_t MemHlp::findPrologue(const lm_address_t address, const int16_t* pro
 
 		if (found)
 		{
-			lm_address_t prol = address - i - prologueSize + 1; //Add 1 byte back since bytesSize would be to big otherwise
+			lm_address_t prol = address - i - prologueBytes.size() + 1; //Add 1 byte back since bytesSize would be to big otherwise
 			LOG_DEBUG("Prologue found at 0x%x\n", prol);
 			return prol;
 		}
