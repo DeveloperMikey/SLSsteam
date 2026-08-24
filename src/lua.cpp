@@ -1,14 +1,14 @@
 #include "lua.hpp"
 
+#include "sdk/sdk.hpp"
+
 #include "config.hpp"
 #include "hooks.hpp"
 #include "log.hpp"
 #include "memhlp.hpp"
 
 #include <filesystem>
-#include <lua.h>
 #include <unordered_map>
-#include <vector>
 
 extern "C"
 {
@@ -20,16 +20,21 @@ extern "C"
 #include "LuaBridge/Array.h"
 #include "LuaBridge/List.h"
 #include "LuaBridge/UnorderedSet.h"
-#include "LuaBridge/LuaBridge.h"
 
 
 void onFileChange(__attribute__((unused)) const std::filesystem::path& path)
 {
 	Lua::init();
+
+	if (Hooks::IClientUtils_GetOfflineMode.hooked) //Ghetto way to check wheter our hooks are setup
+	{
+		Lua::fireCallback("SLSsteam::initialized");
+	}
 }
 
 lua_State* Lua::state;
 std::unique_ptr<CFileWatcher> Lua::watcher = std::make_unique<CFileWatcher>(onFileChange);
+std::unordered_map<std::string, std::vector<luabridge::LuaRef>> Lua::callbacks = std::unordered_map<std::string, std::vector<luabridge::LuaRef>>();
 
 namespace LuaConfig
 {
@@ -62,8 +67,18 @@ namespace LuaLog
 	}
 }
 
+namespace LuaSDK
+{
+	CSteamEngine* getEngine()
+	{
+		return g_pSteamEngine;
+	}
+}
+
 void Lua::init()
 {
+	callbacks.clear();
+
 	if (state)
 	{
 		lua_close(state);
@@ -109,8 +124,27 @@ void Lua::init()
 		.addFunction("setAdditionalApps", &CConfig::setAdditionalApps)
 	.endClass()
 
+	.beginClass<CSteamEngine>("CSteamEngine")
+		.addFunction("getUser", &CSteamEngine::getUser)
+		.addFunction("getUtils", &CSteamEngine::getUtils)
+	.endClass()
+
+	.beginClass<CUser>("CUser")
+		.addFunction("getClientApps", &CUser::getClientApps)
+		.addFunction("getClientUser", &CUser::getClientUser)
+		.addFunction("getAppManager", &CUser::getAppManager)
+		.addFunction("isSubscribed", &CUser::isSubscribed)
+	.endClass()
+
+	.beginClass<IClientApps>("IClientApps")
+		.addFunction("getAppData", &IClientApps::getAppData)
+		.addFunction("getAppType", &IClientApps::getAppType)
+	.endClass()
+
 	.beginNamespace("SLS")
 		.addProperty("config", &LuaConfig::get)
+		.addProperty("steamEngine", &LuaSDK::getEngine)
+		.addFunction("registerCallback", &Lua::registerCallback)
 	.endNamespace();
 
 	auto dir = std::filesystem::path(CConfig::getDir());
@@ -141,3 +175,8 @@ bool Lua::runLua(const std::filesystem::path& path)
 	return true;
 }
 
+void Lua::registerCallback(const std::string& name, luabridge::LuaRef fn)
+{
+	callbacks[name].emplace_back(fn);
+	LOG_DEBUG("Registered lua callback for %s\n", name.c_str());
+}

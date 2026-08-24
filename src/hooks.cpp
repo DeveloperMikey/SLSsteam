@@ -12,6 +12,7 @@
 #include "decompiler.hpp"
 #include "globals.hpp"
 #include "log.hpp"
+#include "lua.hpp"
 #include "memhlp.hpp"
 #include "patterns.hpp"
 #include "process.hpp"
@@ -1570,6 +1571,8 @@ void Hooks::placeVFTHooks()
 	#pragma GCC diagnostic pop
 
 	hooked = true;
+
+	Lua::fireCallback(Lua::Callbacks::SLSsteam_Initialized);
 }
 
 void Hooks::remove()
