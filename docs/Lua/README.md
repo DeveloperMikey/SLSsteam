@@ -102,6 +102,10 @@ config -> CConfig*: Gets SLSsteam config, see [CConfig](#cconfig)
 steamEngine -> CSteamEngine*: Gets the Global CSteamEngine instance
 registerCallback(name: string, function): Registers a callback, when it gets fired function will be invoked from SLSsteam
 
+alloc(size: int) -> lm_address_t: Allocate memory using Steam's memory allocator
+realloc(address: lm_address_t, size: int) -> lm_address_t: Reallocate memory using Steam's memory allocator
+free(address: lm_address_t): Free memory using Steam's memory allocator
+
 
 #### Callbacks
 
