@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 
-typedef void(*FileModifyEvent_t)();
+typedef void(*FileModifyEvent_t)(const std::filesystem::path&);
 
 class CFileWatcher
 {

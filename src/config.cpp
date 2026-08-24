@@ -14,7 +14,7 @@
 #include <string>
 
 
-static void onFileChange()
+static void onFileChange(__attribute__((unused)) const std::filesystem::path& path)
 {
 	g_config.loadSettings();
 	LOG_NOTIFY("Config reloaded!");

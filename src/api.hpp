@@ -3,6 +3,7 @@
 #include "sdk/sdk.hpp"
 
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <mutex>
 #include <vector>
@@ -12,6 +13,8 @@ class CFileWatcher;
 
 namespace SLSAPI
 {
+	constexpr const char* PATH = "/tmp/SLSsteam.API";
+
 	struct CompatOp_t
 	{
 		enum class OpType
@@ -40,7 +43,6 @@ namespace SLSAPI
 		uint32_t libraryIndex;
 	};
 
-	extern const char* path;
 	extern std::fstream fstream;
 	extern std::unique_ptr<CFileWatcher> watcher;
 	extern bool initialized;
@@ -51,7 +53,7 @@ namespace SLSAPI
 	extern std::vector<LibraryOp_t> libraryOps;
 
 	bool isEnabled();
-	void onFileChange();
+	void onFileChange(const std::filesystem::path& path);
 	void init();
 
 	void parseCmd(const std::string& cmd);

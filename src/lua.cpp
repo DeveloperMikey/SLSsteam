@@ -5,7 +5,10 @@
 #include "log.hpp"
 #include "memhlp.hpp"
 
+#include <filesystem>
 #include <lua.h>
+#include <unordered_map>
+#include <vector>
 
 extern "C"
 {
@@ -20,9 +23,9 @@ extern "C"
 #include "LuaBridge/LuaBridge.h"
 
 
-void onFileChange()
+void onFileChange(__attribute__((unused)) const std::filesystem::path& path)
 {
-	Lua::runLua("/home/acesls/.config/SLSsteam/plugins/example.lua");
+	Lua::init();
 }
 
 lua_State* Lua::state;
@@ -61,6 +64,11 @@ namespace LuaLog
 
 void Lua::init()
 {
+	if (state)
+	{
+		lua_close(state);
+	}
+
 	state = luaL_newstate();
 	luaL_openlibs(state);
 
@@ -108,14 +116,16 @@ void Lua::init()
 	auto dir = std::filesystem::path(CConfig::getDir());
 	dir.append("plugins");
 
-	for (const auto& lua : std::filesystem::directory_iterator{ dir })
+	for (const auto& lua : std::filesystem::directory_iterator { dir })
 	{
-		const auto path = lua.path();
-		watcher->addFile(path.c_str());
-		runLua(path);
+		runLua(lua);
 	}
 
-	watcher->start();
+	if (watcher->fileFdMap.size() < 1)
+	{
+		watcher->addFile(dir.c_str());
+		watcher->start();
+	}
 
 	LOG_DEBUG("Lua initialized\n");
 }

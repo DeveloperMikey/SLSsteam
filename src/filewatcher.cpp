@@ -43,20 +43,26 @@ void* watchLoop(void* args)
 			p += sizeof(inotify_event) + event->len;
 
 			auto path = watcher->fileFdMap[event->wd];
+			const bool isDir = std::filesystem::is_directory(path);
 			
 			if (!(event->mask & (CFileWatcher::WATCH_MASK)))
 			{
 				continue;
 			}
 
-			if (strcmp(event->name, path.filename().c_str()) != 0)
+			if (!isDir && strcmp(event->name, path.filename().c_str()) != 0)
 			{
 				continue;
 			}
 
 			LOG_DEBUG("inotify %s(%u) -> %u : %s\n", path.filename().c_str(), event->wd, event->mask, event->len ? event->name : "none");
 
-			watcher->onModify();
+			if (isDir)
+			{
+				path.append(event->name);
+			}
+
+			watcher->onModify(path);
 		}
 	}
 
@@ -98,15 +104,28 @@ int CFileWatcher::addFile(const char* path)
 {
 	//Watching seperate files does not seem to work very well, since the file descriptor becomes useless
 	//on some operations
+
+	int fd;
+
 	const std::filesystem::path p(path);
-	int fd = inotify_add_watch(notifyFd, p.parent_path().c_str(), WATCH_MASK);
+	if (std::filesystem::is_directory(p))
+	{
+		fd = inotify_add_watch(notifyFd, p.c_str(), WATCH_MASK);
+		LOG_DEBUG("Adding %s to FileWatcher %i\n", p.c_str(), notifyFd);
+	}
+	else
+	{
+		fd = inotify_add_watch(notifyFd, p.parent_path().c_str(), WATCH_MASK);
+		LOG_DEBUG("Adding %s with file %s to FileWatcher %i\n", p.parent_path().c_str(), p.filename().c_str(), notifyFd);
+	}
+
 	if (fd == -1)
 	{
+		LOG_ERROR("Failed to watch %s!\n", path);
 		return fd;
 	}
 
 	fileFdMap[fd] = p;
-	LOG_DEBUG("Added %s with file %s to FileWatcher %i\n", p.parent_path().c_str(), p.filename().c_str(), notifyFd);
 	return fd;
 }
 

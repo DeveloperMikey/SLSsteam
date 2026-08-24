@@ -11,7 +11,6 @@
 
 namespace SLSAPI
 {
-	const char* path = "/tmp/SLSsteam.API";
 
 	std::fstream fstream;
 	std::unique_ptr<CFileWatcher> watcher;
@@ -28,7 +27,7 @@ bool SLSAPI::isEnabled()
 	return g_config.api.get() && initialized;
 }
 
-void SLSAPI::onFileChange()
+void SLSAPI::onFileChange(const std::filesystem::path& path)
 {
 	//Hot reload support :)
 	if (!isEnabled())
@@ -41,7 +40,7 @@ void SLSAPI::onFileChange()
 
 	if (!fstream.is_open())
 	{
-		LOG_ERROR("Failed to open %s for parsing the next cmd!\n", path);
+		LOG_ERROR("Failed to open %s for parsing the next cmd!\n", path.c_str());
 		return;
 	}
 
@@ -142,11 +141,11 @@ void SLSAPI::parseCmd(const std::string& cmd)
 
 void SLSAPI::init()
 {
-	fstream = std::fstream(path, std::fstream::in | std::fstream::out | std::fstream::trunc); //Open for reading, writing and also delete contents
+	fstream = std::fstream(PATH, std::fstream::in | std::fstream::out | std::fstream::trunc); //Open for reading, writing and also delete contents
 
 	if (!fstream.is_open())
 	{
-		LOG_NOTIFYWARN("Failed to create %s (%s)!\n API will be unavailable", path, strerror(errno));
+		LOG_NOTIFYWARN("Failed to create %s (%s)!\n API will be unavailable", PATH, strerror(errno));
 		return;
 	}
 
@@ -154,10 +153,10 @@ void SLSAPI::init()
 	fstream.close();
 
 	watcher = std::make_unique<CFileWatcher>(onFileChange);
-	const int fd = watcher->addFile(path);
+	const int fd = watcher->addFile(PATH);
 	if (fd == -1)
 	{
-		LOG_NOTIFYWARN("Failed to watch %s!\n API will be unavailable", path);
+		LOG_NOTIFYWARN("Failed to watch %s!\n API will be unavailable", PATH);
 		return;
 	}
 
