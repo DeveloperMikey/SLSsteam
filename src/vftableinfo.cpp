@@ -7,9 +7,18 @@
 #include <sstream>
 
 
-VFTableInfo_t::VFTableInfo_t(const char* typeName, const char* functionName, const unsigned int index)
+VFTableInfo_t::VFTableInfo_t
+(
+	const char* typeName,
+	const char* functionName,
+	const unsigned int index,
+	const unsigned int subClassIndex
+)
 	:
-	typeName(typeName), functionName(functionName), index(index)
+	typeName(typeName),
+	functionName(functionName),
+	index(index),
+	subClassIndex(subClassIndex)
 {
 	VFTIndexes::functions.emplace_back(this);
 
@@ -42,6 +51,17 @@ bool VFTableInfo_t::init()
 	}
 
 	auto& vft = Decompiler::vftables[typeName];
+	if (subClassIndex != NO_INDEX)
+	{
+		if (subClassIndex >= vft.subclasses.size())
+		{
+			LOG_ERROR("SubClassIndex %u is out of range for %s!\n", subClassIndex, getPrintName().c_str());
+			return false;
+		}
+
+		vft = vft.subclasses[subClassIndex];
+	}
+
 	auto& funcs = vft.functions;
 
 	if (index >= funcs.size())

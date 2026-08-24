@@ -160,6 +160,10 @@ void Lua::init()
 		.addFunction("getAppType", &IClientApps::getAppType)
 	.endClass()
 
+	.beginClass<IClientUser>("IClientUser")
+		.addFunction("loggedOn", &IClientUser::loggedOn)
+	.endClass()
+
 	.beginClass<IClientUtils>("IClientUtils")
 		.addFunction("getAppId", &IClientUtils::getAppId)
 		.addFunction("getCurrentSteamPipe", &IClientUtils::getCurrentSteamPipe)
