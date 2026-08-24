@@ -68,6 +68,14 @@ namespace LuaLog
 	}
 }
 
+namespace LuaMemHlp
+{
+	std::string hexdump(const lm_address_t address, const size_t size)
+	{
+		return MemHlp::hexdump(reinterpret_cast<void*>(address), size);
+	}
+}
+
 namespace LuaSDK
 {
 	CSteamEngine* getEngine()
@@ -80,6 +88,11 @@ namespace LuaSDK
 		char buf[4096] { };
 		size_t size = apps->getAppData(appId, name, buf, sizeof(buf));
 		return std::string(buf, size);
+	}
+
+	void postCallback(CUser* pUser, const uint32_t type, const lm_address_t pCallback, const uint32_t callbackSize)
+	{
+		pUser->postCallback(static_cast<ECallbackType>(type), reinterpret_cast<void*>(pCallback), callbackSize);
 	}
 }
 
@@ -112,7 +125,7 @@ void Lua::init()
 	.beginNamespace("memhlp")
 		.addFunction("getModule", &MemHlp::getModule)
 		.addFunction("getJmpTarget", &MemHlp::getJmpTarget)
-		//.addFunction("hexdump", &MemHlp::hexdump)
+		.addFunction("hexdump", &LuaMemHlp::hexdump)
 		.addFunction("findPrologue", &MemHlp::findPrologue)
 		.addFunction("patternScan", &MemHlp::patternScan)
 	.endNamespace()
@@ -153,6 +166,7 @@ void Lua::init()
 		.addFunction("getClientUser", &CUser::getClientUser)
 		.addFunction("getAppManager", &CUser::getAppManager)
 		.addFunction("isSubscribed", &CUser::isSubscribed)
+		.addFunction("postCallback", &LuaSDK::postCallback)
 	.endClass()
 
 	.beginClass<IClientApps>("IClientApps")
