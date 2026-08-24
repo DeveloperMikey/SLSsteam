@@ -25,13 +25,13 @@ trampFn = ffi.cast("PostCallback_t", lh:place())
 log.debug("Postcallback hooked!")
 
 -- We cast to intptr_t since lua messes up the conversion to unsigned integer otherwise
-local clientUserMapLoggedOn = VFTableInfo_t("14IClientUserMap", "BLoggedOn", tonumber(ffi.cast("intptr_t", 0xffffffff)))
+local clientUserMapLoggedOn = VFTableInfo_t("14IClientUserMap", "BLoggedOn", tonumber(ffi.cast("intptr_t", 0xffffffff)), tonumber(ffi.cast("intptr_t", 0xffffffff)))
 if not clientUserMapLoggedOn:init() then
 	log.notify("Failed to parse IClientUserMap!")
 end
 
 -- IClientUser is subclass 1 of CUser
-local clientUserLoggedOn = VFTableInfo_t("5CUser", "BLoggedOn", clientUserMapLoggedOn.index, 1)
+local clientUserLoggedOn = VFTableInfo_t("5CUser", "BLoggedOn", clientUserMapLoggedOn.index, 0)
 clientUserLoggedOn:init()
 local clientUserLoggedOnFn = ffi.cast("IClientUser_BLoggedOn_t", clientUserLoggedOn.address)
 
@@ -42,12 +42,17 @@ local function initialized()
 	local clientUser = user:getClientUser()
 	local apps = user:getClientApps()
 
-	-- This is just an example how to add arbitrary functions, you can also use clientUser:loggedOn
-	local loggedOn = clientUserLoggedOnFn(clientUser)
+	-- This line is confusing, I am sure we can do better in the future
+	-- We do this because the lua object is wrapped in a UserData object from LuaBridge
+	-- So to get the actual object it's pointing at we need to convert it
+	-- Otherwise calling the resolved BLoggedOn with it will read the from the wrong memory address
+	local rawClientUser = ffi.cast("void*", memhlp.getUserDataPtr(tonumber(ffi.cast("intptr_t", clientUser))))
 
-	log.debug("IClientUser::BLoggedOn -> " .. tostring(loggedOn))
+	log.debug("IClientUser::BLoggedOn -> " .. tostring(clientUser:loggedOn())) -- SLS wrapped function call
+	-- This is just an example how to call arbitrary functions
+	log.debug("IClientUser::BLoggedOn -> " .. tostring(clientUserLoggedOnFn(rawClientUser))) -- Raw function call
 
-	function addappid(appId)
+	local function addappid(appId)
 		if user:isSubscribed(appId) then
 			log.debug(appId .. " is already subscribed! Not adding to additionalApps...")
 		end
@@ -72,6 +77,8 @@ local function initialized()
 	addappid(289121) -- # Darks Souls II JP Retail Pre-Order DLC 4
 	addappid(289122) -- # Darks Souls II JP Retail Pre-Order DLC 5
 	addappid(355700) -- # Dark Souls II Upgrade to DX11 (no content)
+
+	log.custom(log.LogLevelDebug | log.LogLevelOnce, "Custom deduplicated log")
 
 	log.notify("Lua apps added!")
 end
