@@ -92,8 +92,14 @@ bool CConfig::init()
 	}
 
 	//TODO: Move to static init
-	watcher->addFile(getPath().c_str());
-	watcher->start();
+	if (watcher->addFile(getPath().c_str()) != -1)
+	{
+		watcher->start();
+	}
+	else
+	{
+		LOG_NOTIFYERROR("Failed to watch config!\nHot reload will be unavailable");
+	}
 
 	loadSettings(true);
 	return true;

@@ -157,8 +157,14 @@ void Lua::init()
 
 	if (watcher->fileFdMap.size() < 1)
 	{
-		watcher->addFile(dir.c_str());
-		watcher->start();
+		if (watcher->addFile(dir.c_str()) != -1)
+		{
+			watcher->start();
+		}
+		else
+		{
+			LOG_NOTIFYERROR("Failed to watch plugin directory!\nHot reload will be unavailable");
+		}
 	}
 
 	LOG_DEBUG("Lua initialized\n");
