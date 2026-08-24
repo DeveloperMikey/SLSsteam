@@ -12,6 +12,8 @@ VFTableInfo_t::VFTableInfo_t(const char* typeName, const char* functionName, con
 	typeName(typeName), functionName(functionName), index(index)
 {
 	VFTIndexes::functions.emplace_back(this);
+
+	LOG_DEBUG("VFTableInfo_t(%s, %s, %u)\n", typeName, functionName, index);
 }
 
 bool VFTableInfo_t::init()
@@ -55,9 +57,11 @@ bool VFTableInfo_t::init()
 
 std::string VFTableInfo_t::getPrintName() const
 {
-	return typeName + "::" + functionName;
-}
+	std::ostringstream ss;
+	ss << typeName << "::" << functionName;
 
+	return ss.str();
+}
 
 namespace VFTIndexes
 {

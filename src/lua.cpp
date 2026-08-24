@@ -6,6 +6,7 @@
 #include "hooks.hpp"
 #include "log.hpp"
 #include "memhlp.hpp"
+#include "vftableinfo.hpp"
 
 #include <filesystem>
 #include <unordered_map>
@@ -73,6 +74,13 @@ namespace LuaSDK
 	{
 		return g_pSteamEngine;
 	}
+
+	std::string getAppData(IClientApps* apps, const AppId_t appId, const char* name)
+	{
+		char buf[4096] { };
+		size_t size = apps->getAppData(appId, name, buf, sizeof(buf));
+		return std::string(buf, size);
+	}
 }
 
 void Lua::init()
@@ -104,9 +112,20 @@ void Lua::init()
 	.beginNamespace("memhlp")
 		.addFunction("getModule", &MemHlp::getModule)
 		.addFunction("getJmpTarget", &MemHlp::getJmpTarget)
+		//.addFunction("hexdump", &MemHlp::hexdump)
 		.addFunction("findPrologue", &MemHlp::findPrologue)
 		.addFunction("patternScan", &MemHlp::patternScan)
 	.endNamespace()
+
+	.beginClass<VFTableInfo_t>("VFTableInfo_t")
+		.addConstructor<void(*)(const char*, const char*, unsigned int)>()
+		.addProperty("typeName", &VFTableInfo_t::typeName)
+		.addProperty("functionName", &VFTableInfo_t::functionName)
+		.addProperty("address", &VFTableInfo_t::address)
+		.addProperty("index", &VFTableInfo_t::index)
+		.addFunction("init", &VFTableInfo_t::init)
+		.addFunction("getPrintName", &VFTableInfo_t::getPrintName)
+	.endClass()
 
 	.beginClass<LuaHook>("LuaHook")
 		.addConstructor<void(*)(const char*, const lm_address_t, const lm_address_t)>()
@@ -137,8 +156,13 @@ void Lua::init()
 	.endClass()
 
 	.beginClass<IClientApps>("IClientApps")
-		.addFunction("getAppData", &IClientApps::getAppData)
+		.addFunction("getAppData", &LuaSDK::getAppData)
 		.addFunction("getAppType", &IClientApps::getAppType)
+	.endClass()
+
+	.beginClass<IClientUtils>("IClientUtils")
+		.addFunction("getAppId", &IClientUtils::getAppId)
+		.addFunction("getCurrentSteamPipe", &IClientUtils::getCurrentSteamPipe)
 	.endClass()
 
 	.beginNamespace("SLS")

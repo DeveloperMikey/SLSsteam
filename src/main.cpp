@@ -212,7 +212,8 @@ static void load()
 
 	Lua::init();
 	SLSAPI::init();
-	Decompiler::cleanUp();
+	//Disabled, since the Lua API can use it to find VFTables
+	//Decompiler::cleanUp();
 
 	if (g_config.notifyInit.get())
 	{
