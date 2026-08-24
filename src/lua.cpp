@@ -8,6 +8,8 @@
 #include "memhlp.hpp"
 #include "vftableinfo.hpp"
 
+#include "libmem/libmem.h"
+
 #include <filesystem>
 #include <unordered_map>
 
@@ -79,6 +81,11 @@ namespace LuaMemHlp
 	{
 		return MemHlp::hexdump(reinterpret_cast<void*>(address), size);
 	}
+
+	lm_address_t getUserDataPtr(lm_address_t data)
+	{
+		return reinterpret_cast<lm_address_t>(reinterpret_cast<luabridge::detail::Userdata*>(data)->getPointer());
+	}
 }
 
 namespace LuaSDK
@@ -142,6 +149,8 @@ void Lua::init()
 		.addFunction("hexdump", &LuaMemHlp::hexdump)
 		.addFunction("findPrologue", &MemHlp::findPrologue)
 		.addFunction("patternScan", &MemHlp::patternScan)
+
+		.addFunction("getUserDataPtr", &LuaMemHlp::getUserDataPtr)
 	.endNamespace()
 
 	.beginClass<VFTableInfo_t>("VFTableInfo_t")

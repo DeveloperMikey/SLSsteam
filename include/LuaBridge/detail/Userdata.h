@@ -43,7 +43,7 @@ protected:
     /**
       Get an untyped pointer to the contained class.
     */
-    void* getPointer() { return m_p; }
+    //void* getPointer() { return m_p; }
 
 private:
     //--------------------------------------------------------------------------
@@ -256,6 +256,12 @@ public:
     {
         return isInstance(L, index, detail::getClassRegistryKey<T>());
     }
+
+    //--------------------------------------------------------------------------
+    /**
+      Get an untyped pointer to the contained class.
+    */
+    void* getPointer() { return m_p; }
 };
 
 //----------------------------------------------------------------------------
