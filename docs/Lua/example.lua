@@ -35,6 +35,8 @@ local clientUserLoggedOn = VFTableInfo_t("5CUser", "BLoggedOn", clientUserMapLog
 clientUserLoggedOn:init()
 local clientUserLoggedOnFn = ffi.cast("IClientUser_BLoggedOn_t", clientUserLoggedOn.address)
 
+local injectedApps = {}
+
 local function initialized()
 	local config = SLS.config
 	local engine = SLS.steamEngine
@@ -57,8 +59,9 @@ local function initialized()
 			log.debug(appId .. " is already subscribed! Not adding to additionalApps...")
 		end
 
-		local appList = config:getAdditionalApps(config)
+		local appList = config:getAdditionalApps()
 		table.insert(appList, appId)
+		table.insert(injectedApps, appId)
 		log.debug("Added app " .. appId)
 		config:setAdditionalApps(appList)
 	end
@@ -80,8 +83,27 @@ local function initialized()
 
 	log.custom(log.LogLevelDebug | log.LogLevelOnce, "Custom deduplicated log")
 
-	log.notify("Lua apps added!")
+	log.info("Lua apps added!")
+end
+
+local function reload()
+	-- Cleanup code, in case you need some. Hooks get cleaned up automatically
+	local config = SLS.config
+	local appList = config:getAdditionalApps()
+
+	for k, v in ipairs(appList) do
+		for k2, v2 in ipairs(injectedApps) do
+			if v == v2 then
+				table.remove(appList, k)
+				log.debug("Removing app " .. tostring(v2))
+			end
+		end
+	end
+
+	config:setAdditionalApps(appList)
+	log.info("Cleaned applist!")
 end
 
 SLS.registerCallback("SLSsteam::initialized", initialized)
-log.notify("Luas loaded!")
+SLS.registerCallback("SLSsteam::luaReload", reload)
+log.info("Luas loaded!")
