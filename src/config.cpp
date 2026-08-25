@@ -3,6 +3,7 @@
 
 #include "filewatcher.hpp"
 #include "log.hpp"
+#include "lua.hpp"
 #include "utils.hpp"
 
 #include "yaml-cpp/yaml.h"
@@ -138,22 +139,23 @@ void CConfig::setError(const ELoadError err, const char* keyName)
 
 bool CConfig::loadSettings(bool firstLoad)
 {
-	YAML::Node node;
+	rootNode = YAML::Node();
+
 	try
 	{
-		node = YAML::LoadFile(getPath());
+		rootNode = YAML::LoadFile(getPath());
 	}
 	catch (...)
 	{
 		LOG_NOTIFYLONG("Failed loading config file! Using defaults");
-		node = YAML::Node(); //Create empty node and let defaults kick in
+		rootNode = YAML::Node(); //Create empty node and let defaults kick in
 	}
 
 	__loadErrors = std::string("");
 	
 	//Parse logLevels first, otherwise settings won't get logged
-	logLevels = getSetting<LogLevelFlags_t>(node, "LogLevels", 0xff, true);
-	api = getSetting<bool>(node, "API", true);
+	logLevels = getSetting<LogLevelFlags_t>(rootNode, "LogLevels", 0xff, true);
+	api = getSetting<bool>(rootNode, "API", true);
 	if (api.get())
 	{
 		logLevels = logLevels.get() | k_ELogLevelAPI;
@@ -168,35 +170,35 @@ bool CConfig::loadSettings(bool firstLoad)
 		ELogLevel_ToString(logLevels.get()).c_str()
 	);
 
-	disableFamilyLock = getSetting<bool>(node, "DisableFamilyShareLock", true);
-	useWhiteList = getSetting<bool>(node, "UseWhitelist", false);
-	maxSchemaTries = getSetting<uint32_t>(node, "MaxSchemaTries", 10);
-	smartTickets = getSetting<SmartTicketsFlags_t>(node, "SmartTickets", 1);
-	safeMode = getSetting<bool>(node, "SafeMode", false);
-	warnHashMissmatch = getSetting<bool>(node, "WarnHashMissmatch", false);
-	notifyInit = getSetting<bool>(node, "NotifyInit", true);
-	fakeName = getSetting<std::string>(node, "FakeName", "");
-	fakeEmail = getSetting<std::string>(node, "FakeEmail", "");
-	fakeWalletBalance = getSetting<int32_t>(node, "FakeWalletBalance", 0);
-	disableCloud = getSetting<bool>(node, "DisableCloud", true);
-	disableUpdates = getSetting<bool>(node, "DisableUpdates", true);
-	dumpInterfaceMaps = getSetting<bool>(node, "DumpClientInterfaces", false);
-	extendedLogging = getSetting<bool>(node, "ExtendedLogging", false);
+	disableFamilyLock = getSetting<bool>(rootNode, "DisableFamilyShareLock", true);
+	useWhiteList = getSetting<bool>(rootNode, "UseWhitelist", false);
+	maxSchemaTries = getSetting<uint32_t>(rootNode, "MaxSchemaTries", 10);
+	smartTickets = getSetting<SmartTicketsFlags_t>(rootNode, "SmartTickets", 1);
+	safeMode = getSetting<bool>(rootNode, "SafeMode", false);
+	warnHashMissmatch = getSetting<bool>(rootNode, "WarnHashMissmatch", false);
+	notifyInit = getSetting<bool>(rootNode, "NotifyInit", true);
+	fakeName = getSetting<std::string>(rootNode, "FakeName", "");
+	fakeEmail = getSetting<std::string>(rootNode, "FakeEmail", "");
+	fakeWalletBalance = getSetting<int32_t>(rootNode, "FakeWalletBalance", 0);
+	disableCloud = getSetting<bool>(rootNode, "DisableCloud", true);
+	disableUpdates = getSetting<bool>(rootNode, "DisableUpdates", true);
+	dumpInterfaceMaps = getSetting<bool>(rootNode, "DumpClientInterfaces", false);
+	extendedLogging = getSetting<bool>(rootNode, "ExtendedLogging", false);
 
-	appIds = getList<AppId_t>(node, "AppIds");
-	fakeOffline = getList<AppId_t>(node, "FakeOffline");
-	depotBlacklist = getList<AppId_t>(node, "DepotBlacklist");
+	appIds = getList<AppId_t>(rootNode, "AppIds");
+	fakeOffline = getList<AppId_t>(rootNode, "FakeOffline");
+	depotBlacklist = getList<AppId_t>(rootNode, "DepotBlacklist");
 
-	fakeAppIds = getMap<AppId_t, AppId_t>(node, "FakeAppIds");
-	manifestIds = getMap<AppId_t, uint64_t>(node, "ManifestIds");
-	appTokens = getMap<AppId_t, uint64_t>(node, "AppTokens");
-	cdKeys = getMap<AppId_t, std::string>(node, "CDKeys", true);
-	gameTitles = getMap<AppId_t, std::string>(node, "GameTitles");
-	subscriptionTimestamps = getMap<AppId_t, uint32_t>(node, "SubscriptionTimestamps");
-	steamIdOverride = getMap<AppId_t, uint64_t>(node, "SteamIdOverride");
-	launchOptions = getMap<AppId_t, std::string>(node, "LaunchOptions");
+	fakeAppIds = getMap<AppId_t, AppId_t>(rootNode, "FakeAppIds");
+	manifestIds = getMap<AppId_t, uint64_t>(rootNode, "ManifestIds");
+	appTokens = getMap<AppId_t, uint64_t>(rootNode, "AppTokens");
+	cdKeys = getMap<AppId_t, std::string>(rootNode, "CDKeys", true);
+	gameTitles = getMap<AppId_t, std::string>(rootNode, "GameTitles");
+	subscriptionTimestamps = getMap<AppId_t, uint32_t>(rootNode, "SubscriptionTimestamps");
+	steamIdOverride = getMap<AppId_t, uint64_t>(rootNode, "SteamIdOverride");
+	launchOptions = getMap<AppId_t, std::string>(rootNode, "LaunchOptions");
 
-	setAdditionalApps(getList<AppId_t>(node, "AdditionalApps"), firstLoad);
+	setAdditionalApps(getList<AppId_t>(rootNode, "AdditionalApps"), firstLoad);
 
 	//Do not log the keys themself
 	for (const auto& key : cdKeys.get())
@@ -205,7 +207,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	}
 
 	//Do not warn for these (yet?)
-	const auto idleStatusNode = node["IdleStatus"];
+	const auto idleStatusNode = rootNode["IdleStatus"];
 	if (idleStatusNode)
 	{
 		try
@@ -228,7 +230,7 @@ bool CConfig::loadSettings(bool firstLoad)
 		}
 	}
 
-	const auto dlcDataNode = node["DlcData"];
+	const auto dlcDataNode = rootNode["DlcData"];
 	if (dlcDataNode)
 	{
 		auto _dlcData = dlcData.empty();
@@ -261,7 +263,7 @@ bool CConfig::loadSettings(bool firstLoad)
 		setError(ELoadError::MissingKey, "DlcData");
 	}
 
-	const auto denuvoGamesNode = node["DenuvoGames"];
+	const auto denuvoGamesNode = rootNode["DenuvoGames"];
 	if (denuvoGamesNode)
 	{
 		auto _denuvoGames = denuvoGames.empty();
@@ -296,6 +298,8 @@ bool CConfig::loadSettings(bool firstLoad)
 		//LOG_NOTIFY("Missing DenuvoGames entry in config!");
 		setError(ELoadError::MissingKey, "DenuvoGames");
 	}
+
+	Lua::fireCallback(Lua::Callbacks::SLSsteam_ConfigLoaded);
 
 	const auto errors = __loadErrors.get();
 	if (errors.size())

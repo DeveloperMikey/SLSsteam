@@ -11,7 +11,9 @@
 #include "libmem/libmem.h"
 
 #include <filesystem>
+#include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 extern "C"
 {
@@ -28,13 +30,7 @@ extern "C"
 void onFileChange(__attribute__((unused)) const std::filesystem::path& path)
 {
 	Lua::fireCallback(Lua::Callbacks::SLSsteam_LuaReload);
-
 	Lua::init();
-
-	if (Hooks::IClientUtils_GetOfflineMode.hooked) //Ghetto way to check wheter our hooks are setup
-	{
-		Lua::fireCallback(Lua::Callbacks::SLSsteam_Initialized);
-	}
 }
 
 lua_State* Lua::state;
@@ -48,9 +44,39 @@ namespace LuaConfig
 		return &g_config;
 	}
 
-	auto getAdditionalApps(CConfig* config)
+	std::unordered_set<AppId_t> getAdditionalApps(CConfig* config)
 	{
 		return config->addedAppIds.get();
+	}
+
+	double getDouble(CConfig* config, const char* name, const double defaultValue)
+	{
+		return config->getSetting<double>(config->rootNode, name, defaultValue);
+	}
+
+	int64_t getInt(CConfig* config, const char* name, const uint64_t defaultValue)
+	{
+		return config->getSetting<int64_t>(config->rootNode, name, defaultValue);
+	}
+
+	std::string getString(CConfig* config, const char* name, const std::string& defaultValue)
+	{
+		return config->getSetting<std::string>(config->rootNode, name, defaultValue);
+	}
+
+	std::unordered_set<double> getDoubleList(CConfig* config, const char* name)
+	{
+		return config->getList<double>(config->rootNode, name);
+	}
+
+	std::unordered_set<int64_t> getIntList(CConfig* config, const char* name)
+	{
+		return config->getList<int64_t>(config->rootNode, name);
+	}
+
+	std::unordered_set<std::string> getStringList(CConfig* config, const char* name)
+	{
+		return config->getList<std::string>(config->rootNode, name);
 	}
 }
 
@@ -194,6 +220,13 @@ void Lua::init()
 	.beginClass<CConfig>("CConfig")
 		.addFunction("getAdditionalApps", &LuaConfig::getAdditionalApps)
 		.addFunction("setAdditionalApps", &CConfig::setAdditionalApps)
+
+		.addFunction("getDouble", &LuaConfig::getDouble)
+		.addFunction("getInt", &LuaConfig::getInt)
+		.addFunction("getString", &LuaConfig::getString)
+		.addFunction("getIntList", &LuaConfig::getIntList)
+		.addFunction("getDoubleList", &LuaConfig::getDoubleList)
+		.addFunction("getStringList", &LuaConfig::getStringList)
 	.endClass()
 
 	.beginClass<CSteamEngine>("CSteamEngine")
@@ -248,6 +281,13 @@ void Lua::init()
 	for (const auto& lua : std::filesystem::directory_iterator { dir })
 	{
 		runLua(lua);
+	}
+
+	Lua::fireCallback(Lua::Callbacks::SLSsteam_ConfigLoaded);
+
+	if (Hooks::IClientUtils_GetOfflineMode.hooked) //Ghetto way to check wheter our hooks are setup
+	{
+		Lua::fireCallback(Lua::Callbacks::SLSsteam_Initialized);
 	}
 
 	if (watcher->fileFdMap.size() < 1)

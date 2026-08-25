@@ -96,6 +96,8 @@ public:
 	MTVariable<std::unordered_set<AppId_t>> newApps;
 	MTVariable<std::unordered_set<AppId_t>> removedApps;
 
+	YAML::Node rootNode;
+
 	bool createFile() const;
 	bool init();
 
