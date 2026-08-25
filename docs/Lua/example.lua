@@ -7,6 +7,12 @@ ffi.cdef[[
 
 log.debug("Luas loading :)")
 
+-- Define global Hooks table if it does not exist. This prevents Lua's garbage collector
+-- from removing our hooks
+if not Hooks then
+	Hooks = {}
+end
+
 local modSteamClient = memhlp.getModule("steamclient.so")
 
 local postCallbackPtr = memhlp.getJmpTarget(memhlp.patternScan("E8 ? ? ? ? 8B 75 ? 89 D8", modSteamClient))
@@ -20,6 +26,8 @@ end
 
 local detourFn = ffi.cast("PostCallback_t", hkPostCallback)
 local lh = LuaHook("PostCalback", tonumber(postCallbackPtr), tonumber(ffi.cast("intptr_t", detourFn)))
+
+table.insert(Hooks, lh)
 
 trampFn = ffi.cast("PostCallback_t", lh:place())
 log.debug("Postcallback hooked!")
