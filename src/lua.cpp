@@ -9,6 +9,7 @@
 #include "vftableinfo.hpp"
 
 #include "libmem/libmem.h"
+#include "yaml-cpp/yaml.h"
 
 #include <filesystem>
 #include <string>
@@ -24,7 +25,9 @@ extern "C"
 
 #include "LuaBridge/Array.h"
 #include "LuaBridge/List.h"
+#include "LuaBridge/Pair.h"
 #include "LuaBridge/UnorderedSet.h"
+#include "LuaBridge/Vector.h"
 
 
 void onFileChange(__attribute__((unused)) const std::filesystem::path& path)
@@ -82,6 +85,11 @@ namespace LuaConfig
 	std::unordered_set<std::string> getStringList(CConfig* config, const char* name)
 	{
 		return config->getList<std::string>(config->rootNode, name);
+	}
+
+	YAML::Node getNode(CConfig* config, const std::string& name)
+	{
+		return config->rootNode[name];
 	}
 }
 
@@ -156,6 +164,35 @@ namespace LuaSDK
 	}
 }
 
+namespace LuaYAML
+{
+	double asDouble(const YAML::Node* node)
+	{
+		return node->as<double>();
+	}
+
+	int64_t asInt(const YAML::Node* node)
+	{
+		return node->as<int64_t>();
+	}
+
+	std::string asString(const YAML::Node* node)
+	{
+		return node->as<std::string>();
+	}
+
+	std::vector<std::pair<YAML::Node, YAML::Node>> asPairList(const YAML::Node* node)
+	{
+		auto vec = std::vector<std::pair<YAML::Node, YAML::Node>>();
+		for (const auto& it : *node)
+		{
+			vec.emplace_back(it.first, it.second);
+		}
+
+		return vec;
+	}
+}
+
 void Lua::init()
 {
 	callbacks.clear();
@@ -222,6 +259,20 @@ void Lua::init()
 		.addFunction("remove", &LuaHook::remove)
 	.endClass()
 
+	.beginClass<YAML::Node>("YAML::Node")
+		.addProperty("isDefined", &YAML::Node::IsDefined)
+		.addProperty("isNull", &YAML::Node::IsNull)
+		.addProperty("isScalar", &YAML::Node::IsScalar)
+		.addProperty("isSequence", &YAML::Node::IsSequence)
+		.addProperty("isMap", &YAML::Node::IsMap)
+		.addProperty("size", &YAML::Node::size)
+
+		.addFunction("asDouble", &LuaYAML::asDouble)
+		.addFunction("asInt", &LuaYAML::asInt)
+		.addFunction("asString", &LuaYAML::asString)
+		.addFunction("asPairList", &LuaYAML::asPairList)
+	.endClass()
+
 	.beginClass<CConfig>("CConfig")
 		.addFunction("getAdditionalApps", &LuaConfig::getAdditionalApps)
 		.addFunction("setAdditionalApps", &CConfig::setAdditionalApps)
@@ -232,6 +283,7 @@ void Lua::init()
 		.addFunction("getIntList", &LuaConfig::getIntList)
 		.addFunction("getDoubleList", &LuaConfig::getDoubleList)
 		.addFunction("getStringList", &LuaConfig::getStringList)
+		.addFunction("getNode", &LuaConfig::getNode)
 	.endClass()
 
 	.beginClass<CSteamEngine>("CSteamEngine")
