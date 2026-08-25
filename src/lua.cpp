@@ -286,6 +286,17 @@ void Lua::init()
 		.addFunction("getNode", &LuaConfig::getNode)
 	.endClass()
 
+	.beginClass<CNetPacketBody>("CNetPacketBody")
+		.addProperty("type", &CNetPacketBody::type)
+		.addProperty("headerSize", &CNetPacketBody::headerSize)
+	.endClass()
+
+	.beginClass<CNetPacket>("CNetPacket")
+		.addProperty("body", &CNetPacket::body)
+		.addProperty("size", &CNetPacket::size)
+		.addProperty("refs", &CNetPacket::refs)
+	.endClass()
+
 	.beginClass<CSteamEngine>("CSteamEngine")
 		.addFunction("getUser", &CSteamEngine::getUser)
 		.addFunction("getUtils", &CSteamEngine::getUtils)

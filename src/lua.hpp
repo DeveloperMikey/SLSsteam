@@ -24,6 +24,9 @@ namespace Lua
 		constexpr const char* SLSsteam_ConfigLoaded = "SLSsteam::configLoaded";
 		constexpr const char* SLSsteam_Initialized = "SLSsteam::initialized";
 		constexpr const char* SLSsteam_LuaReload = "SLSsteam::luaReload";
+
+		constexpr const char* Network_RecvPkt = "Network::recvPkt";
+		constexpr const char* Network_SendPkt = "Network::sendPkt";
 	}
 
 	extern lua_State* state;

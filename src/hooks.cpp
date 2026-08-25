@@ -334,6 +334,8 @@ static void hkCMInterface_RecvPkt(CCMInterface* pCMInterface, CNetPacket* pNetPa
 			return;
 		}
 
+		Lua::fireCallback(Lua::Callbacks::Network_RecvPkt, pNetPacket);
+
 		Misc::recvMsg(pNetPacket);
 		Ticket::recvMsg(pNetPacket);
 	}
@@ -527,6 +529,8 @@ static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(CWebSocketConnection* 
 				{
 					g_pWebSocketConnection = reinterpret_cast<CWebSocketConnection*>(pWebSocketConnection);
 				}
+
+				Lua::fireCallback(Lua::Callbacks::Network_SendPkt, &packet);
 
 				Apps::sendMsg(&packet);
 				FakeAppIds::sendMsg(&packet);
