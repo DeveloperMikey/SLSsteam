@@ -110,3 +110,4 @@ free(address: lm_address_t): Free memory using Steam's memory allocator
 #### Callbacks
 
 "SLSsteam::initialized": Fired when Steam has finished initializing CUser, making it safe to access
+"SLSsteam::luaReload": Called right before SLSsteam deletes the current Lua state & recreates it. Use this to clean up your changes to memory (LuaHooks get cleaned up automatically)
