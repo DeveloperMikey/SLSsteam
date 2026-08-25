@@ -111,12 +111,12 @@ int CFileWatcher::addFile(const char* path)
 	if (std::filesystem::is_directory(p))
 	{
 		fd = inotify_add_watch(notifyFd, p.c_str(), WATCH_MASK);
-		LOG_DEBUG("Adding %s to FileWatcher %i\n", p.c_str(), notifyFd);
+		LOG_DEBUG("Adding %s to FileWatcher %i\n", p.filename().c_str(), notifyFd);
 	}
 	else
 	{
 		fd = inotify_add_watch(notifyFd, p.parent_path().c_str(), WATCH_MASK);
-		LOG_DEBUG("Adding %s with file %s to FileWatcher %i\n", p.parent_path().c_str(), p.filename().c_str(), notifyFd);
+		LOG_DEBUG("Adding %s with file %s to FileWatcher %i\n", p.parent_path().filename().c_str(), p.filename().c_str(), notifyFd);
 	}
 
 	if (fd == -1)

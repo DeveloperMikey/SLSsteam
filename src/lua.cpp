@@ -262,6 +262,7 @@ bool Lua::runLua(const std::filesystem::path& path)
 		return false;
 	}
 
+	LOG_DEBUG("Ran %s\n", path.filename().c_str());
 	return true;
 }
 
