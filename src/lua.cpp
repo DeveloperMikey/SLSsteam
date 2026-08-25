@@ -12,6 +12,7 @@
 #include "yaml-cpp/yaml.h"
 
 #include <filesystem>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -346,14 +347,21 @@ void Lua::init()
 		}
 	}
 
-	for (const auto& lua : std::filesystem::directory_iterator { dir })
+	//Collect files inside of set since directory_iterator isn't sorted
+	auto files = std::set<std::filesystem::path>();
+	for (const auto& file : std::filesystem::directory_iterator { dir })
 	{
-		const auto path = std::filesystem::path(lua);
+		const auto path = std::filesystem::path(file);
 		if (path.extension() != ".lua")
 		{
 			continue;
 		}
 
+		files.emplace(path);
+	}
+
+	for (const auto& lua : files)
+	{
 		runLua(lua);
 	}
 
