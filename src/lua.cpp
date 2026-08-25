@@ -236,6 +236,15 @@ void Lua::init()
 	auto dir = std::filesystem::path(CConfig::getDir());
 	dir.append("plugins");
 
+	if (!std::filesystem::exists(dir))
+	{
+		if (!std::filesystem::create_directory(dir))
+		{
+			LOG_NOTIFYERROR("Failed to create plugins directory!\nPlugins will be unavailable\n");
+			return;
+		}
+	}
+
 	for (const auto& lua : std::filesystem::directory_iterator { dir })
 	{
 		runLua(lua);
