@@ -27,11 +27,13 @@ extern "C"
 
 void onFileChange(__attribute__((unused)) const std::filesystem::path& path)
 {
+	Lua::fireCallback(Lua::Callbacks::SLSsteam_LuaReload);
+
 	Lua::init();
 
 	if (Hooks::IClientUtils_GetOfflineMode.hooked) //Ghetto way to check wheter our hooks are setup
 	{
-		Lua::fireCallback("SLSsteam::initialized");
+		Lua::fireCallback(Lua::Callbacks::SLSsteam_Initialized);
 	}
 }
 
