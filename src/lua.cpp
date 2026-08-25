@@ -101,6 +101,16 @@ namespace LuaLog
 		LOG_DEBUG("%s\n", msg);
 	}
 
+	void warn(const char* msg)
+	{
+		LOG_WARN("%s\n", msg);
+	}
+
+	void error(const char* msg)
+	{
+		LOG_ERROR("%s\n", msg);
+	}
+
 	void info(const char* msg)
 	{
 		LOG_INFO("%s\n", msg);
@@ -109,6 +119,16 @@ namespace LuaLog
 	void notify(const char* msg)
 	{
 		LOG_NOTIFY("%s", msg);
+	}
+
+	void notifyWarn(const char* msg)
+	{
+		LOG_NOTIFYWARN("%s", msg);
+	}
+
+	void notifyError(const char* msg)
+	{
+		LOG_NOTIFYERROR("%s", msg);
 	}
 
 	void custom(const LogLevelFlags_t lvl, const char* msg)
@@ -218,8 +238,12 @@ void Lua::init()
 		.addConstant("LogLevelNotify", 1 << 6)
 		.addConstant("LogLevelNotifyLong", 1 << 7)
 		.addFunction("debug", &LuaLog::debug)
+		.addFunction("warn", &LuaLog::warn)
+		.addFunction("error", &LuaLog::error)
 		.addFunction("info", &LuaLog::info)
 		.addFunction("notify", &LuaLog::notify)
+		.addFunction("notifyWarn", &LuaLog::notifyWarn)
+		.addFunction("notifyError", &LuaLog::notifyError)
 		.addFunction("custom", &LuaLog::custom)
 	.endNamespace()
 
