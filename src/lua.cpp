@@ -29,6 +29,11 @@ extern "C"
 
 void onFileChange(__attribute__((unused)) const std::filesystem::path& path)
 {
+	if (path.extension() != ".lua")
+	{
+		return;
+	}
+
 	Lua::fireCallback(Lua::Callbacks::SLSsteam_LuaReload);
 	Lua::init();
 }
@@ -280,6 +285,12 @@ void Lua::init()
 
 	for (const auto& lua : std::filesystem::directory_iterator { dir })
 	{
+		const auto path = std::filesystem::path(lua);
+		if (path.extension() != ".lua")
+		{
+			continue;
+		}
+
 		runLua(lua);
 	}
 
