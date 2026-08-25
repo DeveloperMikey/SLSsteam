@@ -75,6 +75,14 @@ remove(): Remove the hook
 getAdditionalApps() -> AppId_t[]: Gets all AdditionalApps
 setAdditionalApps(appIds: AppId_t[]): Sets all AdditionalApps
 
+getDouble(name: string, defaultValue: double) -> double: Gets name from config as double
+getInt(name: string, defaultValue: Int64) -> Int64: Gets name from config as Int64
+getString(name: string, defaultValue: string) -> string: Gets name from config as string
+
+getDoubleList(name: string) -> double[]: Gets name from config as double set (deduplicated)
+getIntList(name: string) -> Int64[]: Gets name from config as Int64 set (deduplicated)
+getStringList(name: string) -> string[]: Gets name from config as string set (deduplicated)
+
 
 #### CSteamEngine
 
@@ -109,5 +117,6 @@ free(address: lm_address_t): Free memory using Steam's memory allocator
 
 #### Callbacks
 
-"SLSsteam::initialized": Fired when Steam has finished initializing CUser, making it safe to access
+"SLSsteam::configLoaded": Fired right after the config got reloaded and also on each subsequent Lua reload
+"SLSsteam::initialized": Fired when Steam has finished initializing CUser, making it safe to access (gets fired after each subsequent Lua reload aswell)
 "SLSsteam::luaReload": Called right before SLSsteam deletes the current Lua state & recreates it. Use this to clean up your changes to memory (LuaHooks get cleaned up automatically)

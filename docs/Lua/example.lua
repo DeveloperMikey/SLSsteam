@@ -112,6 +112,18 @@ local function reload()
 	log.info("Cleaned applist!")
 end
 
+local function configLoaded()
+	local config = SLS.config
+	local someList = config:getIntList("TestAppIds")
+
+	for k, v in ipairs(someList) do
+		log.debug("TestAppIds " .. k .. " -> " .. v)
+	end
+
+	log.info("Lua config loaded")
+end
+
 SLS.registerCallback("SLSsteam::initialized", initialized)
 SLS.registerCallback("SLSsteam::luaReload", reload)
+SLS.registerCallback("SLSsteam::configLoaded", configLoaded)
 log.info("Luas loaded!")
