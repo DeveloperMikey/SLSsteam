@@ -27,8 +27,12 @@ LogLevelNotify -> LogLevelFlags_t
 LogLevelNotifyLong -> LogLevelFlags_t
 
 log.debug(msg: string): Print debug string to log
+log.warn(msg: string): Print warning string to log
+log.error(msg: string): Print error string to log
 log.info(msg: string): Print info string to log
 log.notify(msg: string): Create notification via notify-send
+log.notifyWarn(msg: string): Create warning notification via notify-send
+log.notifyError(msg: string): Create error notification via notify-send
 log.custom(flags: LogLevelFlags_t, msg: string): Create notification via notify-send
 
 
@@ -46,6 +50,7 @@ getJmpTarget(address: lm_address_t) -> lm_address_t: Get absolute address of rel
 hexdump(address: lm_address_t, size: size_t) -> string: Get formatted hexdump
 findPrologue(address: lm_address_t, bytes: uint8_t[]) -> lm_address_t: Find prologue of function by going backwards until bytes match
 patternScan(pattern: string, module: lm_module_t) -> lm_address_t: Find a pattern in the specified modules .text section
+getUserDataPtr(address: lm_address_t) -> lm_address_t: Unpacks LuaBridge's UserData object to get the object it's pointing at (For example to get the actual CUser pointer from CSteamEngine when you want to call functions not available in SLSsteam's Lua API)
 
 
 #### VFTableInfo_t
@@ -70,6 +75,23 @@ place(): Place the hook
 remove(): Remove the hook
 
 
+#### YAML::Node
+
+This API mostly exists for using when the CConfig methods aren't cutting it and you want to parse custom YAML types. It does not have any of the convenience involved in the CConfig, but offers way more control
+
+isDefined -> bool
+isNull -> bool
+isScalar -> bool
+isSequence -> bool
+isMap -> bool
+size -> int
+
+asDouble() -> double
+asInt() -> int
+asString() -> string
+asPairList -> table[table[2]]
+
+
 #### CConfig
 
 getAdditionalApps() -> AppId_t[]: Gets all AdditionalApps
@@ -82,6 +104,20 @@ getString(name: string, defaultValue: string) -> string: Gets name from config a
 getDoubleList(name: string) -> double[]: Gets name from config as double set (deduplicated)
 getIntList(name: string) -> Int64[]: Gets name from config as Int64 set (deduplicated)
 getStringList(name: string) -> string[]: Gets name from config as string set (deduplicated)
+getNode(name: string) -> YAML::Node: Gets name as YAML::Node
+
+
+#### CNetPacketBody
+
+type -> uint32_t
+headerSize -> uint32_t
+
+
+#### CNetPacket
+
+body -> void*
+size -> uint32_t
+refs -> uint32_t
 
 
 #### CSteamEngine
@@ -120,3 +156,6 @@ free(address: lm_address_t): Free memory using Steam's memory allocator
 "SLSsteam::configLoaded": Fired right after the config got reloaded and also on each subsequent Lua reload
 "SLSsteam::initialized": Fired when Steam has finished initializing CUser, making it safe to access (gets fired after each subsequent Lua reload aswell)
 "SLSsteam::luaReload": Called right before SLSsteam deletes the current Lua state & recreates it. Use this to clean up your changes to memory (LuaHooks get cleaned up automatically)
+
+"Network::recvPkt": Fired when Steam receives a CNetPacket. Has 1 argument, the CNetPacket
+"Network::sendPkt": Fired when Steam sends a CNetPacket. Has 1 argument, the CNetPacket
