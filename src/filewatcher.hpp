@@ -9,11 +9,13 @@
 #include <unordered_map>
 
 
-typedef void(*FileModifyEvent_t)(const std::filesystem::path&);
+typedef void(*FileModifyEvent_t)(const std::filesystem::path&, const int eventMask);
 
 class CFileWatcher
 {
 	static void* watchLoop(void* args);
+
+	int eventMask;
 	std::thread watchThread;
 
 public:
@@ -28,7 +30,7 @@ public:
 
 	FileModifyEvent_t onModify;
 
-	CFileWatcher(const FileModifyEvent_t onModify);
+	CFileWatcher(const FileModifyEvent_t onModify, const int eventMask = WATCH_MASK);
 	~CFileWatcher();
 
 	int addFile(const std::filesystem::path& path);

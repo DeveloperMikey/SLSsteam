@@ -27,7 +27,7 @@ bool SLSAPI::isEnabled()
 	return g_config.api.get() && initialized;
 }
 
-void SLSAPI::onFileChange(const std::filesystem::path& path)
+void SLSAPI::onFileChange(const std::filesystem::path& path, __attribute__((unused)) const int eventMask)
 {
 	//Hot reload support :)
 	if (!isEnabled())

@@ -34,6 +34,7 @@ namespace Lua
 	extern std::unordered_map<std::string, std::vector<luabridge::LuaRef>> callbacks;
 
 	void init();
+	void onFileChange(const std::filesystem::path& path, const int eventMask);
 	bool runLua(const std::filesystem::path& path);
 
 	template<typename ...Args>

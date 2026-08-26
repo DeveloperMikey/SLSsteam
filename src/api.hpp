@@ -53,7 +53,7 @@ namespace SLSAPI
 	extern std::vector<LibraryOp_t> libraryOps;
 
 	bool isEnabled();
-	void onFileChange(const std::filesystem::path& path);
+	void onFileChange(const std::filesystem::path& path, __attribute__((unused)) const int eventMask);
 	void init();
 
 	void parseCmd(const std::string& cmd);

@@ -46,7 +46,7 @@ void* CFileWatcher::watchLoop(void* args)
 			auto path = watcher->fileFdMap[event->wd];
 			const bool isDir = std::filesystem::is_directory(path);
 			
-			if (!(event->mask & (CFileWatcher::WATCH_MASK)))
+			if (!(event->mask & watcher->eventMask))
 			{
 				continue;
 			}
@@ -63,7 +63,7 @@ void* CFileWatcher::watchLoop(void* args)
 				path.append(event->name);
 			}
 
-			watcher->onModify(path);
+			watcher->onModify(path, event->mask);
 		}
 	}
 
@@ -87,9 +87,10 @@ void CFileWatcher::installSigHandler()
 	LOG_DEBUG("Installed sighandler\n");
 }
 
-CFileWatcher::CFileWatcher(const FileModifyEvent_t onModify)
+CFileWatcher::CFileWatcher(const FileModifyEvent_t onModify, const int eventMask)
 {
 	this->onModify = onModify;
+	this->eventMask = eventMask;
 
 	notifyFd = inotify_init();
 	LOG_DEBUG("Created notify fd %i\n", notifyFd);

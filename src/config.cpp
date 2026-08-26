@@ -15,7 +15,7 @@
 #include <string>
 
 
-static void onFileChange(__attribute__((unused)) const std::filesystem::path& path)
+static void onFileChange(__attribute__((unused)) const std::filesystem::path& path, __attribute__((unused)) const int eventMask)
 {
 	g_config.loadSettings();
 	LOG_NOTIFY("Config reloaded!");

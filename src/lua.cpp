@@ -31,18 +31,6 @@ extern "C"
 #include "LuaBridge/Vector.h"
 
 
-void onFileChange(__attribute__((unused)) const std::filesystem::path& path)
-{
-	if (path.extension() != ".lua")
-	{
-		return;
-	}
-
-	Lua::fireCallback(Lua::Callbacks::SLSsteam_LuaReload);
-	Lua::init();
-}
-
-lua_State* Lua::state;
 std::unique_ptr<CFileWatcher> Lua::watcher = std::make_unique<CFileWatcher>(onFileChange);
 std::unordered_map<std::string, std::vector<luabridge::LuaRef>> Lua::callbacks = std::unordered_map<std::string, std::vector<luabridge::LuaRef>>();
 
@@ -213,6 +201,8 @@ namespace LuaYAML
 		return vec;
 	}
 }
+
+lua_State* Lua::state;
 
 void Lua::init()
 {
@@ -409,6 +399,17 @@ void Lua::init()
 	}
 
 	LOG_DEBUG("Lua initialized\n");
+}
+
+void Lua::onFileChange(const std::filesystem::path& path, __attribute__((unused)) const int eventMask)
+{
+	if (path.extension() != ".lua")
+	{
+		return;
+	}
+
+	Lua::fireCallback(Lua::Callbacks::SLSsteam_LuaReload);
+	Lua::init();
 }
 
 bool Lua::runLua(const std::filesystem::path& path)
