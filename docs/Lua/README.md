@@ -15,6 +15,12 @@ LogLevelFlags_t -> unsigned int
 AppId_t -> uint32_t
 
 
+#### curl:
+
+downloadString(url: string, timeout: int)
+downloadStringWithHeaders(url: string, headers: string[], timeout: int) -> string: Download url as string with headers & timeOut
+
+
 #### log:
 
 LogLevelTrace -> LogLevelFlags_t

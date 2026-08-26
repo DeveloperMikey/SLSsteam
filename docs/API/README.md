@@ -6,14 +6,20 @@ Arguments written in square brackets \[\] are optional
 
 The current commands are:
 
-### Application Manager
+#### Application Manager
 
 dumplibraries : Lists all available libraries' label, their path & their index \
 install|appId|libraryIndex : Installs appId into library at libraryIndex \
 uninstall|appId : Uninstalls appId
 
-### Compatibility Manager
+
+#### Compatibility Manager
 
 dumpcompat|appId : Lists all available compatibility tools for appId \
 getcompat|appId : Lists the current compatibility tool for appId \
 setcompat|appId\[|tool-name\] : Set's or clears the compatibility tool for appId
+
+
+#### Lua
+
+reloadlua : Force reload of lua
