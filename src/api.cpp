@@ -2,6 +2,7 @@
 
 #include "config.hpp"
 #include "filewatcher.hpp"
+#include "lua.hpp"
 #include "utils.hpp"
 
 #include <cerrno>
@@ -136,6 +137,13 @@ void SLSAPI::parseCmd(const std::string& cmd)
 		}
 
 		libraryOps.emplace_back(LibraryOp_t { LibraryOp_t::OpType::Uninstall, appId, 0 } );
+	}
+
+	// Lua
+	if (split[0] == "reloadlua")
+	{
+		Lua::init();
+		LOG_API("Ran reloadlua!\n");
 	}
 }
 
