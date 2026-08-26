@@ -3,6 +3,7 @@
 #include "api.hpp"
 #include "config.hpp"
 #include "decompiler.hpp"
+#include "filewatcher.hpp"
 #include "globals.hpp"
 #include "hooks.hpp"
 #include "lua.hpp"
@@ -111,6 +112,8 @@ static void setup()
 		unload();
 		return;
 	}
+
+	CFileWatcher::installSigHandler();
 
 	LOG_DEBUG("SLSsteam loading in %s\n", proc.name);
 

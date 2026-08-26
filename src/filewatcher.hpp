@@ -1,8 +1,11 @@
 #pragma once
 
+#include <atomic>
+#include <csignal>
 #include <filesystem>
 #include <pthread.h>
 #include <sys/inotify.h>
+#include <thread>
 #include <unordered_map>
 
 
@@ -10,11 +13,16 @@ typedef void(*FileModifyEvent_t)(const std::filesystem::path&);
 
 class CFileWatcher
 {
-	pthread_t watchThread;
+	static void* watchLoop(void* args);
+	std::thread watchThread;
 
 public:
+	constexpr static int INTERRUPT_SIG = SIGINT;
 	constexpr static int WATCH_MASK = IN_CLOSE_WRITE | IN_MOVED_TO;
 
+	static void installSigHandler();
+
+	std::atomic_bool running;
 	int notifyFd;
 	std::unordered_map<int, std::filesystem::path> fileFdMap;
 
@@ -23,7 +31,8 @@ public:
 	CFileWatcher(const FileModifyEvent_t onModify);
 	~CFileWatcher();
 
-	int addFile(const char* path);
+	int addFile(const std::filesystem::path& path);
+	bool removeFile(const std::filesystem::path& path);
 	bool start();
 	void stop();
 };
