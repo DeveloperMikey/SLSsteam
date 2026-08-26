@@ -83,6 +83,26 @@ namespace LuaConfig
 	}
 }
 
+namespace LuaCurl
+{
+	std::string downloadStringWithHeaders(const char* url, const std::vector<std::string>& headers, const int timeOut)
+	{
+		std::string out;
+		int res = Curl::downloadString(url, headers, out, timeOut);
+		if (res != 0)
+		{
+			return "";
+		}
+
+		return out;
+	}
+
+	std::string downloadString(const char* url, const int timeOut)
+	{
+		return downloadStringWithHeaders(url, { }, timeOut);
+	}
+}
+
 namespace LuaLog
 {
 	void debug(const char* msg)
@@ -218,6 +238,11 @@ void Lua::init()
 	luaL_openlibs(state);
 
 	luabridge::getGlobalNamespace(state)
+
+	.beginNamespace("curl")
+		.addFunction("downloadString", &LuaCurl::downloadString)
+		.addFunction("downloadStringWithHeaders", &LuaCurl::downloadStringWithHeaders)
+	.endNamespace()
 
 	.beginNamespace("log")
 		.addConstant("LogLevelTrace", 1 << 0)
