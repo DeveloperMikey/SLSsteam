@@ -8,7 +8,8 @@
 namespace Utils
 {
 	double calculateEntropy(const std::vector<uint8_t>& bytes);
-	int exec(const std::vector<std::string>& exe, const std::vector<std::string>& args, std::string* stdOut);
+	int exec(const std::string& executable, const std::vector<std::string>& args, std::string* stdOut);
+	int exec(const std::vector<std::string>& executableList, const std::vector<std::string>& args, std::string* stdOut);
 	bool isNumber(const char* str);
 	std::string getFileSHA256(const char* filePath);
 	std::vector<std::string> strsplit(char* str, const char* delimeter);

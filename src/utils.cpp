@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <string>
@@ -34,7 +35,12 @@ double Utils::calculateEntropy(const std::vector<uint8_t>& bytes)
 	return -val;
 }
 
-int Utils::exec(const std::vector<std::string>& exe, const std::vector<std::string>& args, std::string* stdOut)
+int Utils::exec(const std::string& executable, const std::vector<std::string>& args, std::string* stdOut)
+{
+	return exec(std::vector<std::string> { executable }, args, stdOut);
+}
+
+int Utils::exec(const std::vector<std::string>& executableList, const std::vector<std::string>& args, std::string* stdOut)
 {
 	int pipefd[2];
 
@@ -53,6 +59,11 @@ int Utils::exec(const std::vector<std::string>& exe, const std::vector<std::stri
 	};
 
 	std::vector<const char*> ppChArgs;
+	const auto exeName = std::filesystem::path(executableList.at(0)).filename();
+
+	//First argv should be name of executable
+	ppChArgs.emplace_back(exeName.c_str());
+
 	for (const auto& arg : args)
 	{
 		ppChArgs.emplace_back(arg.c_str());
@@ -81,10 +92,10 @@ int Utils::exec(const std::vector<std::string>& exe, const std::vector<std::stri
 		close(pipefd[0]);
 		close(pipefd[1]);
 
-		for (const auto& exePaths : exe)
+		for (const auto& exePath : executableList)
 		{
-			execve(exePaths.c_str(), const_cast<char**>(ppChArgs.data()), const_cast<char**>(env));
-			LOG_DEBUG("Failed to execv %s!\n", exePaths.c_str());
+			execve(exePath.c_str(), const_cast<char**>(ppChArgs.data()), const_cast<char**>(env));
+			LOG_DEBUG("Failed to execv %s!\n", exePath.c_str());
 		}
 
 		exit(1);
