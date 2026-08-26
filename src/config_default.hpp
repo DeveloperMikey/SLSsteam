@@ -125,6 +125,7 @@ NotifyInit: yes
 API: no
 
 #Enable the usage of Lua plugins from the plugins subdirectory
+#SLSsteam plugins can run arbitrary code! So only run plugins you trust
 Plugins: no
 
 #Disable cloud saves for unlocked games. Set to "no" if using CloudRedirect or similar.
