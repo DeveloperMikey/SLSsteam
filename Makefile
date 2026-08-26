@@ -47,7 +47,12 @@ objs := $(srcs:src/%.cpp=obj/$(FLAGSSHA)/%.o)
 deps := $(objs:%.o=%.d)
 
 audit-libs:
-	$(MAKE) -j $(JOBS) $(SLSSTEAMSO) bin/library-inject.so
+	$(MAKE) -j $(JOBS) $(SLSSTEAMSO) library-inject
+	$(MAKE) link-bins
+
+library-inject:
+	@mkdir -p bin
+	$(MAKE) -C tools/library-inject
 	$(MAKE) link-bins
 
 tools:
@@ -60,11 +65,6 @@ link-bins:
 $(SLSSTEAMSO): $(objs) $(libs)
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) $^ -o $(SLSSTEAMSO) $(LDFLAGS)
-	$(MAKE) link-bins
-
-bin/library-inject.so:
-	@mkdir -p bin
-	$(MAKE) -C tools/library-inject
 	$(MAKE) link-bins
 
 schema-grabber:
@@ -146,6 +146,7 @@ release: rebuild zips
 
 .PHONY: \
 	audit-libs \
+	library-inject \
 	tools \
 	link-bins \
 	schema-grabber \
