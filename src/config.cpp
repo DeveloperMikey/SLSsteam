@@ -180,6 +180,7 @@ bool CConfig::loadSettings(bool firstLoad)
 	fakeName = getSetting<std::string>(rootNode, "FakeName", "");
 	fakeEmail = getSetting<std::string>(rootNode, "FakeEmail", "");
 	fakeWalletBalance = getSetting<int32_t>(rootNode, "FakeWalletBalance", 0);
+	plugins = getSetting<bool>(rootNode, "Plugins", false);
 	disableCloud = getSetting<bool>(rootNode, "DisableCloud", true);
 	disableUpdates = getSetting<bool>(rootNode, "DisableUpdates", true);
 	dumpInterfaceMaps = getSetting<bool>(rootNode, "DumpClientInterfaces", false);

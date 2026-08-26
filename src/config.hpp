@@ -84,6 +84,7 @@ public:
 	MTVariable<bool> warnHashMissmatch;
 	MTVariable<bool> notifyInit;
 	MTVariable<bool> api;
+	MTVariable<bool> plugins;
 	MTVariable<bool> disableCloud;
 	MTVariable<bool> disableUpdates;
 	MTVariable<std::string> fakeName;

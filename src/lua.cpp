@@ -414,6 +414,13 @@ void Lua::onFileChange(const std::filesystem::path& path, __attribute__((unused)
 
 bool Lua::runLua(const std::filesystem::path& path)
 {
+	//We disable the plugins from ever getting ran, the rest of the system
+	//stays active to allow for hot reloading
+	if (!g_config.plugins.get())
+	{
+		return false;
+	}
+
 	if (luaL_dofile(state, path.c_str()) != LUA_OK)
 	{
 		LOG_ERROR("Failed to run %s!\n%s\n", path.filename().c_str(), lua_tostring(state, -1));

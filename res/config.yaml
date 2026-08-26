@@ -122,6 +122,9 @@ NotifyInit: yes
 #Enable sending commands to SLSsteam via /tmp/SLSsteam.API
 API: no
 
+#Enable the usage of Lua plugins from the plugins subdirectory
+Plugins: no
+
 #Disable cloud saves for unlocked games. Set to "no" if using CloudRedirect or similar.
 DisableCloud: yes
 
