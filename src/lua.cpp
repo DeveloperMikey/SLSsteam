@@ -3,6 +3,7 @@
 #include "sdk/sdk.hpp"
 
 #include "config.hpp"
+#include "curl.hpp"
 #include "hooks.hpp"
 #include "log.hpp"
 #include "memhlp.hpp"

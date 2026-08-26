@@ -1,108 +1,48 @@
 #include "curl.hpp"
 
 #include "log.hpp"
+#include "utils.hpp"
 
-#include <cstdlib>
-#include <sstream>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-
+#include <vector>
 
 //Spawn an external instance of curl, read it's stdout into out and return it's exit code
 //It's necessary because SteamOS seems broken. Curling certain URLs
 //will crash inside libssl.3.so (might have to do with broken certs, idk for sure).
-int Curl::getString(const char* url, std::string& out)
+
+int Curl::downloadString(const char* url, std::string& out, const int timeOut)
+{
+	return downloadString(url, { }, out, timeOut);
+}
+
+int Curl::downloadString(const char* url, const std::vector<std::string>& headers, std::string& out, const int timeOut)
 {
 	LOG_DEBUG("Curl::getString(%s)\n", url);
 
-	int pipefd[2];
-
-	if (pipe(pipefd) == -1)
+	static const auto exes = std::vector<std::string>
 	{
-		LOG_ERROR("Failed to create pipe!\n");
-		return 1;
-	}
-
-	LOG_DEBUG("Created pipe %i : %i\n", pipefd[0], pipefd[1]);
-
-	constexpr static const char* env[] =
-	{
-		"PATH='/usr/bin:/bin'",
-		nullptr
+		"/bin/curl",
+		"/usr/bin/curl",
+		"/run/current-system/sw/bin/curl",
 	};
 
-	const char* args[] =
+	auto args = std::vector<std::string>
 	{
 		"--silent",
-		"--connect-timeout", "15",
+		"--connect-timeout", std::to_string(timeOut),
 		url,
-		nullptr
 	};
 
-	const pid_t pid = fork();
-	if (pid == -1)
+	for (const auto& header : headers)
 	{
-		close(pipefd[0]);
-		close(pipefd[1]);
-
-		LOG_ERROR("Failed to fork!\n");
-		return 1;
+		args.insert(args.begin(), header);
+		args.insert(args.begin(), "-H");
 	}
 
-	if (pid == 0)
+	int res = Utils::exec(exes, args, &out);;
+	if (res != 0)
 	{
-		if (dup2(pipefd[1], STDOUT_FILENO) == -1)
-		{
-			LOG_ERROR("Failed to dup2!\n");
-			exit(1);
-		}
-
-		//No need for reading
-		close(pipefd[0]);
-		close(pipefd[1]);
-
-		execve("/bin/curl", const_cast<char**>(args), const_cast<char**>(env));
-		execve("/usr/bin/curl", const_cast<char**>(args), const_cast<char**>(env));
-		//NixOS
-		execve("/run/current-system/sw/bin/curl", const_cast<char**>(args), const_cast<char**>(env));
-
-		LOG_DEBUG("Failed to execv curl!\n");
-		exit(1);
+		LOG_ERROR("Failed to run curl (%i)!\n", res);
 	}
 
-	//No need for writing
-	close(pipefd[1]);
-
-	LOG_DEBUG("Child PID %i\n", pid);
-
-	std::ostringstream bufSS;
-	char buf[8192];
-	int numRead;
-
-	while((numRead = read(pipefd[0], buf, sizeof(buf))) > 0)
-	{
-		bufSS << std::string(buf, numRead);
-	}
-
-	close(pipefd[0]);
-
-	int status;
-	if (waitpid(pid, &status, 0) == -1)
-	{
-		return 1;
-	}
-
-	if (!WIFEXITED(status))
-	{
-		return 1;
-	}
-
-	status = WEXITSTATUS(status);
-
-	LOG_DEBUG("Exit Status: %i\n", status);
-
-	out = bufSS.str();
-
-	return status;
+	return res;
 }

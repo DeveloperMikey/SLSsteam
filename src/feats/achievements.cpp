@@ -47,7 +47,7 @@ std::unordered_set<uint64_t> Achievements::getReviewersForGame(const AppId_t app
 	auto url = getReviewUrl(appId);
 	std::string reviews;
 
-	if (Curl::getString(url.c_str(), reviews))
+	if (Curl::downloadString(url.c_str(), reviews))
 	{
 		LOG_WARN("Failed to get reviewer list for %u!\n", appId);
 		return list;
