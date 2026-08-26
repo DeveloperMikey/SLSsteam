@@ -168,6 +168,12 @@ LuaHook::~LuaHook()
 
 lm_address_t LuaHook::place()
 {
+	if (fn == LM_ADDRESS_BAD || hookFn == LM_ADDRESS_BAD)
+	{
+		LOG_ERROR("Failed to place LuaHook %s, targetFn is LM_ADDRESS_BAD\n", name.c_str());
+		return LM_ADDRESS_BAD;
+	}
+
 	size = LM_HookCode(fn, hookFn, &tramp);
 	if (!size)
 	{
