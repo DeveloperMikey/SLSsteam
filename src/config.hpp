@@ -26,6 +26,7 @@ public:
 
 	static std::filesystem::path getDir();
 	static std::filesystem::path getPath();
+	static void onFileChange(__attribute__((unused)) const std::filesystem::path& path, __attribute__((unused)) const int eventMask);
 
 	typedef unsigned int SmartTicketsFlags_t;
 

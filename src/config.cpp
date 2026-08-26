@@ -15,12 +15,6 @@
 #include <string>
 
 
-static void onFileChange(__attribute__((unused)) const std::filesystem::path& path, __attribute__((unused)) const int eventMask)
-{
-	g_config.loadSettings();
-	LOG_NOTIFY("Config reloaded!");
-}
-
 std::unique_ptr<CFileWatcher> CConfig::watcher = std::make_unique<CFileWatcher>(onFileChange);
 
 std::filesystem::path CConfig::getDir()
@@ -51,6 +45,12 @@ std::filesystem::path CConfig::getPath()
 	dir.append("config.yaml");
 
 	return dir;
+}
+
+void CConfig::onFileChange(__attribute__((unused)) const std::filesystem::path& path, __attribute__((unused)) const int eventMask)
+{
+	g_config.loadSettings();
+	LOG_NOTIFY("Config reloaded!");
 }
 
 bool CConfig::createFile() const
