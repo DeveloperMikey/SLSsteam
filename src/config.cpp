@@ -324,8 +324,8 @@ bool CConfig::isAddedAppId(const AppId_t appId)
 
 void CConfig::setAdditionalApps(const std::unordered_set<AppId_t>& appIds, const bool firstLoad)
 {
-	auto _newApps = newApps.empty();
-	auto _removedApps = removedApps.empty();
+	auto _newApps = newApps.get();
+	auto _removedApps = removedApps.get();
 	const auto prevAppIds = addedAppIds.get();
 
 	if (!firstLoad)
