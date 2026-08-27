@@ -455,6 +455,7 @@ void Lua::init()
 		files.emplace(path);
 	}
 
+	//There is no API in linux to freeze single threads, so we just wing it
 	for (const auto& lua : files)
 	{
 		runLua(lua);
