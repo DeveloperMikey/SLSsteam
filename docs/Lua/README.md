@@ -81,9 +81,11 @@ place(): Place the hook
 remove(): Remove the hook
 
 
-#### YAML::Node
+#### YAMLNode
 
 This API mostly exists for using when the CConfig methods aren't cutting it and you want to parse custom YAML types. It does not have any of the convenience involved in the CConfig, but offers way more control
+
+YAMLNode(): Create new YAMLNode
 
 isDefined -> bool
 isNull -> bool
@@ -96,6 +98,12 @@ asDouble() -> double
 asInt() -> int
 asString() -> string
 asPairList -> table[table[2]]
+
+addPair(key: YAMLNode, value: YAMLNode)
+
+setDouble(value: double)
+setInt(value: int)
+setString(value: double)
 
 
 #### CConfig
