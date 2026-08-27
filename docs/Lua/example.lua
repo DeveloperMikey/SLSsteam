@@ -1,3 +1,13 @@
+-- Please for the love of god add an include guard to only run your code once
+-- In debug releases the LuaState gets rebuild on every hot reload
+-- But in release builds it does not to prevent hooking over and over
+-- while the steamclient is potentially executing code we are in the process
+-- of hooking
+ExampleSetup = false
+if ExampleSetup then
+	return
+end
+
 local ffi = require("ffi")
 
 ffi.cdef[[
@@ -7,11 +17,9 @@ ffi.cdef[[
 
 log.debug("Luas loading :)")
 
--- Define global Hooks table if it does not exist. This prevents Lua's garbage collector
--- from removing our hooks
-if not Hooks then
-	Hooks = {}
-end
+-- Define global Hooks table if it does not exist. We store our LuaHooks
+-- in it to prevent Lua's garbage collector from removing our hooks
+Hooks = Hooks or {}
 
 local modSteamClient = memhlp.getModule("steamclient.so")
 
@@ -94,24 +102,6 @@ local function initialized()
 	log.info("Lua apps added!")
 end
 
-local function reload()
-	-- Cleanup code, in case you need some. Hooks get cleaned up automatically
-	local config = SLS.config
-	local appList = config:getAdditionalApps()
-
-	for k, v in ipairs(appList) do
-		for k2, v2 in ipairs(injectedApps) do
-			if v == v2 then
-				table.remove(appList, k)
-				log.debug("Removing app " .. tostring(v2))
-			end
-		end
-	end
-
-	config:setAdditionalApps(appList)
-	log.info("Cleaned applist!")
-end
-
 local function configLoaded()
 	local config = SLS.config
 	local someList = config:getIntList("TestAppIds")
@@ -124,6 +114,5 @@ local function configLoaded()
 end
 
 SLS.registerCallback("SLSsteam::initialized", initialized)
-SLS.registerCallback("SLSsteam::luaReload", reload)
 SLS.registerCallback("SLSsteam::configLoaded", configLoaded)
-log.info("Luas loaded!")
+log.notify("example.lua loaded!")

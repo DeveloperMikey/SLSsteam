@@ -5,6 +5,11 @@ Plugins get automatically read from SLSsteam's plugin directory (config/plugins)
 
 If you want to dive right in without reading the docs check out the example.lua in the same directory this README is in.
 
+Some side notes:
+- SLSsteam will reload the config each time the luas reload to allow changing it & remove any changes a previous Lua could have done.
+- In debug versions SLSsteam will recreate the lua_State on each hot reload. In release versions it does not to
+prevent hooks getting placed on code that's potentially being executed.
+
 
 #### typedefs
 
@@ -167,6 +172,7 @@ free(address: lm_address_t): Free memory using Steam's memory allocator
 
 #### Callbacks
 
+"SLSsteam::configLoaing": Fired right after the config created the root YAMLNode. If you want to modify SLSsteam's configuration do so here
 "SLSsteam::configLoaded": Fired right after the config got reloaded and also on each subsequent Lua reload
 "SLSsteam::initialized": Fired when Steam has finished initializing CUser, making it safe to access (gets fired after each subsequent Lua reload aswell)
 "SLSsteam::luaReload": Called right before SLSsteam deletes the current Lua state & recreates it. Use this to clean up your changes to memory (LuaHooks get cleaned up automatically)
