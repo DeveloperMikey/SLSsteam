@@ -400,6 +400,12 @@ void Lua::init()
 		files.emplace(path);
 	}
 
+	//Silent config reload. Otherwise Luas will have to keep track of changes
+	//and undo them on SLSsteam::luaReload
+	//Silent suppresses the lua callback, so that we can reload, run the luas
+	//and then fire the callback from here to not break the usual sequence
+	g_config.loadSettings(false, true);
+
 	for (const auto& lua : files)
 	{
 		runLua(lua);

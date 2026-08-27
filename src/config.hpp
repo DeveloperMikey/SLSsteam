@@ -104,7 +104,7 @@ public:
 	bool init();
 
 	void setError(const ELoadError err, const char* keyName);
-	bool loadSettings(const bool firstLoad = false);
+	bool loadSettings(const bool firstLoad = false, const bool silent = false);
 
 	template<typename T>
 	T getSetting(const YAML::Node& node, const char* name, const T defVal, const bool silent = false)

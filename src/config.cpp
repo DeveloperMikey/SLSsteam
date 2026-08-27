@@ -137,7 +137,7 @@ void CConfig::setError(const ELoadError err, const char* keyName)
 	__loadErrors = msg.str();
 }
 
-bool CConfig::loadSettings(bool firstLoad)
+bool CConfig::loadSettings(const bool firstLoad, const bool silent)
 {
 	rootNode = YAML::Node();
 
@@ -300,18 +300,22 @@ bool CConfig::loadSettings(bool firstLoad)
 		setError(ELoadError::MissingKey, "DenuvoGames");
 	}
 
-	Lua::fireCallback(Lua::Callbacks::SLSsteam_ConfigLoaded);
-
-	const auto errors = __loadErrors.get();
-	if (errors.size())
+	if (!silent)
 	{
-		//We know this isn't build by user input, so disabling the warning is fine for this line
-		#pragma GCC diagnostic push
-		#pragma GCC diagnostic ignored "-Wformat-security"
+		//Don't fire callback in silent mode. Lua::init does it after config got reloaded
+		Lua::fireCallback(Lua::Callbacks::SLSsteam_ConfigLoaded);
 
-		LOG_NOTIFYWARN(errors.c_str());
+		const auto errors = __loadErrors.get();
+		if (errors.size())
+		{
+			//We know this isn't build by user input, so disabling the warning is fine for this line
+			#pragma GCC diagnostic push
+			#pragma GCC diagnostic ignored "-Wformat-security"
 
-		#pragma GCC diagnostic pop
+			LOG_NOTIFYWARN(errors.c_str());
+
+			#pragma GCC diagnostic pop
+		}
 	}
 
 	return true;
