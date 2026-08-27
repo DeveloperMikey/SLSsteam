@@ -269,6 +269,8 @@ std::unordered_map<std::string, std::vector<luabridge::LuaRef>> Lua::callbacks =
 
 void Lua::init()
 {
+	stateMutex.lock();
+
 	callbacks.clear();
 
 	if (state)
@@ -457,6 +459,8 @@ void Lua::init()
 	{
 		runLua(lua);
 	}
+
+	stateMutex.unlock();
 
 	g_config.loadSettings(false, true);
 

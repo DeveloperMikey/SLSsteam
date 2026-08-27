@@ -5,6 +5,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 
 extern "C"
@@ -31,6 +32,7 @@ namespace Lua
 	}
 
 	extern lua_State* state;
+	extern std::mutex stateMutex;
 	extern std::unique_ptr<CFileWatcher> watcher;
 	extern std::unordered_map<std::string, std::vector<luabridge::LuaRef>> callbacks;
 
@@ -41,6 +43,13 @@ namespace Lua
 	template<typename ...Args>
 	unsigned int fireCallback(const char* name, Args... args)
 	{
+		std::lock_guard guard(stateMutex);
+
+		if (!state)
+		{
+			return 0;
+		}
+
 		if (!callbacks.contains(name))
 		{
 			return 0;
