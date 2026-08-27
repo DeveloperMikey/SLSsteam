@@ -32,9 +32,6 @@ extern "C"
 #include "LuaBridge/Vector.h"
 
 
-std::unique_ptr<CFileWatcher> Lua::watcher = std::make_unique<CFileWatcher>(onFileChange, IN_CREATE | IN_CLOSE_WRITE | IN_DELETE | IN_MOVED_TO | IN_MOVED_FROM);
-std::unordered_map<std::string, std::vector<luabridge::LuaRef>> Lua::callbacks = std::unordered_map<std::string, std::vector<luabridge::LuaRef>>();
-
 namespace LuaConfig
 {
 	CConfig* get()
@@ -80,6 +77,11 @@ namespace LuaConfig
 	YAML::Node getNode(CConfig* config, const std::string& name)
 	{
 		return config->rootNode[name];
+	}
+
+	void setNode(CConfig* config, const std::string& name, const YAML::Node& node)
+	{
+		config->rootNode[name] = node;
 	}
 }
 
@@ -222,9 +224,26 @@ namespace LuaYAML
 		return vec;
 	}
 
-	void addPair(YAML::Node* node, const YAML::Node& first, const YAML::Node& second)
+	bool addItem(YAML::Node* node, const YAML::Node& nitm)
 	{
-		node->force_insert(first, second);
+		if (!node->IsSequence())
+		{
+			return false;
+		}
+
+		node->push_back(nitm);
+		return true;
+	}
+
+	bool addPair(YAML::Node* node, const YAML::Node& first, const YAML::Node& second)
+	{
+		if (!node->IsMap())
+		{
+			return false;
+		}
+
+		(*node)[first] = second;
+		return true;
 	}
 
 	void setDouble(YAML::Node* node, const double val)
@@ -244,6 +263,9 @@ namespace LuaYAML
 }
 
 lua_State* Lua::state;
+std::mutex Lua::stateMutex;
+std::unique_ptr<CFileWatcher> Lua::watcher = std::make_unique<CFileWatcher>(onFileChange, IN_CREATE | IN_CLOSE_WRITE | IN_DELETE | IN_MOVED_TO | IN_MOVED_FROM);
+std::unordered_map<std::string, std::vector<luabridge::LuaRef>> Lua::callbacks = std::unordered_map<std::string, std::vector<luabridge::LuaRef>>();
 
 void Lua::init()
 {
@@ -335,6 +357,7 @@ void Lua::init()
 		.addFunction("asString", &LuaYAML::asString)
 		.addFunction("asPairList", &LuaYAML::asPairList)
 
+		.addFunction("addItem", &LuaYAML::addItem)
 		.addFunction("addPair", &LuaYAML::addPair)
 
 		.addFunction("setDouble", &LuaYAML::setDouble)
@@ -352,7 +375,9 @@ void Lua::init()
 		.addFunction("getIntList", &LuaConfig::getIntList)
 		.addFunction("getDoubleList", &LuaConfig::getDoubleList)
 		.addFunction("getStringList", &LuaConfig::getStringList)
+
 		.addFunction("getNode", &LuaConfig::getNode)
+		.addFunction("setNode", &LuaConfig::setNode)
 	.endClass()
 
 	.beginClass<CNetPacketBody>("CNetPacketBody")
@@ -428,18 +453,12 @@ void Lua::init()
 		files.emplace(path);
 	}
 
-	//Silent config reload. Otherwise Luas will have to keep track of changes
-	//and undo them on SLSsteam::luaReload
-	//Silent suppresses the lua callback, so that we can reload, run the luas
-	//and then fire the callback from here to not break the usual sequence
-	g_config.loadSettings(false, true);
-
 	for (const auto& lua : files)
 	{
 		runLua(lua);
 	}
 
-	Lua::fireCallback(Lua::Callbacks::SLSsteam_ConfigLoaded);
+	g_config.loadSettings(false, true);
 
 	if (Hooks::IClientUtils_GetOfflineMode.hooked) //Ghetto way to check wheter our hooks are setup
 	{

@@ -22,6 +22,7 @@ namespace Lua
 	namespace Callbacks
 	{
 		constexpr const char* SLSsteam_ConfigLoaded = "SLSsteam::configLoaded";
+		constexpr const char* SLSsteam_ConfigLoading = "SLSsteam::configLoading";
 		constexpr const char* SLSsteam_Initialized = "SLSsteam::initialized";
 		constexpr const char* SLSsteam_LuaReload = "SLSsteam::luaReload";
 
