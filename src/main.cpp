@@ -213,7 +213,7 @@ static void load()
 		return;
 	}
 
-	Lua::init();
+	Lua::init(true);
 	SLSAPI::init();
 	//Disabled, since the Lua API can use it to find VFTables
 	//Decompiler::cleanUp();

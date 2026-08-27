@@ -267,21 +267,78 @@ std::mutex Lua::stateMutex;
 std::unique_ptr<CFileWatcher> Lua::watcher = std::make_unique<CFileWatcher>(onFileChange, IN_CREATE | IN_CLOSE_WRITE | IN_DELETE | IN_MOVED_TO | IN_MOVED_FROM);
 std::unordered_map<std::string, std::vector<luabridge::LuaRef>> Lua::callbacks = std::unordered_map<std::string, std::vector<luabridge::LuaRef>>();
 
-void Lua::init()
+void Lua::init(const bool fullReload)
 {
 	stateMutex.lock();
 
-	callbacks.clear();
-
-	if (state)
+	if (fullReload)
 	{
-		lua_close(state);
+		initLuaState();
 	}
 
-	state = luaL_newstate();
-	luaL_openlibs(state);
+	auto dir = std::filesystem::path(CConfig::getDir());
+	dir.append("plugins");
 
-	luabridge::getGlobalNamespace(state)
+	if (!std::filesystem::exists(dir))
+	{
+		if (!std::filesystem::create_directory(dir))
+		{
+			LOG_NOTIFYERROR("Failed to create plugins directory!\nPlugins will be unavailable\n");
+			return;
+		}
+	}
+
+	//Collect files inside of set since directory_iterator isn't sorted
+	auto files = std::set<std::filesystem::path>();
+	for (const auto& file : std::filesystem::directory_iterator { dir })
+	{
+		const auto path = std::filesystem::path(file);
+		if (path.extension() != ".lua")
+		{
+			continue;
+		}
+
+		files.emplace(path);
+	}
+
+	//There is no API in linux to freeze single threads, so we just wing it
+	for (const auto& lua : files)
+	{
+		runLua(lua);
+	}
+
+	stateMutex.unlock();
+
+	g_config.loadSettings(false, true);
+
+	if (Hooks::IClientUtils_GetOfflineMode.hooked) //Ghetto way to check wheter our hooks are setup
+	{
+		Lua::fireCallback(Lua::Callbacks::SLSsteam_Initialized);
+	}
+
+	if (watcher->fileFdMap.size() < 1)
+	{
+		if (watcher->addFile(dir.c_str()) != -1)
+		{
+			watcher->start();
+		}
+		else
+		{
+			LOG_NOTIFYERROR("Failed to watch plugin directory!\nHot reload will be unavailable");
+		}
+	}
+
+	LOG_DEBUG("Lua initialized\n");
+}
+
+void Lua::initLuaState()
+{
+	callbacks.clear();
+
+	lua_State* newState = luaL_newstate();
+	luaL_openlibs(newState);
+
+	luabridge::getGlobalNamespace(newState)
 
 	.beginNamespace("curl")
 		.addFunction("downloadString", &LuaCurl::downloadString)
@@ -430,59 +487,14 @@ void Lua::init()
 		.addFunction("free", LuaSDK::free)
 	.endNamespace();
 
-	auto dir = std::filesystem::path(CConfig::getDir());
-	dir.append("plugins");
 
-	if (!std::filesystem::exists(dir))
+	lua_State* old = state;
+	state = newState;
+
+	if (old)
 	{
-		if (!std::filesystem::create_directory(dir))
-		{
-			LOG_NOTIFYERROR("Failed to create plugins directory!\nPlugins will be unavailable\n");
-			return;
-		}
+		lua_close(old);
 	}
-
-	//Collect files inside of set since directory_iterator isn't sorted
-	auto files = std::set<std::filesystem::path>();
-	for (const auto& file : std::filesystem::directory_iterator { dir })
-	{
-		const auto path = std::filesystem::path(file);
-		if (path.extension() != ".lua")
-		{
-			continue;
-		}
-
-		files.emplace(path);
-	}
-
-	//There is no API in linux to freeze single threads, so we just wing it
-	for (const auto& lua : files)
-	{
-		runLua(lua);
-	}
-
-	stateMutex.unlock();
-
-	g_config.loadSettings(false, true);
-
-	if (Hooks::IClientUtils_GetOfflineMode.hooked) //Ghetto way to check wheter our hooks are setup
-	{
-		Lua::fireCallback(Lua::Callbacks::SLSsteam_Initialized);
-	}
-
-	if (watcher->fileFdMap.size() < 1)
-	{
-		if (watcher->addFile(dir.c_str()) != -1)
-		{
-			watcher->start();
-		}
-		else
-		{
-			LOG_NOTIFYERROR("Failed to watch plugin directory!\nHot reload will be unavailable");
-		}
-	}
-
-	LOG_DEBUG("Lua initialized\n");
 }
 
 void Lua::onFileChange(const std::filesystem::path& path, __attribute__((unused)) const int eventMask)
@@ -493,7 +505,11 @@ void Lua::onFileChange(const std::filesystem::path& path, __attribute__((unused)
 	}
 
 	Lua::fireCallback(Lua::Callbacks::SLSsteam_LuaReload);
+#ifdef DEBUG
+	Lua::init(true);
+#else
 	Lua::init();
+#endif
 }
 
 bool Lua::runLua(const std::filesystem::path& path)
