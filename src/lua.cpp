@@ -320,7 +320,9 @@ void Lua::init()
 		.addFunction("remove", &LuaHook::remove)
 	.endClass()
 
-	.beginClass<YAML::Node>("YAML::Node")
+	.beginClass<YAML::Node>("YAMLNode")
+		.addConstructor<void(*)()>()
+
 		.addProperty("isDefined", &YAML::Node::IsDefined)
 		.addProperty("isNull", &YAML::Node::IsNull)
 		.addProperty("isScalar", &YAML::Node::IsScalar)
