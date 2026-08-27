@@ -222,6 +222,11 @@ namespace LuaYAML
 		return vec;
 	}
 
+	void addPair(YAML::Node* node, const YAML::Node& first, const YAML::Node& second)
+	{
+		node->force_insert(first, second);
+	}
+
 	void setDouble(YAML::Node* node, const double val)
 	{
 		*node = val;
@@ -235,14 +240,6 @@ namespace LuaYAML
 	void setString(YAML::Node* node, const std::string& val)
 	{
 		*node = val;
-	}
-
-	void setPairList(YAML::Node* node, const std::vector<std::pair<YAML::Node, YAML::Node>>& pairList)
-	{
-		for (const auto& it : pairList)
-		{
-			node->force_insert(it.first, it.second);
-		}
 	}
 }
 
@@ -335,10 +332,12 @@ void Lua::init()
 		.addFunction("asInt", &LuaYAML::asInt)
 		.addFunction("asString", &LuaYAML::asString)
 		.addFunction("asPairList", &LuaYAML::asPairList)
+
+		.addFunction("addPair", &LuaYAML::addPair)
+
 		.addFunction("setDouble", &LuaYAML::setDouble)
 		.addFunction("setInt", &LuaYAML::setInt)
 		.addFunction("setString", &LuaYAML::setString)
-		.addFunction("setPairList", &LuaYAML::setPairList)
 	.endClass()
 
 	.beginClass<CConfig>("CConfig")
