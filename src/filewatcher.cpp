@@ -123,12 +123,12 @@ int CFileWatcher::addFile(const std::filesystem::path& path)
 
 	if (std::filesystem::is_directory(path))
 	{
-		fd = inotify_add_watch(notifyFd, path.c_str(), WATCH_MASK);
+		fd = inotify_add_watch(notifyFd, path.c_str(), eventMask);
 		LOG_DEBUG("Adding %s to FileWatcher %i\n", path.filename().c_str(), notifyFd);
 	}
 	else
 	{
-		fd = inotify_add_watch(notifyFd, path.parent_path().c_str(), WATCH_MASK);
+		fd = inotify_add_watch(notifyFd, path.parent_path().c_str(), eventMask);
 		LOG_DEBUG("Adding %s with file %s to FileWatcher %i\n", path.parent_path().filename().c_str(), path.filename().c_str(), notifyFd);
 	}
 
