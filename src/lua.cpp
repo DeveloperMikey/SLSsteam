@@ -148,6 +148,32 @@ namespace LuaLog
 	}
 }
 
+class LuaMutex
+{
+	std::recursive_mutex* mutex;
+
+public:
+	LuaMutex() : mutex(&Lua::stateMutex)
+	{
+		lock();
+	}
+
+	~LuaMutex()
+	{
+		unlock();
+	}
+
+	void lock()
+	{
+		mutex->lock();
+	}
+
+	void unlock()
+	{
+		mutex->unlock();
+	}
+};
+
 namespace LuaMemHlp
 {
 	std::string hexdump(const lm_address_t address, const size_t size)
@@ -263,7 +289,7 @@ namespace LuaYAML
 }
 
 lua_State* Lua::state;
-std::mutex Lua::stateMutex;
+std::recursive_mutex Lua::stateMutex;
 std::unique_ptr<CFileWatcher> Lua::watcher = std::make_unique<CFileWatcher>(onFileChange, IN_CREATE | IN_CLOSE_WRITE | IN_DELETE | IN_MOVED_TO | IN_MOVED_FROM);
 std::unordered_map<std::string, std::vector<luabridge::LuaRef>> Lua::callbacks = std::unordered_map<std::string, std::vector<luabridge::LuaRef>>();
 
@@ -390,6 +416,12 @@ void Lua::initLuaState()
 		.addFunction("getPrintName", &VFTableInfo_t::getPrintName)
 	.endClass()
 
+	.beginClass<LuaMutex>("LuaMutex")
+		.addConstructor<void(*)()>()
+		.addFunction("lock", &LuaMutex::lock)
+		.addFunction("unlock", &LuaMutex::unlock)
+	.endClass()
+
 	.beginClass<LuaHook>("LuaHook")
 		.addConstructor<void(*)(const char*, const lm_address_t, const lm_address_t)>()
 		.addProperty("name", &LuaHook::name)
@@ -481,7 +513,6 @@ void Lua::initLuaState()
 		.addProperty("config", &LuaConfig::get)
 		.addProperty("steamEngine", &LuaSDK::getEngine)
 		.addFunction("registerCallback", &Lua::registerCallback)
-
 		.addFunction("alloc", LuaSDK::alloc)
 		.addFunction("realloc", LuaSDK::realloc)
 		.addFunction("free", LuaSDK::free)

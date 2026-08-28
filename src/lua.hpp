@@ -32,7 +32,7 @@ namespace Lua
 	}
 
 	extern lua_State* state;
-	extern std::mutex stateMutex;
+	extern std::recursive_mutex stateMutex;
 	extern std::unique_ptr<CFileWatcher> watcher;
 	extern std::unordered_map<std::string, std::vector<luabridge::LuaRef>> callbacks;
 
