@@ -3,10 +3,10 @@
 -- But in release builds it does not to prevent hooking over and over
 -- while the steamclient is potentially executing code we are in the process
 -- of hooking
-ExampleSetup = false
 if ExampleSetup then
 	return
 end
+ExampleSetup = true
 
 local ffi = require("ffi")
 
@@ -28,8 +28,17 @@ local postCallbackPtr = memhlp.getJmpTarget(memhlp.patternScan("E8 ? ? ? ? 8B 75
 local trampFn
 
 local function hkPostCallback(user, type, pCallback, callbackSize, a4)
+	-- Lua is not thread safe, so we use a recursive_mutex to prevent
+	-- multiple threads using the same lua_State simultaneously 
+	-- LuaMutex() locks automatically, ~LuaMutex() unlocks automatically
+	-- but since Lua doesn't run the garbage collector as soon as the function ends we call unlock manually
+	-- SLSsteam will automatically lock the shared LuaMutex before firing a callback/rerunning Luas
+	local mutex = LuaMutex()
+
 	log.debug("PostCallback " .. type)
 	trampFn(user, type, pCallback, callbackSize, a4)
+
+	mutex:unlock()
 end
 
 local detourFn = ffi.cast("PostCallback_t", hkPostCallback)

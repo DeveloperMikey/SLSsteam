@@ -9,6 +9,7 @@ Some side notes:
 - SLSsteam will reload the config each time the luas reload to allow changing it & remove any changes a previous Lua could have done.
 - In debug versions SLSsteam will recreate the lua_State on each hot reload. In release versions it does not to
 prevent hooks getting placed on code that's potentially being executed.
+- When a lua callback gets fired SLSsteam will lock the lua_State mutex
 
 
 #### typedefs
@@ -74,9 +75,17 @@ init() -> bool: Initialize, returns true on success, false otherwise. Check the 
 getPrintName() -> string: Returns typeName::functionName
 
 
+#### LuaMutex:
+
+LuaMutex(): Creates a LuaMutex variable & locks SLSsteam's recursive lua_State mutex
+~LuaMutex(): Unlocks the recursive mutex
+lock: Locks the  mutex
+unlock: Unlocks the mutex
+
 #### LuaHook:
 
 LuaHook(name: string, targetFn: lm_address_t, hookFn: lm_address_t): Create new LuaHook
+~LuaHook(): Restores the original code the LuaHook overwrote
 name -> string: Hook name, solely used for logging
 fn -> lm_address_t: Target function address
 hookFn -> lm_address_t: Hook function address
