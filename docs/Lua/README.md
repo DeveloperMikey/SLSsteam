@@ -3,6 +3,8 @@
 SLSsteam now embeds LuaJIT which allows doing basically everything paired with FFI & SLSsteam's exposed functions.
 Plugins get automatically read from SLSsteam's plugin directory (config/plugins).
 
+#### **While hot reloading Luas is possible it's highly advised against doing so. You have been warned.**
+
 If you want to dive right in without reading the docs check out the example.lua in the same directory this README is in.
 
 Some side notes:

@@ -1,12 +1,23 @@
--- Please for the love of god add an include guard to only run your code once
--- In debug releases the LuaState gets rebuild on every hot reload
--- But in release builds it does not to prevent hooking over and over
--- while the steamclient is potentially executing code we are in the process
--- of hooking
-if ExampleSetup then
+-- Define a global table to store everything into that you do not
+-- want to get garbage collected
+Example = Example or {
+	setup = false,
+
+	-- Hooks
+	postCallbackHook = nil, postCallbackTramp = nil,
+	
+	-- Functions
+	clientUserLoggedOn = nil
+}
+
+-- Do not run multiple times. While Luas do support hot reloading it's
+-- not a good idea to do so. Linux is lacking an API to suspend threads
+-- so things can and most likely will go wrong. Only hot reload plugins
+-- while developing
+if Example.setup then
 	return
 end
-ExampleSetup = true
+Example.setup = true
 
 local ffi = require("ffi")
 
@@ -17,36 +28,25 @@ ffi.cdef[[
 
 log.debug("Luas loading :)")
 
--- Define global Hooks table if it does not exist. We store our LuaHooks
--- in it to prevent Lua's garbage collector from removing our hooks
-Hooks = Hooks or {}
-
 local modSteamClient = memhlp.getModule("steamclient.so")
-
 local postCallbackPtr = memhlp.getJmpTarget(memhlp.patternScan("E8 ? ? ? ? 8B 75 ? 89 D8", modSteamClient))
 
-local trampFn
-
-local function hkPostCallback(user, type, pCallback, callbackSize, a4)
+Example.hkPostCallback = function(user, type, pCallback, callbackSize, a4)
 	-- Lua is not thread safe, so we use a recursive_mutex to prevent
-	-- multiple threads using the same lua_State simultaneously 
+	-- multiple threads using the same lua_State simultaneously
 	-- LuaMutex() locks automatically, ~LuaMutex() unlocks automatically
 	-- but since Lua doesn't run the garbage collector as soon as the function ends we call unlock manually
 	-- SLSsteam will automatically lock the shared LuaMutex before firing a callback/rerunning Luas
 	local mutex = LuaMutex()
 
 	log.debug("PostCallback " .. type)
-	trampFn(user, type, pCallback, callbackSize, a4)
+	Example.postCallbackTramp(user, type, pCallback, callbackSize, a4)
 
 	mutex:unlock()
 end
 
-local detourFn = ffi.cast("PostCallback_t", hkPostCallback)
-local lh = LuaHook("PostCalback", tonumber(postCallbackPtr), tonumber(ffi.cast("intptr_t", detourFn)))
-
-table.insert(Hooks, lh)
-
-trampFn = ffi.cast("PostCallback_t", lh:place())
+Example.postCallbackHook = LuaHook("PostCalback", tonumber(postCallbackPtr), tonumber(ffi.cast("intptr_t", ffi.cast("PostCallback_t", Example.hkPostCallback))))
+Example.postCallbackTramp = ffi.cast("PostCallback_t", Example.postCallbackHook:place())
 log.debug("Postcallback hooked!")
 
 -- We cast to intptr_t since lua messes up the conversion to unsigned integer otherwise
@@ -58,11 +58,10 @@ end
 -- IClientUser is subclass 1 of CUser
 local clientUserLoggedOn = VFTableInfo_t("5CUser", "BLoggedOn", clientUserMapLoggedOn.index, 0)
 clientUserLoggedOn:init()
-local clientUserLoggedOnFn = ffi.cast("IClientUser_BLoggedOn_t", clientUserLoggedOn.address)
 
-local injectedApps = {}
+Example.clientUserLoggedOn = ffi.cast("IClientUser_BLoggedOn_t", clientUserLoggedOn.address)
 
-local function initialized()
+Example.initialized = function()
 	local config = SLS.config
 	local engine = SLS.steamEngine
 	local user = engine:getUser(0)
@@ -77,7 +76,7 @@ local function initialized()
 
 	log.debug("IClientUser::BLoggedOn -> " .. tostring(clientUser:loggedOn())) -- SLS wrapped function call
 	-- This is just an example how to call arbitrary functions
-	log.debug("IClientUser::BLoggedOn -> " .. tostring(clientUserLoggedOnFn(rawClientUser))) -- Raw function call
+	log.debug("IClientUser::BLoggedOn -> " .. tostring(Example.clientUserLoggedOn(rawClientUser))) -- Raw function call
 
 	local function addappid(appId)
 		if user:isSubscribed(appId) then
@@ -86,7 +85,6 @@ local function initialized()
 
 		local appList = config:getAdditionalApps()
 		table.insert(appList, appId)
-		table.insert(injectedApps, appId)
 		log.debug("Added app " .. appId)
 		config:setAdditionalApps(appList)
 	end
@@ -111,17 +109,18 @@ local function initialized()
 	log.info("Lua apps added!")
 end
 
-local function configLoaded()
+Example.configLoaded = function()
 	local config = SLS.config
-	local someList = config:getIntList("TestAppIds")
+	local someList = config:getIntList("FakeOffline")
 
 	for k, v in ipairs(someList) do
-		log.debug("TestAppIds " .. k .. " -> " .. v)
+		log.debug("FakeOffline " .. k .. " -> " .. v)
 	end
 
 	log.info("Lua config loaded")
 end
 
-SLS.registerCallback("SLSsteam::initialized", initialized)
-SLS.registerCallback("SLSsteam::configLoaded", configLoaded)
+SLS.registerCallback("SLSsteam::initialized", Example.initialized)
+SLS.registerCallback("SLSsteam::configLoaded", Example.configLoaded)
+
 log.notify("example.lua loaded!")
