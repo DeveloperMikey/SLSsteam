@@ -6,24 +6,27 @@
 #include <shared_mutex>
 #include <unordered_set>
 
-#define LOG_TRACE(fmt, ...) g_pLog->trace(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
-#define LOG_TRACE_ONCE(fmt, ...) g_pLog->traceOnce(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOG_IF_EXISTS(fn) if (g_pLog) { fn; }
 
-#define LOG_ONCE(fmt, ...) g_pLog->once(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOG_TRACE(fmt, ...) LOG_IF_EXISTS(g_pLog->trace(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
+#define LOG_TRACE_ONCE(fmt, ...) LOG_IF_EXISTS(g_pLog->traceOnce(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
 
-#define LOG_DEBUG(fmt, ...) g_pLog->debug(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
-#define LOG_DEBUG_ONCE(fmt, ...) g_pLog->debugOnce(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOG_ONCE(fmt, ...) LOG_IF_EXISTS(g_pLog->once(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
 
-#define LOG_WARN(fmt, ...) g_pLog->warn(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
-#define LOG_ERROR(fmt, ...) g_pLog->error(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
-#define LOG_INFO(fmt, ...) g_pLog->info(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
-#define LOG_NOTIFY(fmt, ...) g_pLog->notify(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
-#define LOG_NOTIFYLONG(fmt, ...) g_pLog->notifyLong(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
-#define LOG_NOTIFYWARN(fmt, ...) g_pLog->notifyWarn(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
-#define LOG_NOTIFYERROR(fmt, ...) g_pLog->notifyError(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
-#define LOG_API(fmt, ...) g_pLog->api(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOG_DEBUG(fmt, ...) LOG_IF_EXISTS(g_pLog->debug(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
+#define LOG_DEBUG_ONCE(fmt, ...) LOG_IF_EXISTS(g_pLog->debugOnce(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
+
+#define LOG_WARN(fmt, ...) LOG_IF_EXISTS(g_pLog->warn(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
+#define LOG_ERROR(fmt, ...) LOG_IF_EXISTS(g_pLog->error(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
+#define LOG_INFO(fmt, ...) LOG_IF_EXISTS(g_pLog->info(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
+#define LOG_NOTIFY(fmt, ...) LOG_IF_EXISTS(g_pLog->notify(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
+#define LOG_NOTIFYLONG(fmt, ...) LOG_IF_EXISTS(g_pLog->notifyLong(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
+#define LOG_NOTIFYWARN(fmt, ...) LOG_IF_EXISTS(g_pLog->notifyWarn(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
+#define LOG_NOTIFYERROR(fmt, ...) LOG_IF_EXISTS(g_pLog->notifyError(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
+#define LOG_API(fmt, ...) LOG_IF_EXISTS(g_pLog->api(__FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__))
 
 #define LOG_CUSTOM(lvl, fmt, ...) g_pLog->custom(lvl, __FILE__, __FUNCTION__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
+
 
 typedef unsigned int LogLevelFlags_t;
 
