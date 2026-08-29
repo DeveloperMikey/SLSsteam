@@ -12,8 +12,8 @@
 
 
 std::unordered_map<AppId_t, std::chrono::time_point<std::chrono::system_clock>> Achievements::fetchCooldowns = std::unordered_map<AppId_t, std::chrono::time_point<std::chrono::system_clock>>();
-std::unordered_map<AppId_t, uint64_t> Achievements::preferredOwners;
-std::unordered_map<AppId_t, std::unordered_set<uint64_t>> Achievements::ownerBlacklist;
+std::unordered_map<AppId_t, uint64_t> Achievements::preferredOwners = std::unordered_map<AppId_t, uint64_t>();
+std::unordered_map<AppId_t, std::unordered_set<uint64_t>> Achievements::ownerBlacklist = std::unordered_map<AppId_t, std::unordered_set<uint64_t>>();
 
 std::string Achievements::getReviewUrl(const AppId_t appId)
 {
