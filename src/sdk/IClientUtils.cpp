@@ -18,5 +18,5 @@ HSteamPipe IClientUtils::getCurrentSteamPipe()
 
 AppId_t IClientUtils::getAppId()
 {
-	return Hooks::IClientUtils_GetAppId.originalFn.fn(this);
+	return Hooks::IClientUtils_GetAppId->originalFn.fn(this);
 }

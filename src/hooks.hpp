@@ -7,69 +7,132 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 
 struct Pattern_t;
 struct VFTableInfo_t;
 
 template<typename T>
-union FunctionUnion_t
+struct FunctionUnion_t
 {
-	T fn;
-	lm_address_t address;
+	union
+	{
+		T fn;
+		lm_address_t address;
+	};
+
+	FunctionUnion_t();
+	FunctionUnion_t(const lm_address_t address);
+	FunctionUnion_t(const T fn);
 };
 
-//TODO: Look up if there's an interface kinda thing for C++
-template<typename T>
-class Hook
+class IHook
 {
 public:
-	//TODO: Add base setup fn to set hookFn
-	std::string name;
-	FunctionUnion_t<T> originalFn;
-	FunctionUnion_t<T> hookFn;
+	static std::unordered_set<IHook*> hooks;
 
-	Hook(const char* name);
+	enum class EType
+	{
+		Unknown,
+		Detour,
+		VFT,
+		Lua
+	};
+	
+	IHook();
+	virtual ~IHook();
+
+	virtual EType getType() = 0;
+	virtual bool isHooked() = 0;
+	virtual void setup() = 0;
 
 	virtual void place() = 0;
 	virtual void remove() = 0;
 };
 
 template<typename T>
+class Hook : public IHook
+{
+	lm_address_t targetAddress = LM_ADDRESS_BAD;
+	lm_address_t* targetAddressPtr = nullptr;
+
+protected:
+	bool setupRan = false;
+
+public:
+	std::string name = "";
+	FunctionUnion_t<T> originalFn = nullptr;
+	FunctionUnion_t<T> hookFn = nullptr;
+
+	Hook(const std::string& name, lm_address_t targetAddress, const T hookFn);
+	//VFTIndex_t & Pattern_t hooks
+	Hook(const std::string& name, lm_address_t* targetAddressPtr, const T hookFn);
+
+	constexpr virtual IHook::EType getType()
+	{
+		return IHook::EType::Unknown;
+	}
+
+	constexpr virtual bool isHooked()
+	{
+		return false;
+	}
+
+	virtual void setup();
+};
+
+template<typename T>
 class DetourHook : public Hook<T>
 {
 public:
-	FunctionUnion_t<T> tramp;
-	size_t size;
+	FunctionUnion_t<T> tramp = nullptr;
+	size_t size = 0;
 
-	DetourHook(const char* name);
-	DetourHook();
+	DetourHook(const std::string& name, lm_address_t targetAddress, const T hookFn);
+	DetourHook(Pattern_t& targetPattern, const T hookFn);
+	DetourHook(VFTableInfo_t& targetVFTInfo, const T hookFn);
+
+	constexpr virtual IHook::EType getType()
+	{
+		return IHook::EType::Detour;
+	}
+
+	constexpr virtual bool isHooked()
+	{
+		return size > 0;
+	}
 
 	virtual void place();
 	virtual void remove();
-
-	bool setup(const char* name, lm_address_t fn, T hookFn);
-	bool setup(const Pattern_t& pattern, T hookFn);
-	bool setup(const VFTableInfo_t& info, T hookFn);
 };
 
 template<typename T>
 class VFTHook : public Hook<T>
 {
-public:
-	std::shared_ptr<lm_vmt_t> vft;
-	unsigned int index;
-	bool hooked;
+	std::shared_ptr<lm_vmt_t> vft = nullptr;
 
-	VFTHook(const char* name);
-	VFTHook();
+public:
+	unsigned int index = 0;
+	bool hooked = false;
+
+	VFTHook(const std::shared_ptr<lm_vmt_t>& vft, const VFTableInfo_t& mapVFTInfo, const T hookFn);
+
+	constexpr virtual IHook::EType getType()
+	{
+		return IHook::EType::Detour;
+	}
+
+	constexpr virtual bool isHooked()
+	{
+		return hooked;
+	}
 
 	virtual void place();
 	virtual void remove();
-
-	void setup(std::shared_ptr<lm_vmt_t> vft, const VFTableInfo_t&, T hookFn);
 };
 
+// Lua hooks are a little special for now
 class LuaHook
 {
 public:
@@ -121,38 +184,38 @@ namespace Hooks
 
 	typedef bool(*IClientRemoteStorage_IsCloudEnabledForApp_t)(void*, AppId_t);
 
-	extern DetourHook<TraceIPC_t> TraceIPC;
+	extern DetourHook<TraceIPC_t>* TraceIPC;
 
-	extern DetourHook<CAPIJob_SendAndRecv_t> CAPIJob_SendAndRecv;
+	extern DetourHook<CAPIJob_SendAndRecv_t>* CAPIJob_SendAndRecv;
 
-	extern DetourHook<CAppDataCache_BParseResponseFromMessage_t> CAppDataCache_BParseResponseFromMessage;
+	extern DetourHook<CAppDataCache_BParseResponseFromMessage_t>* CAppDataCache_BParseResponseFromMessage;
 
-	extern DetourHook<CClientUnifiedServiceMethod_SendAndRecvMsg_t> CClientUnifiedServiceMethod_SendAndRecvMsg;
+	extern DetourHook<CClientUnifiedServiceMethod_SendAndRecvMsg_t>* CClientUnifiedServiceMethod_SendAndRecvMsg;
 
-	extern DetourHook<CCMInterface_RecvPkt_t> CCMInterface_RecvPkt;
+	extern DetourHook<CCMInterface_RecvPkt_t>* CCMInterface_RecvPkt;
 
-	extern DetourHook<CSteamMatchmakingServers_GetServerDetails_t> CSteamMatchmakingServers_GetServerDetails;
-	extern DetourHook<CSteamMatchmakingServers_RequestInternetServerList_t> CSteamMatchmakingServers_RequestInternetServerList;
+	extern DetourHook<CSteamMatchmakingServers_GetServerDetails_t>* CSteamMatchmakingServers_GetServerDetails;
+	extern DetourHook<CSteamMatchmakingServers_RequestInternetServerList_t>* CSteamMatchmakingServers_RequestInternetServerList;
 
-	extern DetourHook<CSteamEngine_ProcessIPCFrame_t> CSteamEngine_ProcessIPCFrame;
-	extern DetourHook<CSteamEngine_SetAppIdForCurrentPipe_t> CSteamEngine_SetAppIdForCurrentPipe;
+	extern DetourHook<CSteamEngine_ProcessIPCFrame_t>* CSteamEngine_ProcessIPCFrame;
+	extern DetourHook<CSteamEngine_SetAppIdForCurrentPipe_t>* CSteamEngine_SetAppIdForCurrentPipe;
 
-	extern DetourHook<CUser_CheckAppOwnership_t> CUser_CheckAppOwnership;
-	extern DetourHook<CUser_GetSubscribedApps_t> CUser_GetSubscribedApps;
-	extern DetourHook<CUser_PostCallbackToAppId_t> CUser_PostCallbackToAppId;
-	extern DetourHook<CUser_SpawnGameId_t> CUser_SpawnGameId;
+	extern DetourHook<CUser_CheckAppOwnership_t>* CUser_CheckAppOwnership;
+	extern DetourHook<CUser_GetSubscribedApps_t>* CUser_GetSubscribedApps;
+	extern DetourHook<CUser_PostCallbackToAppId_t>* CUser_PostCallbackToAppId;
+	extern DetourHook<CUser_SpawnGameId_t>* CUser_SpawnGameId;
 
-	extern DetourHook<CUserAppManager_BuildDepotDependency_t> CUserAppManager_BuildDepotDependency;
+	extern DetourHook<CUserAppManager_BuildDepotDependency_t>* CUserAppManager_BuildDepotDependency;
 
-	extern DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
+	extern DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t>* CWebSocketConnection_BBuildAndAsyncSendFrame;
 
-	extern DetourHook<IClientCompat_BIsCompatLayerEnabled_t> IClientCompat_BIsCompatLayerEnabled;
+	extern DetourHook<IClientCompat_BIsCompatLayerEnabled_t>* IClientCompat_BIsCompatLayerEnabled;
 
-	extern DetourHook<IClientConfigStore_SetString_t> IClientConfigStore_SetString;
+	extern DetourHook<IClientConfigStore_SetString_t>* IClientConfigStore_SetString;
 
-	extern DetourHook<IClientFriends_GetFriendGamePlayed_t> IClientFriends_GetFriendGamePlayed;
+	extern DetourHook<IClientFriends_GetFriendGamePlayed_t>* IClientFriends_GetFriendGamePlayed;
 
-	extern DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
+	extern DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t>* IClientRemoteStorage_IsCloudEnabledForApp;
 
 	typedef unsigned int(*IClientApps_GetDLCCount_t)(IClientApps*, AppId_t);
 	typedef bool(*IClientApps_GetDLCDataByIndex_t)(IClientApps*, AppId_t, int, AppId_t*, bool*, char*, size_t);
@@ -174,34 +237,35 @@ namespace Hooks
 	typedef AppId_t(*IClientUtils_GetAppId_t)(IClientUtils*);
 	typedef bool(*IClientUtils_GetOfflineMode_t)(IClientUtils*);
 
-	extern VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
-	extern VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;
-	extern VFTHook<IClientAppManager_GetAppUpdateInfo_t> IClientAppManager_GetAppUpdateInfo;
-	extern VFTHook<IClientAppManager_GetAppStateInfo_t> IClientAppManager_GetAppStateInfo;
-	extern VFTHook<IClientAppManager_LaunchApp_t> IClientAppManager_LaunchApp;
-	extern VFTHook<IClientAppManager_IsAppDlcInstalled_t> IClientAppManager_IsAppDlcInstalled;
+	extern VFTHook<IClientAppManager_BCanRemotePlayTogether_t>* IClientAppManager_BCanRemotePlayTogether;
+	extern VFTHook<IClientAppManager_BIsDlcEnabled_t>* IClientAppManager_BIsDlcEnabled;
+	extern VFTHook<IClientAppManager_GetAppUpdateInfo_t>* IClientAppManager_GetAppUpdateInfo;
+	extern VFTHook<IClientAppManager_GetAppStateInfo_t>* IClientAppManager_GetAppStateInfo;
+	extern VFTHook<IClientAppManager_LaunchApp_t>* IClientAppManager_LaunchApp;
+	extern VFTHook<IClientAppManager_IsAppDlcInstalled_t>* IClientAppManager_IsAppDlcInstalled;
 
-	extern VFTHook<IClientApps_GetDLCDataByIndex_t> IClientApps_GetDLCDataByIndex;
-	extern VFTHook<IClientApps_GetDLCCount_t> IClientApps_GetDLCCount;
+	extern VFTHook<IClientApps_GetDLCDataByIndex_t>* IClientApps_GetDLCDataByIndex;
+	extern VFTHook<IClientApps_GetDLCCount_t>* IClientApps_GetDLCCount;
 
-	extern VFTHook<IClientUser_BLoggedOn_t> IClientUser_BLoggedOn;
-	extern VFTHook<IClientUser_BUpdateAppOwnershipTicket_t> IClientUser_BUpdateAppOwnershipTicket;
-	extern VFTHook<IClientUser_GetAppOwnershipTicketExtendedData_t> IClientUser_GetAppOwnershipTicketExtendedData;
-	extern VFTHook<IClientUser_GetEncryptedAppTicket_t> IClientUser_GetEncryptedAppTicket;
-	extern VFTHook<IClientUser_GetLegacyCDKey_t> IClientUser_GetLegacyCDKey;
-	extern VFTHook<IClientUser_IsUserSubscribedAppInTicket_t> IClientUser_IsUserSubscribedAppInTicket;
+	extern VFTHook<IClientUser_BLoggedOn_t>* IClientUser_BLoggedOn;
+	extern VFTHook<IClientUser_BUpdateAppOwnershipTicket_t>* IClientUser_BUpdateAppOwnershipTicket;
+	extern VFTHook<IClientUser_GetAppOwnershipTicketExtendedData_t>* IClientUser_GetAppOwnershipTicketExtendedData;
+	extern VFTHook<IClientUser_GetEncryptedAppTicket_t>* IClientUser_GetEncryptedAppTicket;
+	extern VFTHook<IClientUser_GetLegacyCDKey_t>* IClientUser_GetLegacyCDKey;
+	extern VFTHook<IClientUser_IsUserSubscribedAppInTicket_t>* IClientUser_IsUserSubscribedAppInTicket;
 
-	extern VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
-	extern VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;
+	extern VFTHook<IClientUtils_GetAppId_t>* IClientUtils_GetAppId;
+	extern VFTHook<IClientUtils_GetOfflineMode_t>* IClientUtils_GetOfflineMode;
 
 
 	//steamui.so
 	typedef void(*CGameInfoDialog_ServerResponded_t)(void*, gameserverdetails_t*);
 
-	extern DetourHook<CGameInfoDialog_ServerResponded_t> CGameInfoDialog_ServerResponded;
+	extern DetourHook<CGameInfoDialog_ServerResponded_t>* CGameInfoDialog_ServerResponded;
 
-	bool setup();
-	void place();
+	bool init();
+	void setupAll();
+	void placeAll();
 	void placeVFTHooks();
-	void remove();
+	void removeAll(const bool deleteAll = false);
 }

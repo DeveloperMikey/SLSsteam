@@ -208,9 +208,9 @@ static void load()
 		return;
 	}
 
-	if (!Hooks::setup())
+	if (!Hooks::init())
 	{
-		unload();
+		LOG_NOTIFYERROR("Failed to setup & place hooks! Aborting...");
 		return;
 	}
 

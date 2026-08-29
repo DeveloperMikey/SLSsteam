@@ -31,7 +31,7 @@ IClientUser* CUser::getClientUser()
 
 bool CUser::checkAppOwnership(const AppId_t appId, AppOwnershipInfo_t* pInfo)
 {
-	return Hooks::CUser_CheckAppOwnership.tramp.fn(this, appId, pInfo);
+	return Hooks::CUser_CheckAppOwnership->tramp.fn(this, appId, pInfo);
 }
 
 bool CUser::isSubscribed(const AppId_t appId)

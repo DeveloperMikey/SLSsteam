@@ -337,7 +337,7 @@ void Lua::init(const bool fullReload)
 
 	g_config.loadSettings(false, true);
 
-	if (Hooks::IClientUtils_GetOfflineMode.hooked) //Ghetto way to check wheter our hooks are setup
+	if (Hooks::IClientUtils_GetOfflineMode && Hooks::IClientUtils_GetOfflineMode->isHooked()) //Ghetto way to check wheter our hooks are setup
 	{
 		Lua::fireCallback(Lua::Callbacks::SLSsteam_Initialized);
 	}

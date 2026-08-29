@@ -31,6 +31,8 @@ bool Pattern_t::find()
 
 bool Patterns::init()
 {
+	LOG_DEBUG("Patterns::init()");
+
 	bool found = true;
 
 	for (auto& pattern : patterns)

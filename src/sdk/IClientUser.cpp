@@ -7,7 +7,7 @@
 
 bool IClientUser::loggedOn()
 {
-	return Hooks::IClientUser_BLoggedOn.originalFn.fn(this);
+	return Hooks::IClientUser_BLoggedOn->originalFn.fn(this);
 }
 
 uint32_t IClientUser::getAppOwnershipTicketExtendeData
@@ -21,7 +21,7 @@ uint32_t IClientUser::getAppOwnershipTicketExtendeData
 	uint32_t* pSigSize
 )
 {
-	return Hooks::IClientUser_GetAppOwnershipTicketExtendedData.originalFn.fn(this, appId, pTicket, ticketSize, pOffAppId, pOffSteamId, pOffSig, pSigSize);
+	return Hooks::IClientUser_GetAppOwnershipTicketExtendedData->originalFn.fn(this, appId, pTicket, ticketSize, pOffAppId, pOffSteamId, pOffSig, pSigSize);
 }
 
 bool IClientUser::setLegacyCDKey(const AppId_t appId, const char* key)

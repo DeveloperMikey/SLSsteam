@@ -24,63 +24,90 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <memory>
 #include <mutex>
 #include <pthread.h>
 #include <strings.h>
 #include <unistd.h>
-#include <vector>
 
 
 template<typename T>
-Hook<T>::Hook(const char* name) : name(name) { }
+FunctionUnion_t<T>::FunctionUnion_t() { }
 
 template<typename T>
-DetourHook<T>::DetourHook(const char* name) : Hook<T>::Hook(name), size(0) { }
-
-//TODO: Fix this ungodly mess
-template<typename T>
-DetourHook<T>::DetourHook() : DetourHook<T>("") { }
+FunctionUnion_t<T>::FunctionUnion_t(const lm_address_t address) : address(address) { }
 
 template<typename T>
-VFTHook<T>::VFTHook(const char* name) : Hook<T>::Hook(name), hooked(false) { }
+FunctionUnion_t<T>::FunctionUnion_t(const T fn) : fn(fn) { }
 
-template<typename T>
-VFTHook<T>::VFTHook() : VFTHook<T>("") { }
+std::unordered_set<IHook*> IHook::hooks = std::unordered_set<IHook*>();
 
-template<typename T>
-bool DetourHook<T>::setup(const char* name, const lm_address_t fn, T hookFn)
+IHook::IHook()
 {
-	this->name = name;
-	this->originalFn.address = fn;
-	this->hookFn.fn = hookFn;
+	hooks.emplace(this);
+}
 
-	return true;
+IHook::~IHook()
+{
+	if (hooks.contains(this))
+	{
+		hooks.erase(this);
+	}
 }
 
 template<typename T>
-bool DetourHook<T>::setup(const Pattern_t& pattern, T hookFn)
-{
-	this->name = pattern.name;
-	this->originalFn.address = pattern.address;
-	this->hookFn.fn = hookFn;
+Hook<T>::Hook(const std::string& name, const lm_address_t targetAddress, const T hookFn)
+: targetAddress(targetAddress), name(name), hookFn(hookFn) { }
 
-	return true;
+template<typename T>
+Hook<T>::Hook(const std::string& name, lm_address_t* targetAddressPtr, const T hookFn)
+: targetAddressPtr(targetAddressPtr), name(name), hookFn(hookFn) { }
+
+template<typename T>
+void Hook<T>::setup()
+{
+	if (setupRan)
+	{
+		return;
+	}
+
+	//Only one of the target* members will have a value
+	if (targetAddress != LM_ADDRESS_BAD)
+	{
+		originalFn.address = targetAddress;
+	}
+	else if (targetAddressPtr)
+	{
+		originalFn.address = *targetAddressPtr;
+	}
+	else
+	{
+		LOG_ERROR("No address supplied to hook %s!\n", name.c_str());
+		return;
+	}
+
+	setupRan = true;
 }
 
 template<typename T>
-bool DetourHook<T>::setup(const VFTableInfo_t& info, T hookFn)
-{
-	this->name = info.getPrintName();
-	this->originalFn.address = info.address;
-	this->hookFn.fn = hookFn;
+DetourHook<T>::DetourHook(const std::string& name, lm_address_t targetAddress, const T hookFn)
+: Hook<T>(name, targetAddress, hookFn) { }
 
-	return true;
-}
+template<typename T>
+DetourHook<T>::DetourHook(Pattern_t& targetPattern, const T hookFn)
+: Hook<T>(targetPattern.name, &targetPattern.address, hookFn) { }
+
+template<typename T>
+DetourHook<T>::DetourHook(VFTableInfo_t& targetVFTInfo, const T hookFn)
+: Hook<T>(targetVFTInfo.getPrintName(), &targetVFTInfo.address, hookFn) { }
 
 template<typename T>
 void DetourHook<T>::place()
 {
+	if (!this->setupRan || isHooked())
+	{
+		return;
+	}
+
 	this->size = LM_HookCode(this->originalFn.address, this->hookFn.address, &this->tramp.address);
 	MemHlp::fixPICThunkCall(this->name.c_str(), this->originalFn.address, this->tramp.address);
 
@@ -97,7 +124,7 @@ void DetourHook<T>::place()
 template<typename T>
 void DetourHook<T>::remove()
 {
-	if (!this->size)
+	if (!isHooked())
 	{
 		return;
 	}
@@ -109,9 +136,19 @@ void DetourHook<T>::remove()
 }
 
 template<typename T>
+VFTHook<T>::VFTHook(const std::shared_ptr<lm_vmt_t>& vft, const VFTableInfo_t& mapVFTInfo, const T hookFn)
+: Hook<T>(mapVFTInfo.getPrintName(), vft->vtable[mapVFTInfo.index], hookFn), vft(vft), index(mapVFTInfo.index) { }
+
+template<typename T>
 void VFTHook<T>::place()
 {
-	LM_VmtHook(this->vft.get(), this->index, this->hookFn.address);
+	if (!this->setupRan || isHooked())
+	{
+		return;
+	}
+
+	LM_VmtHook(vft.get(), index, this->hookFn.address);
+
 	this->hooked = true;
 
 	LOG_DEBUG
@@ -126,28 +163,15 @@ void VFTHook<T>::place()
 template<typename T>
 void VFTHook<T>::remove()
 {
-	//No clue how libmem reacts when unhooking a non existent hook
-	//so we do this
-	if (!this->hooked)
+	if (!isHooked())
 	{
 		return;
 	}
 
-	LM_VmtUnhook(this->vft.get(), this->index);
+	LM_VmtUnhook(vft.get(), index);
 	this->hooked = false;
 
 	LOG_DEBUG("Unhooked %s!\n", this->name.c_str());
-}
-
-template<typename T>
-void VFTHook<T>::setup(std::shared_ptr<lm_vmt_t> vft, const VFTableInfo_t& info, T hookFn)
-{
-	this->vft = vft;
-	this->index = info.index;
-	this->name = info.getPrintName();
-
-	this->originalFn.address = LM_VmtGetOriginal(this->vft.get(), this->index);
-	this->hookFn.fn = hookFn;
 }
 
 LuaHook::LuaHook(const char* name, const lm_address_t targetFn, const lm_address_t hookFn)
@@ -207,14 +231,14 @@ static void hkTraceIPC(const char* iface, const char* fn)
 		(
 			"%s(%s, %s)\n",
 
-			Hooks::TraceIPC.name.c_str(),
+			Hooks::TraceIPC->name.c_str(),
 			iface,
 			fn
 		);
 	}
 
 	LOG_TRACE("Calling tramp\n");
-	Hooks::TraceIPC.tramp.fn(iface, fn);
+	Hooks::TraceIPC->tramp.fn(iface, fn);
 }
 
 static uint32_t hkAPIJob_SendAndRecv(CAPIJob* pAPIJob, CProtoBufMsgBase* send, uint32_t a2, uint32_t timeOut, CProtoBufMsgBase* recv, EMsg targetType)
@@ -224,14 +248,14 @@ static uint32_t hkAPIJob_SendAndRecv(CAPIJob* pAPIJob, CProtoBufMsgBase* send, u
 	if (!ret)
 	{
 		LOG_TRACE("Calling tramp\n");
-		ret = Hooks::CAPIJob_SendAndRecv.tramp.fn(pAPIJob, send, a2, timeOut, recv, targetType);
+		ret = Hooks::CAPIJob_SendAndRecv->tramp.fn(pAPIJob, send, a2, timeOut, recv, targetType);
 	}
 
 	LOG_DEBUG
 	(
 		"%s(%p, %s, %u, %u, %s, %u) -> %u\n",
 
-		Hooks::CAPIJob_SendAndRecv.name.c_str(),
+		Hooks::CAPIJob_SendAndRecv->name.c_str(),
 		reinterpret_cast<void*>(pAPIJob),
 		MemHlp::getTypeName(send),
 		a2,
@@ -247,12 +271,12 @@ static uint32_t hkAPIJob_SendAndRecv(CAPIJob* pAPIJob, CProtoBufMsgBase* send, u
 static uint32_t hkAppDataCache_BParseResponseFromMessage(void* pAppDataCache, CProtoBufMsgBase* pMsg)
 {
 	LOG_TRACE("Calling tramp\n");
-	const uint32_t ret = Hooks::CAppDataCache_BParseResponseFromMessage.tramp.fn(pAppDataCache, pMsg);
+	const uint32_t ret = Hooks::CAppDataCache_BParseResponseFromMessage->tramp.fn(pAppDataCache, pMsg);
 
 	LOG_DEBUG
 	(
 		"%s(%p, %p) -> %i\n",
-		Patterns::CAppDataCache::BParseResponseMessage.name.c_str(),
+		Hooks::CAppDataCache_BParseResponseFromMessage->name.c_str(),
 		reinterpret_cast<void*>(pAppDataCache),
 		reinterpret_cast<void*>(pMsg),
 		ret
@@ -276,7 +300,7 @@ static uint32_t hkClientUnifiedServiceTransport_SendAndRecvMsg(CClientUnifiedSer
 	if (ret == k_EResultNoResult)
 	{
 		LOG_TRACE("Calling tramp\n");
-		ret = Hooks::CClientUnifiedServiceMethod_SendAndRecvMsg.tramp.fn(pUnifiedServiceTransport, name, send, recv, arg4);
+		ret = Hooks::CClientUnifiedServiceMethod_SendAndRecvMsg->tramp.fn(pUnifiedServiceTransport, name, send, recv, arg4);
 	}
 
 	Apps::sendAndRecvLastPlayedTimes(name, reinterpret_cast<CPlayer_GetLastPlayedTimes_Response*>(recv));
@@ -285,7 +309,7 @@ static uint32_t hkClientUnifiedServiceTransport_SendAndRecvMsg(CClientUnifiedSer
 	(
 		"%s(%p, %s, %s, %s, %p) -> %u\n",
 
-		Hooks::CClientUnifiedServiceMethod_SendAndRecvMsg.name.c_str(),
+		Hooks::CClientUnifiedServiceMethod_SendAndRecvMsg->name.c_str(),
 		reinterpret_cast<void*>(pUnifiedServiceTransport),
 		name,
 		MemHlp::getTypeName(send),
@@ -347,7 +371,7 @@ static void hkCMInterface_RecvPkt(CCMInterface* pCMInterface, CNetPacket* pNetPa
 	}
 
 	LOG_TRACE("Calling tramp\n");
-	Hooks::CCMInterface_RecvPkt.tramp.fn(pCMInterface, pNetPacket);
+	Hooks::CCMInterface_RecvPkt->tramp.fn(pCMInterface, pNetPacket);
 }
 
 //I don't like forward declerations, but with the current style & hooks layout it's a necessity
@@ -411,7 +435,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(CSteamEngine* pSteamEngine, HSteam
 		FakeAppIds::runIPCFrame(false, interface);
 
 		LOG_TRACE("Calling tramp\n");
-		ret = Hooks::CSteamEngine_ProcessIPCFrame.tramp.fn(pSteamEngine, hPipe, pBufIn, pBufOut);
+		ret = Hooks::CSteamEngine_ProcessIPCFrame->tramp.fn(pSteamEngine, hPipe, pBufIn, pBufOut);
 
 		//LOG_DEBUG("In\n%s\n", MemHlp::hexdump(pBufIn->mem.base, pBufIn->offset).c_str());
 
@@ -457,7 +481,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(CSteamEngine* pSteamEngine, HSteam
 	else
 	{
 		LOG_TRACE("Calling tramp\n");
-		ret = Hooks::CSteamEngine_ProcessIPCFrame.tramp.fn(pSteamEngine, hPipe, pBufIn, pBufOut);
+		ret = Hooks::CSteamEngine_ProcessIPCFrame->tramp.fn(pSteamEngine, hPipe, pBufIn, pBufOut);
 	}
 
 	if (cmd == EIPCCmd::ConnectPipe)
@@ -489,13 +513,13 @@ static AppId_t hkSteamEngine_SetAppIdForCurrentPipe(CSteamEngine* pSteamEngine, 
 	FakeAppIds::setAppIdForCurrentPipe(appId);
 
 	LOG_TRACE("Calling tramp\n");
-	const AppId_t ret = Hooks::CSteamEngine_SetAppIdForCurrentPipe.tramp.fn(pSteamEngine, appId, a2);
+	const AppId_t ret = Hooks::CSteamEngine_SetAppIdForCurrentPipe->tramp.fn(pSteamEngine, appId, a2);
 
 	LOG_DEBUG
 	(
 		"%s(%p, %u, %i) -> %i\n",
 
-		Hooks::CSteamEngine_SetAppIdForCurrentPipe.name.c_str(),
+		Hooks::CSteamEngine_SetAppIdForCurrentPipe->name.c_str(),
 		reinterpret_cast<void*>(pSteamEngine),
 		appId,
 		a2,
@@ -543,26 +567,26 @@ static bool hkWebSocketConnection_BBuildAndAsyncSendFrame(CWebSocketConnection* 
 			}
 
 			LOG_TRACE("Calling tramp\n");
-			const bool success = Hooks::CWebSocketConnection_BBuildAndAsyncSendFrame.tramp.fn(pWebSocketConnection, type, packet.body, packet.size);
+			const bool success = Hooks::CWebSocketConnection_BBuildAndAsyncSendFrame->tramp.fn(pWebSocketConnection, type, packet.body, packet.size);
 			packet.free();
 			return success;
 		}
 	}
 
 	LOG_TRACE("Calling tramp\n");
-	return Hooks::CWebSocketConnection_BBuildAndAsyncSendFrame.tramp.fn(pWebSocketConnection, type, pData, dataSize);
+	return Hooks::CWebSocketConnection_BBuildAndAsyncSendFrame->tramp.fn(pWebSocketConnection, type, pData, dataSize);
 }
 
 static gameserverdetails_t* hkSteamMatchmakingServers_GetServerDetails(void* pSteamMatchmakingServers, uint32_t handle, uint32_t serverIdx)
 {
 	LOG_TRACE("Calling tramp\n");
-	gameserverdetails_t* ret = Hooks::CSteamMatchmakingServers_GetServerDetails.tramp.fn(pSteamMatchmakingServers, handle, serverIdx);
+	gameserverdetails_t* ret = Hooks::CSteamMatchmakingServers_GetServerDetails->tramp.fn(pSteamMatchmakingServers, handle, serverIdx);
 
 	LOG_DEBUG
 	(
 		"%s(%p, 0x%x, %u) -> %p\n",
 
-		Hooks::CSteamMatchmakingServers_GetServerDetails.name.c_str(),
+		Hooks::CSteamMatchmakingServers_GetServerDetails->name.c_str(),
 		pSteamMatchmakingServers,
 		handle,
 		serverIdx,
@@ -582,13 +606,13 @@ static uint32_t hkSteamMatchmakingServers_RequestInternetServerList(void* pSteam
 	const uint32_t fake = FakeAppIds::requestInternetServerList(appId);
 
 	LOG_TRACE("Calling tramp\n");
-	uint32_t handle = Hooks::CSteamMatchmakingServers_RequestInternetServerList.tramp.fn(pSteamMatchmakingServers, fake ? fake : appId, a2, a3, a4);
+	uint32_t handle = Hooks::CSteamMatchmakingServers_RequestInternetServerList->tramp.fn(pSteamMatchmakingServers, fake ? fake : appId, a2, a3, a4);
 
 	LOG_DEBUG
 	(
 		"%s(%p, %u, 0x%x, 0x%x, 0x%x)->0x%x\n",
 
-		Hooks::CSteamMatchmakingServers_RequestInternetServerList.name.c_str(),
+		Hooks::CSteamMatchmakingServers_RequestInternetServerList->name.c_str(),
 		pSteamMatchmakingServers,
 		appId,
 		a2,
@@ -606,14 +630,14 @@ __attribute__((hot))
 static uint32_t hkUser_CheckAppOwnership(CUser* pUser, AppId_t appId, AppOwnershipInfo_t* pOwnershipInfo)
 {
 	LOG_TRACE("Calling tramp\n");
-	const uint32_t ret = Hooks::CUser_CheckAppOwnership.tramp.fn(pUser, appId, pOwnershipInfo);
+	const uint32_t ret = Hooks::CUser_CheckAppOwnership->tramp.fn(pUser, appId, pOwnershipInfo);
 
 	//Do not log pOwnershipInfo because it gets deleted very quickly, so it's pretty much useless in the logs
 	LOG_ONCE
 	(
 		"%s(%p, %u) -> %i\n",
 
-		Hooks::CUser_CheckAppOwnership.name.c_str(),
+		Hooks::CUser_CheckAppOwnership->name.c_str(),
 		reinterpret_cast<void*>(pUser),
 		appId,
 		ret
@@ -630,7 +654,7 @@ static uint32_t hkUser_CheckAppOwnership(CUser* pUser, AppId_t appId, AppOwnersh
 static uint32_t hkUser_GetSubscribedApps(CUser* pUser, AppId_t* pAppList, uint32_t size, uint8_t a3)
 {
 	LOG_TRACE("Calling tramp\n");
-	uint32_t count = Hooks::CUser_GetSubscribedApps.tramp.fn(pUser, pAppList, size, a3);
+	uint32_t count = Hooks::CUser_GetSubscribedApps->tramp.fn(pUser, pAppList, size, a3);
 
 	Apps::getSubscribedApps(pAppList, size, count);
 
@@ -638,7 +662,7 @@ static uint32_t hkUser_GetSubscribedApps(CUser* pUser, AppId_t* pAppList, uint32
 	(
 		"%s(%p, %p, %i, %i) -> %i\n",
 
-		Hooks::CUser_GetSubscribedApps.name.c_str(),
+		Hooks::CUser_GetSubscribedApps->name.c_str(),
 		reinterpret_cast<void*>(pUser),
 		reinterpret_cast<void*>(pAppList),
 		size,
@@ -659,13 +683,13 @@ static uint32_t hkUser_PostCallbackToAppId(CUser* pUser, AppId_t appId, uint32_t
 	}
 
 	LOG_TRACE("Calling tramp\n");
-	const uint32_t ret = Hooks::CUser_PostCallbackToAppId.tramp.fn(pUser, appId, type, pCallback, callbackSize);
+	const uint32_t ret = Hooks::CUser_PostCallbackToAppId->tramp.fn(pUser, appId, type, pCallback, callbackSize);
 
 	LOG_DEBUG
 	(
 		"%s(%p, %u, %u, %p, %u) -> %u\n",
 
-		Hooks::CUser_PostCallbackToAppId.name.c_str(),
+		Hooks::CUser_PostCallbackToAppId->name.c_str(),
 		reinterpret_cast<void*>(pUser),
 		appId,
 		type,
@@ -699,7 +723,7 @@ static uint32_t hkUser_SpawnGameId
 
 	LOG_DEBUG("Launching gameId %llu with cmd %s as %s\n", *pGameId, newExe.c_str(), newCmd.c_str());
 
-	const uint32_t ret = Hooks::CUser_SpawnGameId.tramp.fn
+	const uint32_t ret = Hooks::CUser_SpawnGameId->tramp.fn
 	(
 		pUser,
 		newExe.c_str(),
@@ -730,12 +754,12 @@ static bool hkUserAppManager_BuildDepotDependency
 )
 {
 	LOG_TRACE("Calling tramp\n");
-	const bool success = Hooks::CUserAppManager_BuildDepotDependency.tramp.fn(pAppManager, appId, a2, depots, sharedDepots, a5, pBuildId, a7);
+	const bool success = Hooks::CUserAppManager_BuildDepotDependency->tramp.fn(pAppManager, appId, a2, depots, sharedDepots, a5, pBuildId, a7);
 
 	LOG_DEBUG
 	(
 		"%s(%p, %u) -> %i\n",
-		Hooks::CUserAppManager_BuildDepotDependency.name.c_str(),
+		Hooks::CUserAppManager_BuildDepotDependency->name.c_str(),
 		reinterpret_cast<void*>(pAppManager),
 		appId,
 		success
@@ -749,12 +773,12 @@ static bool hkUserAppManager_BuildDepotDependency
 static bool hkClientAppManager_BCanRemotePlayTogether(IClientAppManager* pAppManager, AppId_t appId)
 {
 	LOG_TRACE("Calling original\n");
-	const bool ret = Hooks::IClientAppManager_BCanRemotePlayTogether.originalFn.fn(pAppManager, appId);
+	const bool ret = Hooks::IClientAppManager_BCanRemotePlayTogether->originalFn.fn(pAppManager, appId);
 
 	LOG_DEBUG
 	(
 		"%s(%p, %u) -> %u\n",
-		Hooks::IClientAppManager_BCanRemotePlayTogether.name.c_str(),
+		Hooks::IClientAppManager_BCanRemotePlayTogether->name.c_str(),
 		reinterpret_cast<void*>(pAppManager),
 		appId,
 		ret
@@ -771,7 +795,7 @@ static void* hkClientAppManager_LaunchApp(IClientAppManager* pAppManager, AppId_
 		(
 			"%s(%p, %u, %p, %p, %p)\n",
 
-			Hooks::IClientAppManager_LaunchApp.name.c_str(),
+			Hooks::IClientAppManager_LaunchApp->name.c_str(),
 			reinterpret_cast<void*>(pAppManager),
 			*pAppId,
 			a2,
@@ -784,19 +808,19 @@ static void* hkClientAppManager_LaunchApp(IClientAppManager* pAppManager, AppId_
 
 	LOG_TRACE("Calling original\n");
 	//Do not do anything in post! Otherwise App launching will break
-	return Hooks::IClientAppManager_LaunchApp.originalFn.fn(pAppManager, pAppId, a2, a3, a4);
+	return Hooks::IClientAppManager_LaunchApp->originalFn.fn(pAppManager, pAppId, a2, a3, a4);
 }
 
 static bool hkClientAppManager_IsAppDlcInstalled(IClientAppManager* pAppManager, AppId_t appId, AppId_t dlcId)
 {
 	LOG_TRACE("Calling original\n");
-	const bool ret = Hooks::IClientAppManager_IsAppDlcInstalled.originalFn.fn(pAppManager, appId, dlcId);
+	const bool ret = Hooks::IClientAppManager_IsAppDlcInstalled->originalFn.fn(pAppManager, appId, dlcId);
 
 	LOG_ONCE
 	(
 		"%s(%p, %u, %u) -> %i\n",
 
-		Hooks::IClientAppManager_IsAppDlcInstalled.name.c_str(),
+		Hooks::IClientAppManager_IsAppDlcInstalled->name.c_str(),
 		reinterpret_cast<void*>(pAppManager),
 		appId,
 		dlcId,
@@ -815,12 +839,12 @@ static bool hkClientAppManager_BIsDlcEnabled(IClientAppManager* pAppManager, App
 {
 	LOG_TRACE("Calling original\n");
 
-	const bool ret = Hooks::IClientAppManager_BIsDlcEnabled.originalFn.fn(pAppManager, appId, dlcId, a3);
+	const bool ret = Hooks::IClientAppManager_BIsDlcEnabled->originalFn.fn(pAppManager, appId, dlcId, a3);
 	LOG_ONCE
 	(
 		"%s(%p, %u, %u, %p) -> %i\n",
 
-		Hooks::IClientAppManager_BIsDlcEnabled.name.c_str(),
+		Hooks::IClientAppManager_BIsDlcEnabled->name.c_str(),
 		reinterpret_cast<void*>(pAppManager),
 		appId,
 		dlcId,
@@ -841,11 +865,11 @@ static bool hkClientAppManager_GetUpdateInfo(IClientAppManager* pAppManager, App
 {
 	LOG_TRACE("Calling original\n");
 
-	const bool success = Hooks::IClientAppManager_GetAppUpdateInfo.originalFn.fn(pAppManager, appId, a2);
+	const bool success = Hooks::IClientAppManager_GetAppUpdateInfo->originalFn.fn(pAppManager, appId, a2);
 	LOG_ONCE
 	(
 		"%s(%p, %u, %p) -> %i\n",
-		Hooks::IClientAppManager_GetAppUpdateInfo.name.c_str(),
+		Hooks::IClientAppManager_GetAppUpdateInfo->name.c_str(),
 		reinterpret_cast<void*>(pAppManager),
 		appId,
 		reinterpret_cast<void*>(a2),
@@ -863,7 +887,7 @@ static bool hkClientAppManager_GetUpdateInfo(IClientAppManager* pAppManager, App
 
 static bool hkClientAppManager_GetAppStateInfo(IClientAppManager* pAppManager, AppId_t appId, AppStateInfo_t* pInfo)
 {
-	const bool success = Hooks::IClientAppManager_GetAppStateInfo.originalFn.fn(pAppManager, appId, pInfo);
+	const bool success = Hooks::IClientAppManager_GetAppStateInfo->originalFn.fn(pAppManager, appId, pInfo);
 
 	if (success)
 	{
@@ -877,12 +901,12 @@ static unsigned int hkClientApps_GetDLCCount(IClientApps* pClientApps, AppId_t a
 {
 	LOG_TRACE("Calling original\n");
 
-	uint32_t count = Hooks::IClientApps_GetDLCCount.originalFn.fn(pClientApps, appId);
+	uint32_t count = Hooks::IClientApps_GetDLCCount->originalFn.fn(pClientApps, appId);
 	LOG_ONCE
 	(
 		"%s(%p, %u) -> %u\n",
 
-		Hooks::IClientApps_GetDLCCount.name.c_str(),
+		Hooks::IClientApps_GetDLCCount->name.c_str(),
 		reinterpret_cast<void*>(pClientApps),
 		appId,
 		count
@@ -902,14 +926,14 @@ static bool hkClientApps_GetDLCDataByIndex(IClientApps* pClientApps, AppId_t app
 	LOG_TRACE("Calling original\n");
 	//Preserve original call to populate stuff
 	const bool ret = DLC::getDlcDataByIndex(appId, dlcIndex, pDlcId, pIsAvailable, pChDlcName, dlcNameLen)
-		|| Hooks::IClientApps_GetDLCDataByIndex.originalFn.fn(pClientApps, appId, dlcIndex, pDlcId, pIsAvailable, pChDlcName, dlcNameLen);
+		|| Hooks::IClientApps_GetDLCDataByIndex->originalFn.fn(pClientApps, appId, dlcIndex, pDlcId, pIsAvailable, pChDlcName, dlcNameLen);
 
 
 	LOG_ONCE
 	(
 		"%s(%p, %u, %i, %p, %p, %s, %i) -> %i\n",
 
-		Hooks::IClientApps_GetDLCDataByIndex.name.c_str(),
+		Hooks::IClientApps_GetDLCDataByIndex->name.c_str(),
 		reinterpret_cast<void*>(pClientApps),
 		appId,
 		dlcIndex,
@@ -926,7 +950,7 @@ static bool hkClientApps_GetDLCDataByIndex(IClientApps* pClientApps, AppId_t app
 static uint32_t hkClientFriends_GetFriendGamePlayed(void* pClientFriends, uint64_t steamId, GamePlayed_t* gamePlayed)
 {
 	LOG_TRACE("Calling original\n");
-	const uint32_t ret = Hooks::IClientFriends_GetFriendGamePlayed.tramp.fn(pClientFriends, steamId, gamePlayed);
+	const uint32_t ret = Hooks::IClientFriends_GetFriendGamePlayed->tramp.fn(pClientFriends, steamId, gamePlayed);
 
 	const AppId_t realAppId = FakeAppIds::getRealAppIdForCurrentPipe();
 	const AppId_t fakeAppId = FakeAppIds::getFakeAppId(realAppId);
@@ -945,12 +969,12 @@ static uint32_t hkClientFriends_GetFriendGamePlayed(void* pClientFriends, uint64
 static bool hkClientRemoteStorage_IsCloudEnabledForApp(void* pClientRemoteStorage, AppId_t appId)
 {
 	LOG_TRACE("Calling tramp\n");
-	const bool enabled = Hooks::IClientRemoteStorage_IsCloudEnabledForApp.tramp.fn(pClientRemoteStorage, appId);
+	const bool enabled = Hooks::IClientRemoteStorage_IsCloudEnabledForApp->tramp.fn(pClientRemoteStorage, appId);
 	LOG_ONCE
 	(
 		"%s(%p, %u) -> %i\n",
 
-		Hooks::IClientRemoteStorage_IsCloudEnabledForApp.name.c_str(),
+		Hooks::IClientRemoteStorage_IsCloudEnabledForApp->name.c_str(),
 		pClientRemoteStorage,
 		appId,
 		enabled
@@ -968,12 +992,12 @@ static bool hkClientRemoteStorage_IsCloudEnabledForApp(void* pClientRemoteStorag
 static bool hkClientUser_BLoggedOn(IClientUser* pClientUser)
 {
 	LOG_TRACE("Calling original\n");
-	const bool ret = Hooks::IClientUser_BLoggedOn.originalFn.fn(pClientUser);
+	const bool ret = Hooks::IClientUser_BLoggedOn->originalFn.fn(pClientUser);
 	//Useless logging
 	//LOG_DEBUG
 	//(
 	//	"%s(0x%x) -> %i\n",
-	//	Hooks::IClientUser_BLoggedOn.name.c_str(),
+	//	Hooks::IClientUser_BLoggedOn->name.c_str(),
 	//	pClientUser,
 	//	ret
 	//);
@@ -996,13 +1020,13 @@ static uint32_t hkClientUser_BUpdateAppOwnershipTicket(IClientUser* pClientUser,
 	}
 
 	LOG_TRACE("Calling original\n");
-	const uint32_t ret = Hooks::IClientUser_BUpdateAppOwnershipTicket.originalFn.fn(pClientUser, appId, staleOnly);
+	const uint32_t ret = Hooks::IClientUser_BUpdateAppOwnershipTicket->originalFn.fn(pClientUser, appId, staleOnly);
 
 	LOG_DEBUG
 	(
 		"%s(%p, %u, %i) -> %u\n",
 
-		Hooks::IClientUser_BUpdateAppOwnershipTicket.name.c_str(),
+		Hooks::IClientUser_BUpdateAppOwnershipTicket->name.c_str(),
 		reinterpret_cast<void*>(pClientUser),
 		appId,
 		staleOnly,
@@ -1025,7 +1049,7 @@ static uint32_t hkClientUser_GetAppOwnershipTicketExtendedData
 )
 {
 	LOG_TRACE("Calling original\n");
-	const uint32_t size = Hooks::IClientUser_GetAppOwnershipTicketExtendedData.originalFn.fn
+	const uint32_t size = Hooks::IClientUser_GetAppOwnershipTicketExtendedData->originalFn.fn
 	(
 		pClientUser,
 		appId,
@@ -1037,7 +1061,7 @@ static uint32_t hkClientUser_GetAppOwnershipTicketExtendedData
 		pSigSize
    );
 
-	LOG_ONCE("%s(%u)->%u\n", Hooks::IClientUser_GetAppOwnershipTicketExtendedData.name.c_str(), appId, size);
+	LOG_ONCE("%s(%u)->%u\n", Hooks::IClientUser_GetAppOwnershipTicketExtendedData->name.c_str(), appId, size);
 
 	if (size)
 	{
@@ -1050,13 +1074,13 @@ static uint32_t hkClientUser_GetAppOwnershipTicketExtendedData
 static bool hkClientUser_GetEncryptedAppTicket(IClientUser* pClientUser, void* pTicket, uint32_t ticketSize, uint32_t* pTicketSize)
 {
 	LOG_TRACE("Calling original\n");
-	const bool success = Hooks::IClientUser_GetEncryptedAppTicket.originalFn.fn(pClientUser, pTicket, ticketSize, pTicketSize);
+	const bool success = Hooks::IClientUser_GetEncryptedAppTicket->originalFn.fn(pClientUser, pTicket, ticketSize, pTicketSize);
 
 	LOG_DEBUG
 	(
 		"%s(%p, %p, %u, %p) -> %u\n",
 
-		Hooks::IClientUser_GetEncryptedAppTicket.name.c_str(),
+		Hooks::IClientUser_GetEncryptedAppTicket->name.c_str(),
 		reinterpret_cast<void*>(pClientUser),
 		pTicket,
 		ticketSize,
@@ -1076,20 +1100,20 @@ static bool hkClientUser_GetLegacyCDKey(IClientUser* pClientUser, AppId_t appId,
 {
 	Apps::getLegacyCDKey(appId);
 
-	return Hooks::IClientUser_GetLegacyCDKey.originalFn.fn(pClientUser, appId, pChKey, keySize);
+	return Hooks::IClientUser_GetLegacyCDKey->originalFn.fn(pClientUser, appId, pChKey, keySize);
 }
 
 static uint8_t hkClientUser_IsUserSubscribedAppInTicket(IClientUser* pClientUser, uint64_t steamId, AppId_t appId)
 {
 	LOG_TRACE("Calling original\n");
-	const uint8_t ticketState = Hooks::IClientUser_IsUserSubscribedAppInTicket.originalFn.fn(pClientUser, steamId, appId);
+	const uint8_t ticketState = Hooks::IClientUser_IsUserSubscribedAppInTicket->originalFn.fn(pClientUser, steamId, appId);
 	//LOG_ONCE("IClientUser::IsUserSubscribedAppInTicket(0x%x, %u, %u, %u, %u) -> %i\n", pClientUser, steamId, a2, a3, appId, ticketState);
 	//Don't log the steamId, protect users from themselves and stuff
 	LOG_ONCE
 	(
 		"%s(%p, %u) -> %i\n",
 
-		Hooks::IClientUser_IsUserSubscribedAppInTicket.name.c_str(),
+		Hooks::IClientUser_IsUserSubscribedAppInTicket->name.c_str(),
 		reinterpret_cast<void*>(pClientUser),
 		appId,
 		ticketState
@@ -1171,13 +1195,13 @@ static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 static AppId_t hkClientUtils_GetAppId(IClientUtils* pClientUtils)
 {
 	LOG_TRACE("Calling original\n");
-	AppId_t appId = Hooks::IClientUtils_GetAppId.originalFn.fn(pClientUtils);
+	AppId_t appId = Hooks::IClientUtils_GetAppId->originalFn.fn(pClientUtils);
 
 	LOG_DEBUG
 	(
 		"%s(%p) -> %u\n",
 
-		Hooks::IClientUtils_GetAppId.name.c_str(),
+		Hooks::IClientUtils_GetAppId->name.c_str(),
 		reinterpret_cast<void*>(pClientUtils),
 		appId
 	);
@@ -1195,7 +1219,7 @@ static AppId_t hkClientUtils_GetAppId(IClientUtils* pClientUtils)
 static bool hkClientUtils_GetOfflineMode(IClientUtils* pClientUtils)
 {
 	LOG_TRACE("Calling original\n");
-	const bool ret = Hooks::IClientUtils_GetOfflineMode.originalFn.fn(pClientUtils);
+	const bool ret = Hooks::IClientUtils_GetOfflineMode->originalFn.fn(pClientUtils);
 
 	if (Misc::shouldFakeOffline())
 	{
@@ -1210,12 +1234,12 @@ static void hkCGameInfoDialog_ServerResponded(void* pSteamMatchingPingResponse, 
 	FakeAppIds::pingResponse(details);
 
 	LOG_TRACE("Calling tramp\n");
-	Hooks::CGameInfoDialog_ServerResponded.tramp.fn(pSteamMatchingPingResponse, details);
+	Hooks::CGameInfoDialog_ServerResponded->tramp.fn(pSteamMatchingPingResponse, details);
 
 	LOG_DEBUG
 	(
 		"%s(%p, %p) for %u\n",
-		Hooks::CGameInfoDialog_ServerResponded.name.c_str(),
+		Hooks::CGameInfoDialog_ServerResponded->name.c_str(),
 		pSteamMatchingPingResponse,
 		reinterpret_cast<void*>(details),
 		details ? details->appId : 0
@@ -1230,19 +1254,19 @@ static bool hkClientCompat_BIsCompatLayerEnabled(IClientCompat* pClientCompat)
 		LOG_DEBUG("g_pClientCompat at %p\n", reinterpret_cast<void*>(g_pClientCompat));
 	}
 
-	return Hooks::IClientCompat_BIsCompatLayerEnabled.tramp.fn(pClientCompat);
+	return Hooks::IClientCompat_BIsCompatLayerEnabled->tramp.fn(pClientCompat);
 }
 
 static bool hkClientConfigStore_SetString(void* pClientConfigStore, uint32_t store, const char* key, const char* value)
 {
 	LOG_TRACE("Calling tramp\n");
-	const bool success = Hooks::IClientConfigStore_SetString.tramp.fn(pClientConfigStore, store, key, value);
+	const bool success = Hooks::IClientConfigStore_SetString->tramp.fn(pClientConfigStore, store, key, value);
 
 	//LOG_DEBUG
 	//(
 	//	"%s(0x%x, %u, %s, %s) -> %u\n",
 
-	//	Hooks::IClientConfigStore_SetString.name.c_str(),
+	//	Hooks::IClientConfigStore_SetString->name.c_str(),
 	//	pClientConfigStore,
 	//	store,
 	//	key,
@@ -1260,67 +1284,68 @@ static bool hkClientConfigStore_SetString(void* pClientConfigStore, uint32_t sto
 
 namespace Hooks
 {
-	//TODO: Lazily intialize in a different way, or preload glibc
-	DetourHook<TraceIPC_t> TraceIPC;
+	DetourHook<TraceIPC_t>* TraceIPC = nullptr;
 
-	DetourHook<CAPIJob_SendAndRecv_t> CAPIJob_SendAndRecv;
+	DetourHook<CAPIJob_SendAndRecv_t>* CAPIJob_SendAndRecv = nullptr;
 
-	DetourHook<CAppDataCache_BParseResponseFromMessage_t> CAppDataCache_BParseResponseFromMessage;
+	DetourHook<CAppDataCache_BParseResponseFromMessage_t>* CAppDataCache_BParseResponseFromMessage = nullptr;
 
-	DetourHook<CClientUnifiedServiceMethod_SendAndRecvMsg_t> CClientUnifiedServiceMethod_SendAndRecvMsg;
+	DetourHook<CClientUnifiedServiceMethod_SendAndRecvMsg_t>* CClientUnifiedServiceMethod_SendAndRecvMsg = nullptr;
 
-	DetourHook<CCMInterface_RecvPkt_t> CCMInterface_RecvPkt;
+	DetourHook<CCMInterface_RecvPkt_t>* CCMInterface_RecvPkt = nullptr;
 
-	DetourHook<CSteamMatchmakingServers_GetServerDetails_t> CSteamMatchmakingServers_GetServerDetails;
-	DetourHook<CSteamMatchmakingServers_RequestInternetServerList_t> CSteamMatchmakingServers_RequestInternetServerList;
+	DetourHook<CSteamMatchmakingServers_GetServerDetails_t>* CSteamMatchmakingServers_GetServerDetails = nullptr;
+	DetourHook<CSteamMatchmakingServers_RequestInternetServerList_t>* CSteamMatchmakingServers_RequestInternetServerList = nullptr;
 
-	DetourHook<CSteamEngine_ProcessIPCFrame_t> CSteamEngine_ProcessIPCFrame;
-	DetourHook<CSteamEngine_SetAppIdForCurrentPipe_t> CSteamEngine_SetAppIdForCurrentPipe;
+	DetourHook<CSteamEngine_ProcessIPCFrame_t>* CSteamEngine_ProcessIPCFrame = nullptr;
+	DetourHook<CSteamEngine_SetAppIdForCurrentPipe_t>* CSteamEngine_SetAppIdForCurrentPipe = nullptr;
 
-	DetourHook<CUser_CheckAppOwnership_t> CUser_CheckAppOwnership;
-	DetourHook<CUser_GetSubscribedApps_t> CUser_GetSubscribedApps;
-	DetourHook<CUser_PostCallbackToAppId_t> CUser_PostCallbackToAppId;
-	DetourHook<CUser_SpawnGameId_t> CUser_SpawnGameId;
+	DetourHook<CUser_CheckAppOwnership_t>* CUser_CheckAppOwnership = nullptr;
+	DetourHook<CUser_GetSubscribedApps_t>* CUser_GetSubscribedApps = nullptr;
+	DetourHook<CUser_PostCallbackToAppId_t>* CUser_PostCallbackToAppId = nullptr;
+	DetourHook<CUser_SpawnGameId_t>* CUser_SpawnGameId = nullptr;
 
-	DetourHook<CUserAppManager_BuildDepotDependency_t> CUserAppManager_BuildDepotDependency;
+	DetourHook<CUserAppManager_BuildDepotDependency_t>* CUserAppManager_BuildDepotDependency = nullptr;
 
-	DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t> CWebSocketConnection_BBuildAndAsyncSendFrame;
+	DetourHook<CWebSocketConnection_BBuildAndAsyncSendFrame_t>* CWebSocketConnection_BBuildAndAsyncSendFrame = nullptr;
 
-	DetourHook<IClientCompat_BIsCompatLayerEnabled_t> IClientCompat_BIsCompatLayerEnabled;
-	DetourHook<IClientConfigStore_SetString_t> IClientConfigStore_SetString;
+	DetourHook<IClientCompat_BIsCompatLayerEnabled_t>* IClientCompat_BIsCompatLayerEnabled = nullptr;
 
-	DetourHook<IClientFriends_GetFriendGamePlayed_t> IClientFriends_GetFriendGamePlayed;
+	DetourHook<IClientConfigStore_SetString_t>* IClientConfigStore_SetString = nullptr;
 
-	DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t> IClientRemoteStorage_IsCloudEnabledForApp;
+	DetourHook<IClientFriends_GetFriendGamePlayed_t>* IClientFriends_GetFriendGamePlayed = nullptr;
 
-	VFTHook<IClientAppManager_BCanRemotePlayTogether_t> IClientAppManager_BCanRemotePlayTogether;
-	VFTHook<IClientAppManager_BIsDlcEnabled_t> IClientAppManager_BIsDlcEnabled;
-	VFTHook<IClientAppManager_GetAppUpdateInfo_t> IClientAppManager_GetAppUpdateInfo;
-	VFTHook<IClientAppManager_GetAppStateInfo_t> IClientAppManager_GetAppStateInfo;
-	VFTHook<IClientAppManager_LaunchApp_t> IClientAppManager_LaunchApp;
-	VFTHook<IClientAppManager_IsAppDlcInstalled_t> IClientAppManager_IsAppDlcInstalled;
+	DetourHook<IClientRemoteStorage_IsCloudEnabledForApp_t>* IClientRemoteStorage_IsCloudEnabledForApp = nullptr;
 
-	VFTHook<IClientApps_GetDLCDataByIndex_t> IClientApps_GetDLCDataByIndex;
-	VFTHook<IClientApps_GetDLCCount_t> IClientApps_GetDLCCount;
 
-	VFTHook<IClientUser_BLoggedOn_t> IClientUser_BLoggedOn;
-	VFTHook<IClientUser_BUpdateAppOwnershipTicket_t> IClientUser_BUpdateAppOwnershipTicket;
-	VFTHook<IClientUser_GetAppOwnershipTicketExtendedData_t> IClientUser_GetAppOwnershipTicketExtendedData;
-	VFTHook<IClientUser_GetEncryptedAppTicket_t> IClientUser_GetEncryptedAppTicket;
-	VFTHook<IClientUser_GetLegacyCDKey_t> IClientUser_GetLegacyCDKey;
-	VFTHook<IClientUser_IsUserSubscribedAppInTicket_t> IClientUser_IsUserSubscribedAppInTicket;
+	VFTHook<IClientAppManager_BCanRemotePlayTogether_t>* IClientAppManager_BCanRemotePlayTogether = nullptr;
+	VFTHook<IClientAppManager_BIsDlcEnabled_t>* IClientAppManager_BIsDlcEnabled = nullptr;
+	VFTHook<IClientAppManager_GetAppUpdateInfo_t>* IClientAppManager_GetAppUpdateInfo = nullptr;
+	VFTHook<IClientAppManager_GetAppStateInfo_t>* IClientAppManager_GetAppStateInfo = nullptr;
+	VFTHook<IClientAppManager_LaunchApp_t>* IClientAppManager_LaunchApp = nullptr;
+	VFTHook<IClientAppManager_IsAppDlcInstalled_t>* IClientAppManager_IsAppDlcInstalled = nullptr;
 
-	VFTHook<IClientUtils_GetAppId_t> IClientUtils_GetAppId;
-	VFTHook<IClientUtils_GetOfflineMode_t> IClientUtils_GetOfflineMode;
+	VFTHook<IClientApps_GetDLCDataByIndex_t>* IClientApps_GetDLCDataByIndex = nullptr;
+	VFTHook<IClientApps_GetDLCCount_t>* IClientApps_GetDLCCount = nullptr;
+
+	VFTHook<IClientUser_BLoggedOn_t>* IClientUser_BLoggedOn = nullptr;
+	VFTHook<IClientUser_BUpdateAppOwnershipTicket_t>* IClientUser_BUpdateAppOwnershipTicket = nullptr;
+	VFTHook<IClientUser_GetAppOwnershipTicketExtendedData_t>* IClientUser_GetAppOwnershipTicketExtendedData = nullptr;
+	VFTHook<IClientUser_GetEncryptedAppTicket_t>* IClientUser_GetEncryptedAppTicket = nullptr;
+	VFTHook<IClientUser_GetLegacyCDKey_t>* IClientUser_GetLegacyCDKey = nullptr;
+	VFTHook<IClientUser_IsUserSubscribedAppInTicket_t>* IClientUser_IsUserSubscribedAppInTicket = nullptr;
+
+	VFTHook<IClientUtils_GetAppId_t>* IClientUtils_GetAppId = nullptr;
+	VFTHook<IClientUtils_GetOfflineMode_t>* IClientUtils_GetOfflineMode = nullptr;
 
 
 	//steamui.so
-	DetourHook<CGameInfoDialog_ServerResponded_t> CGameInfoDialog_ServerResponded;
+	DetourHook<CGameInfoDialog_ServerResponded_t>* CGameInfoDialog_ServerResponded = nullptr;
 }
 
-bool Hooks::setup()
+bool Hooks::init()
 {
-	LOG_DEBUG("Hooks::setup()\n");
+	LOG_DEBUG("Hooks::init()\n");
 
 	{
 		const auto name = std::string("14CCompatManager");
@@ -1332,7 +1357,7 @@ bool Hooks::setup()
 
 		auto& compatMan = Decompiler::vftables.at(name);
 
-		IClientCompat_BIsCompatLayerEnabled.setup
+		IClientCompat_BIsCompatLayerEnabled = new DetourHook
 		(
 			VFTIndexes::IClientCompat::BIsCompatLayerEnabled.getPrintName().c_str(),
 			compatMan.functions[VFTIndexes::IClientCompat::BIsCompatLayerEnabled.index],
@@ -1350,7 +1375,7 @@ bool Hooks::setup()
 
 		auto& store = Decompiler::vftables.at(name);
 
-		IClientConfigStore_SetString.setup
+		IClientConfigStore_SetString = new DetourHook
 		(
 			VFTIndexes::IClientConfigStore::SetString.getPrintName().c_str(),
 			store.functions[VFTIndexes::IClientConfigStore::SetString.index],
@@ -1368,7 +1393,7 @@ bool Hooks::setup()
 
 		auto& friends = Decompiler::vftables.at(name);
 
-		IClientFriends_GetFriendGamePlayed.setup
+		IClientFriends_GetFriendGamePlayed = new DetourHook
 		(
 			VFTIndexes::IClientFriends::GetFriendGamePlayed.getPrintName().c_str(),
 			friends.functions[VFTIndexes::IClientFriends::GetFriendGamePlayed.index],
@@ -1389,7 +1414,7 @@ bool Hooks::setup()
 		//We detourhook because the vftable seems to get relocated, so at this point in time
 		//the pointers are all wrong and would need manual adjustment which breaks
 		//current assumptions by VFTHook<T>
-		IClientRemoteStorage_IsCloudEnabledForApp.setup
+		IClientRemoteStorage_IsCloudEnabledForApp = new DetourHook
 		(
 			VFTIndexes::IClientRemoteStorage::IsCloudEnabledForApp.getPrintName().c_str(),
 			storage.functions[VFTIndexes::IClientRemoteStorage::IsCloudEnabledForApp.index],
@@ -1397,84 +1422,68 @@ bool Hooks::setup()
 		);
 	}
 
-	bool succeeded =
-		TraceIPC.setup(Patterns::TraceIPC, &hkTraceIPC)
+	TraceIPC = new DetourHook(Patterns::TraceIPC, hkTraceIPC);
 
-		&& CAPIJob_SendAndRecv.setup(Patterns::CAPIJob::SendAndRecv, hkAPIJob_SendAndRecv)
+	CAPIJob_SendAndRecv = new DetourHook(Patterns::CAPIJob::SendAndRecv, hkAPIJob_SendAndRecv);
 
-		&& CAppDataCache_BParseResponseFromMessage.setup(Patterns::CAppDataCache::BParseResponseMessage, hkAppDataCache_BParseResponseFromMessage)
+	CAppDataCache_BParseResponseFromMessage = new DetourHook(Patterns::CAppDataCache::BParseResponseMessage, hkAppDataCache_BParseResponseFromMessage);
 
-		//We detour hook this virtual function out of respect for my friend Selectively11. His amazing project
-		//CloudRedirect hooks the same function using a VFT hook already
-		&& CClientUnifiedServiceMethod_SendAndRecvMsg.setup(VFTIndexes::CClientUnifiedServiceTransport::SendAndRecvMsg, hkClientUnifiedServiceTransport_SendAndRecvMsg)
+	CClientUnifiedServiceMethod_SendAndRecvMsg = new DetourHook(VFTIndexes::CClientUnifiedServiceTransport::SendAndRecvMsg, hkClientUnifiedServiceTransport_SendAndRecvMsg);
 
-		//To lazy to move this for now. Doesn't really matter wheter we detour or vft hook
-		&& CCMInterface_RecvPkt.setup(VFTIndexes::CCMInterface::RecvPkt, hkCMInterface_RecvPkt)
+	CCMInterface_RecvPkt = new DetourHook(VFTIndexes::CCMInterface::RecvPkt, hkCMInterface_RecvPkt);
 
-		&& CSteamMatchmakingServers_GetServerDetails.setup(VFTIndexes::CSteamMatchmakingServers::GetServerDetails, hkSteamMatchmakingServers_GetServerDetails)
-		&& CSteamMatchmakingServers_RequestInternetServerList.setup(VFTIndexes::CSteamMatchmakingServers::RequestInternetServerList, hkSteamMatchmakingServers_RequestInternetServerList)
+	CSteamMatchmakingServers_GetServerDetails = new DetourHook(VFTIndexes::CSteamMatchmakingServers::GetServerDetails, hkSteamMatchmakingServers_GetServerDetails);
+	CSteamMatchmakingServers_RequestInternetServerList = new DetourHook(VFTIndexes::CSteamMatchmakingServers::RequestInternetServerList, hkSteamMatchmakingServers_RequestInternetServerList);
 
-		&& CUser_CheckAppOwnership.setup(Patterns::CUser::CheckAppOwnership, hkUser_CheckAppOwnership)
-		&& CUser_GetSubscribedApps.setup(Patterns::CUser::GetSubscribedApps, hkUser_GetSubscribedApps)
-		&& CUser_PostCallbackToAppId.setup(Patterns::CUser::PostCallbackToAppId, hkUser_PostCallbackToAppId)
-		&& CUser_SpawnGameId.setup(Patterns::CUser::SpawnGameId, hkUser_SpawnGameId)
+	CSteamEngine_ProcessIPCFrame = new DetourHook(Patterns::CSteamEngine::ProcessIPCFrame, hkSteamEngine_ProcessIPCFrame);
+	CSteamEngine_SetAppIdForCurrentPipe = new DetourHook(Patterns::CSteamEngine::SetAppIdForCurrentPipe, hkSteamEngine_SetAppIdForCurrentPipe);
 
-		&& CUserAppManager_BuildDepotDependency.setup(Patterns::CUserAppManager::BuildDepotDependency, hkUserAppManager_BuildDepotDependency)
+	CUser_CheckAppOwnership = new DetourHook(Patterns::CUser::CheckAppOwnership, hkUser_CheckAppOwnership);
+	CUser_GetSubscribedApps = new DetourHook(Patterns::CUser::GetSubscribedApps, hkUser_GetSubscribedApps);
+	CUser_PostCallbackToAppId = new DetourHook(Patterns::CUser::PostCallbackToAppId, hkUser_PostCallbackToAppId);
+	CUser_SpawnGameId = new DetourHook(Patterns::CUser::SpawnGameId, hkUser_SpawnGameId);
 
-		&& CSteamEngine_ProcessIPCFrame.setup(Patterns::CSteamEngine::ProcessIPCFrame, hkSteamEngine_ProcessIPCFrame)
-		&& CSteamEngine_SetAppIdForCurrentPipe.setup(Patterns::CSteamEngine::SetAppIdForCurrentPipe, hkSteamEngine_SetAppIdForCurrentPipe)
+	CUserAppManager_BuildDepotDependency = new DetourHook(Patterns::CUserAppManager::BuildDepotDependency, hkUserAppManager_BuildDepotDependency);
 
-		&& CWebSocketConnection_BBuildAndAsyncSendFrame.setup(Patterns::CWebSocketConnection::BBuildAndAsyncSendFrame, hkWebSocketConnection_BBuildAndAsyncSendFrame)
+	CWebSocketConnection_BBuildAndAsyncSendFrame = new DetourHook(Patterns::CWebSocketConnection::BBuildAndAsyncSendFrame, hkWebSocketConnection_BBuildAndAsyncSendFrame);
 
-		&& CGameInfoDialog_ServerResponded.setup(VFTIndexes::CGameInfoDialog::ServerResponded, hkCGameInfoDialog_ServerResponded);
+	CGameInfoDialog_ServerResponded = new DetourHook(VFTIndexes::CGameInfoDialog::ServerResponded, hkCGameInfoDialog_ServerResponded);
 
+	setupAll();
+	placeAll();
 
-	Hooks::place();
-	//This is unnecessary but I'll keep this for now in case I wanna improve error checks
-	return succeeded;
+	return true;
 }
 
-void Hooks::place()
+void Hooks::setupAll()
 {
-	//Detours
-	TraceIPC.place();
+	LOG_DEBUG("Hooks::setupAll()\n");
 
-	CAPIJob_SendAndRecv.place();
+	//This does not work! GCC sees no path to the hk* functions
+	//and assumes the hooks are unused, so they get deleted right after creation
+	for (auto hook : IHook::hooks)
+	{
+		hook->setup();
+	}
+}
 
-	CAppDataCache_BParseResponseFromMessage.place();
+void Hooks::placeAll()
+{
+	LOG_DEBUG("Hooks::placeAll()\n");
 
-	CClientUnifiedServiceMethod_SendAndRecvMsg.place();
-
-	CCMInterface_RecvPkt.place();
-
-	CSteamEngine_ProcessIPCFrame.place();
-	CSteamEngine_SetAppIdForCurrentPipe.place();
-
-	CSteamMatchmakingServers_GetServerDetails.place();
-	CSteamMatchmakingServers_RequestInternetServerList.place();
-
-	CUser_CheckAppOwnership.place();
-	CUser_GetSubscribedApps.place();
-	CUser_PostCallbackToAppId.place();
-	CUser_SpawnGameId.place();
-
-	CUserAppManager_BuildDepotDependency.place();
-
-	CWebSocketConnection_BBuildAndAsyncSendFrame.place();
-
-	CGameInfoDialog_ServerResponded.place();
-
-	IClientCompat_BIsCompatLayerEnabled.place();
-
-	IClientConfigStore_SetString.place();
-
-	IClientFriends_GetFriendGamePlayed.place();
-
-	IClientRemoteStorage_IsCloudEnabledForApp.place();
+	for (auto hook : IHook::hooks)
+	{
+		hook->place();
+	}
 }
 
 void Hooks::placeVFTHooks()
 {
+	//Most of the steamclient runs in a single thread
+	//But just in case things change (they probably won't)
+	static std::mutex mutex;
+	std::lock_guard guard(mutex);
+
 	static bool hooked = false;
 	if (hooked)
 	{
@@ -1487,10 +1496,6 @@ void Hooks::placeVFTHooks()
 		return;
 	}
 
-	//I don't think the IPC layer is multithreaded but better safe than sorry
-	static std::mutex mutex;
-	std::lock_guard guard(mutex);
-
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 
@@ -1500,148 +1505,92 @@ void Hooks::placeVFTHooks()
 		const auto appManager = usr->getAppManager();
 		LOG_DEBUG("CUserAppManager at %p\n", reinterpret_cast<void*>(appManager));
 
-		std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
+		auto vft = std::make_shared<lm_vmt_t>();
 		LM_VmtNew(*reinterpret_cast<lm_address_t**>(appManager), vft.get());
 
-		Hooks::IClientAppManager_BCanRemotePlayTogether.setup(vft, VFTIndexes::IClientAppManager::BCanRemotePlayTogether, hkClientAppManager_BCanRemotePlayTogether);
-		Hooks::IClientAppManager_BIsDlcEnabled.setup(vft, VFTIndexes::IClientAppManager::BIsDlcEnabled, hkClientAppManager_BIsDlcEnabled);
-		Hooks::IClientAppManager_GetAppUpdateInfo.setup(vft, VFTIndexes::IClientAppManager::GetUpdateInfo, hkClientAppManager_GetUpdateInfo);
-		Hooks::IClientAppManager_GetAppStateInfo.setup(vft, VFTIndexes::IClientAppManager::GetAppStateInfo, hkClientAppManager_GetAppStateInfo);
-		Hooks::IClientAppManager_LaunchApp.setup(vft, VFTIndexes::IClientAppManager::LaunchApp, hkClientAppManager_LaunchApp);
-		Hooks::IClientAppManager_IsAppDlcInstalled.setup(vft, VFTIndexes::IClientAppManager::IsAppDlcInstalled, hkClientAppManager_IsAppDlcInstalled);
+		Hooks::IClientAppManager_BCanRemotePlayTogether = new VFTHook(vft, VFTIndexes::IClientAppManager::BCanRemotePlayTogether, hkClientAppManager_BCanRemotePlayTogether);
+		Hooks::IClientAppManager_BIsDlcEnabled = new VFTHook(vft, VFTIndexes::IClientAppManager::BIsDlcEnabled, hkClientAppManager_BIsDlcEnabled);
+		Hooks::IClientAppManager_GetAppUpdateInfo = new VFTHook(vft, VFTIndexes::IClientAppManager::GetUpdateInfo, hkClientAppManager_GetUpdateInfo);
+		Hooks::IClientAppManager_GetAppStateInfo = new VFTHook(vft, VFTIndexes::IClientAppManager::GetAppStateInfo, hkClientAppManager_GetAppStateInfo);
+		Hooks::IClientAppManager_LaunchApp = new VFTHook(vft, VFTIndexes::IClientAppManager::LaunchApp, hkClientAppManager_LaunchApp);
+		Hooks::IClientAppManager_IsAppDlcInstalled = new VFTHook(vft, VFTIndexes::IClientAppManager::IsAppDlcInstalled, hkClientAppManager_IsAppDlcInstalled);
 
-		Hooks::IClientAppManager_BCanRemotePlayTogether.place();
-		Hooks::IClientAppManager_BIsDlcEnabled.place();
-		Hooks::IClientAppManager_GetAppUpdateInfo.place();
-		Hooks::IClientAppManager_GetAppStateInfo.place();
-		Hooks::IClientAppManager_LaunchApp.place();
-		Hooks::IClientAppManager_IsAppDlcInstalled.place();
+		Hooks::IClientAppManager_BCanRemotePlayTogether = new VFTHook(vft, VFTIndexes::IClientAppManager::BCanRemotePlayTogether, hkClientAppManager_BCanRemotePlayTogether);
+		Hooks::IClientAppManager_BIsDlcEnabled = new VFTHook(vft, VFTIndexes::IClientAppManager::BIsDlcEnabled, hkClientAppManager_BIsDlcEnabled);
+		Hooks::IClientAppManager_GetAppUpdateInfo = new VFTHook(vft, VFTIndexes::IClientAppManager::GetUpdateInfo, hkClientAppManager_GetUpdateInfo);
+		Hooks::IClientAppManager_GetAppStateInfo = new VFTHook(vft, VFTIndexes::IClientAppManager::GetAppStateInfo, hkClientAppManager_GetAppStateInfo);
+		Hooks::IClientAppManager_LaunchApp = new VFTHook(vft, VFTIndexes::IClientAppManager::LaunchApp, hkClientAppManager_LaunchApp);
+		Hooks::IClientAppManager_IsAppDlcInstalled = new VFTHook(vft, VFTIndexes::IClientAppManager::IsAppDlcInstalled, hkClientAppManager_IsAppDlcInstalled);
 
-		LOG_DEBUG("IClientAppManager->vft at %p\n", reinterpret_cast<void*>(vft->vtable));
+		LOG_DEBUG("IClientAppManager->vft at %p\n", reinterpret_cast<void*>(vft.get()));
 	}
 
 	{
 		const auto clientApps = usr->getClientApps();
 		LOG_DEBUG("CUserAppInfo at %p\n", reinterpret_cast<void*>(clientApps));
 
-		std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
+		auto vft = std::make_shared<lm_vmt_t>();
 		LM_VmtNew(*reinterpret_cast<lm_address_t**>(clientApps), vft.get());
 
-		Hooks::IClientApps_GetDLCDataByIndex.setup(vft, VFTIndexes::IClientApps::GetDLCDataByIndex, hkClientApps_GetDLCDataByIndex);
-		Hooks::IClientApps_GetDLCCount.setup(vft, VFTIndexes::IClientApps::GetDLCCount, hkClientApps_GetDLCCount);
+		Hooks::IClientApps_GetDLCDataByIndex = new VFTHook(vft, VFTIndexes::IClientApps::GetDLCDataByIndex, hkClientApps_GetDLCDataByIndex);
+		Hooks::IClientApps_GetDLCCount = new VFTHook(vft, VFTIndexes::IClientApps::GetDLCCount, hkClientApps_GetDLCCount);
 
-		Hooks::IClientApps_GetDLCDataByIndex.place();
-		Hooks::IClientApps_GetDLCCount.place();
-
-		LOG_DEBUG("IClientApps->vft at %p\n", reinterpret_cast<void*>(vft->vtable));
+		LOG_DEBUG("IClientApps->vft at %p\n", reinterpret_cast<void*>(vft.get()));
 	}
 
 	{
 		const auto clientUser = usr->getClientUser();
 		LOG_DEBUG("IClientUser at %p\n", reinterpret_cast<void*>(clientUser));
 
-		std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
+		auto vft = std::make_shared<lm_vmt_t>();
 		LM_VmtNew(*reinterpret_cast<lm_address_t**>(clientUser), vft.get());
 
-		Hooks::IClientUser_BLoggedOn.setup(vft, VFTIndexes::IClientUser::BLoggedOn, &hkClientUser_BLoggedOn);
-		Hooks::IClientUser_BUpdateAppOwnershipTicket.setup(vft, VFTIndexes::IClientUser::BUpdateAppOwnershipTicket, hkClientUser_BUpdateAppOwnershipTicket);
-		Hooks::IClientUser_GetAppOwnershipTicketExtendedData.setup(vft, VFTIndexes::IClientUser::GetAppOwnershipTicketExtendedData, hkClientUser_GetAppOwnershipTicketExtendedData);
+		Hooks::IClientUser_BLoggedOn = new VFTHook(vft, VFTIndexes::IClientUser::BLoggedOn, &hkClientUser_BLoggedOn);
+		Hooks::IClientUser_BUpdateAppOwnershipTicket = new VFTHook(vft, VFTIndexes::IClientUser::BUpdateAppOwnershipTicket, hkClientUser_BUpdateAppOwnershipTicket);
+		Hooks::IClientUser_GetAppOwnershipTicketExtendedData = new VFTHook(vft, VFTIndexes::IClientUser::GetAppOwnershipTicketExtendedData, hkClientUser_GetAppOwnershipTicketExtendedData);
 		//GetEncryptedAppTicket is just a wrapper for CUser::GetEncryptedAppTicket. But there is no need to go deeper
 		//since we load the encrypted ticket in the Networking layer. We just need this function to spoof our steamId once
-		Hooks::IClientUser_GetEncryptedAppTicket.setup(vft, VFTIndexes::IClientUser::GetEncryptedAppTicket, hkClientUser_GetEncryptedAppTicket);
-		Hooks::IClientUser_GetLegacyCDKey.setup(vft, VFTIndexes::IClientUser::GetLegacyCDKey, hkClientUser_GetLegacyCDKey);
-		Hooks::IClientUser_IsUserSubscribedAppInTicket.setup(vft, VFTIndexes::IClientUser::IsUserSubscribedAppInTicket, hkClientUser_IsUserSubscribedAppInTicket);
+		Hooks::IClientUser_GetEncryptedAppTicket = new VFTHook(vft, VFTIndexes::IClientUser::GetEncryptedAppTicket, hkClientUser_GetEncryptedAppTicket);
+		Hooks::IClientUser_GetLegacyCDKey = new VFTHook(vft, VFTIndexes::IClientUser::GetLegacyCDKey, hkClientUser_GetLegacyCDKey);
+		Hooks::IClientUser_IsUserSubscribedAppInTicket = new VFTHook(vft, VFTIndexes::IClientUser::IsUserSubscribedAppInTicket, hkClientUser_IsUserSubscribedAppInTicket);
 
-		Hooks::IClientUser_BLoggedOn.place();
-		Hooks::IClientUser_BUpdateAppOwnershipTicket.place();
-		Hooks::IClientUser_GetAppOwnershipTicketExtendedData.place();
-		//Hooks::IClientUser_GetEncryptedAppTicket.place();
-		Hooks::IClientUser_GetLegacyCDKey.place();
-		Hooks::IClientUser_IsUserSubscribedAppInTicket.place();
-
-		LOG_DEBUG("IClientUser->vft at %p\n", reinterpret_cast<void*>(vft->vtable));
+		LOG_DEBUG("IClientUser->vft at %p\n", reinterpret_cast<void*>(vft.get()));
 	}
 
 	{
 		const auto utils = g_pSteamEngine->getUtils();
 		LOG_DEBUG("IClientUtils at %p\n", reinterpret_cast<void*>(utils));
 
-		std::shared_ptr<lm_vmt_t> vft = std::make_shared<lm_vmt_t>();
+		auto vft = std::make_shared<lm_vmt_t>();
 		LM_VmtNew(*reinterpret_cast<lm_address_t**>(utils), vft.get());
 
-		Hooks::IClientUtils_GetAppId.setup(vft, VFTIndexes::IClientUtils::GetAppId, hkClientUtils_GetAppId);
-		Hooks::IClientUtils_GetOfflineMode.setup(vft, VFTIndexes::IClientUtils::GetOfflineMode, hkClientUtils_GetOfflineMode);
+		Hooks::IClientUtils_GetAppId = new VFTHook(vft, VFTIndexes::IClientUtils::GetAppId, hkClientUtils_GetAppId);
+		Hooks::IClientUtils_GetOfflineMode = new VFTHook(vft, VFTIndexes::IClientUtils::GetOfflineMode, hkClientUtils_GetOfflineMode);
 
-		Hooks::IClientUtils_GetAppId.place();
-		Hooks::IClientUtils_GetOfflineMode.place();
-
-		LOG_DEBUG("IClientUtils->vft at %p\n", reinterpret_cast<void*>(vft->vtable));
+		LOG_DEBUG("IClientUtils->vft at %p\n", reinterpret_cast<void*>(vft.get()));
 	}
 
 	#pragma GCC diagnostic pop
+
+	setupAll();
+	placeAll();
 
 	hooked = true;
 
 	Lua::fireCallback(Lua::Callbacks::SLSsteam_Initialized);
 }
 
-void Hooks::remove()
+void Hooks::removeAll(const bool deleteAll)
 {
-	//Detours
-	TraceIPC.remove();
+	LOG_DEBUG("Hooks::removeAll()\n");
 
-	CAPIJob_SendAndRecv.remove();
+	for (IHook* hook : IHook::hooks)
+	{
+		hook->remove();
 
-	CAppDataCache_BParseResponseFromMessage.remove();
-
-	CClientUnifiedServiceMethod_SendAndRecvMsg.remove();
-
-	CCMInterface_RecvPkt.remove();
-
-	CSteamEngine_ProcessIPCFrame.remove();
-	CSteamEngine_SetAppIdForCurrentPipe.remove();
-
-	CSteamMatchmakingServers_GetServerDetails.remove();
-	CSteamMatchmakingServers_RequestInternetServerList.remove();
-
-	CUser_CheckAppOwnership.remove();
-	CUser_GetSubscribedApps.remove();
-	CUser_PostCallbackToAppId.remove();
-	CUser_SpawnGameId.remove();
-
-	CUserAppManager_BuildDepotDependency.remove();
-
-	CWebSocketConnection_BBuildAndAsyncSendFrame.remove();
-
-	CGameInfoDialog_ServerResponded.remove();
-
-	IClientCompat_BIsCompatLayerEnabled.remove();
-
-	IClientConfigStore_SetString.remove();
-
-	IClientFriends_GetFriendGamePlayed.remove();
-
-	IClientRemoteStorage_IsCloudEnabledForApp.remove();
-
-	//VFT Hooks
-	IClientAppManager_BCanRemotePlayTogether.remove();
-	IClientAppManager_BIsDlcEnabled.remove();
-	IClientAppManager_GetAppUpdateInfo.remove();
-	IClientAppManager_GetAppStateInfo.remove();
-	IClientAppManager_LaunchApp.remove();
-	IClientAppManager_IsAppDlcInstalled.remove();
-
-	IClientApps_GetDLCDataByIndex.remove();
-	IClientApps_GetDLCCount.remove();
-
-	IClientUser_BLoggedOn.remove();
-	IClientUser_BUpdateAppOwnershipTicket.remove();
-	IClientUser_GetAppOwnershipTicketExtendedData.remove();
-	//IClientUser_GetEncryptedAppTicket.remove();
-	IClientUser_GetLegacyCDKey.remove();
-	IClientUser_IsUserSubscribedAppInTicket.remove();
-
-	IClientUtils_GetAppId.remove();
-	IClientUtils_GetOfflineMode.remove();
-
+		if (deleteAll)
+		{
+			delete hook;
+		}
+	}
 }
