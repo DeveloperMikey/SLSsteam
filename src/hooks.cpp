@@ -1459,8 +1459,6 @@ void Hooks::setupAll()
 {
 	LOG_DEBUG("Hooks::setupAll()\n");
 
-	//This does not work! GCC sees no path to the hk* functions
-	//and assumes the hooks are unused, so they get deleted right after creation
 	for (auto hook : IHook::hooks)
 	{
 		hook->setup();
