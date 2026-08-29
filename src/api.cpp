@@ -25,7 +25,7 @@ namespace SLSAPI
 
 bool SLSAPI::isEnabled()
 {
-	return g_config.api.get() && initialized;
+	return g_config.api.copy() && initialized;
 }
 
 void SLSAPI::onFileChange(const std::filesystem::path& path, __attribute__((unused)) const int eventMask)

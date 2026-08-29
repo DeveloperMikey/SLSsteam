@@ -9,7 +9,7 @@
 bool Misc::shouldFakeOffline()
 {
 	const AppId_t appId = FakeAppIds::getRealAppIdForCurrentPipe();
-	if (!appId || !g_config.fakeOffline.get().contains(appId))
+	if (!appId || !g_config.fakeOffline.get()->contains(appId))
 	{
 		return false;
 	}
@@ -26,7 +26,7 @@ void Misc::recvMsg(CNetPacket *pkt)
 		case k_EMsgClientPersonaState:
 		{
 			const auto name = g_config.fakeName.get();
-			if (name.size() < 1)
+			if (name->size() < 1)
 			{
 				return;
 			}
@@ -42,7 +42,7 @@ void Misc::recvMsg(CNetPacket *pkt)
 					continue;
 				}
 
-				frnd->set_player_name(name);
+				frnd->set_player_name(*name);
 				LOG_DEBUG("Faked self persona\n");
 
 				pkt->serialize(msg);
@@ -55,13 +55,13 @@ void Misc::recvMsg(CNetPacket *pkt)
 		case k_EMsgClientEmailAddrInfo:
 		{
 			const auto email = g_config.fakeEmail.get();
-			if (email.size() < 1)
+			if (email->size() < 1)
 			{
 				return;
 			}
 
 			auto msg = pkt->deserializeBody<CMsgClientEmailAddrInfo>();
-			msg.set_email_address(email);
+			msg.set_email_address(*email);
 			msg.set_email_is_validated(true);
 
 			pkt->serialize(msg);
@@ -70,7 +70,7 @@ void Misc::recvMsg(CNetPacket *pkt)
 
 		case k_EMsgClientWalletInfoUpdate:
 		{
-			const int32_t amount = g_config.fakeWalletBalance.get();
+			const int32_t amount = g_config.fakeWalletBalance.copy();
 			if (!amount)
 			{
 				return;

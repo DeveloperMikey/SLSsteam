@@ -149,7 +149,7 @@ void Ticket::getTicketOwnershipExtendedData(const AppId_t appId)
 {
 	const auto utils = g_pSteamEngine->getUtils();
 
-	if (g_config.smartTickets.get() & CConfig::k_ESmartTicketsSteamDRM)
+	if (g_config.smartTickets.copy() & CConfig::k_ESmartTicketsSteamDRM)
 	{
 		const auto& proc = g_processMap.at(utils->getCurrentSteamPipe());
 		if (proc.steamDRM)
@@ -183,7 +183,7 @@ std::filesystem::path Ticket::getEncryptedTicketPath(const AppId_t appId)
 Ticket::SavedTicket* Ticket::getCachedEncryptedTicket(const AppId_t appId)
 {
 	const AppId_t fakeAppId = FakeAppIds::getFakeAppId(appId);
-	const auto smartTickets = g_config.smartTickets.get();
+	const auto smartTickets = g_config.smartTickets.copy();
 
 	if (!(smartTickets & CConfig::k_ESmartTicketsDenuvo) && appId && fakeAppId && fakeAppId != appId)
 	{

@@ -66,17 +66,17 @@ void Apps::buildDepotDependency(CUtlVector<DepotInfo_t>* depots, CUtlVector<Depo
 	{
 		const auto depot = depots->at(i);
 
-		if (depotBlacklist.contains(depot->depotId))
+		if (depotBlacklist->contains(depot->depotId))
 		{
 			LOG_DEBUG("Removing %u with %llu\n", depot->depotId, depot->manifestId);
 			depots->swap(i, depots->size - 1);
 			depots->size--;
 		}
 
-		if (manifestOverrides.contains(depot->depotId))
+		if (manifestOverrides->contains(depot->depotId))
 		{
 			const uint64_t oldId = depot->manifestId;
-			depot->manifestId = manifestOverrides.at(depot->depotId);
+			depot->manifestId = manifestOverrides->at(depot->depotId);
 			LOG_DEBUG("Overrode %u's manifest %llu with %llu\n", depot->depotId, oldId, depot->manifestId);
 		}
 
@@ -126,9 +126,9 @@ bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
 	}
 
 	const auto times = g_config.subscriptionTimestamps.get();
-	if (times.contains(appId))
+	if (times->contains(appId))
 	{
-		pInfo->purchaseTime = times.at(appId);
+		pInfo->purchaseTime = times->at(appId);
 	}
 
 	if (!g_config.isAddedAppId(appId))
@@ -143,7 +143,7 @@ bool Apps::checkAppOwnership(AppId_t appId, AppOwnershipInfo_t* pInfo)
 
 void Apps::getAppStateInfo(const AppId_t appId, AppStateInfo_t* info)
 {
-	if (!g_config.disableFamilyLock.get())
+	if (!g_config.disableFamilyLock.copy())
 	{
 		return;
 	}
@@ -182,9 +182,9 @@ void Apps::getLegacyCDKey(const AppId_t appId)
 	std::string newKey;
 
 	const auto keys = g_config.cdKeys.get();
-	if (keys.contains(appId))
+	if (keys->contains(appId))
 	{
-		newKey = keys.at(appId);
+		newKey = keys->at(appId);
 		LOG_DEBUG("Using key from config for %u\n", appId);
 	}
 	else
@@ -234,15 +234,17 @@ void Apps::getLegacyCDKey(const AppId_t appId)
 
 void Apps::getSubscribedApps(AppId_t* appList, const size_t size, uint32_t& count)
 {
+	const auto addedApps = g_config.addedAppIds.get();
+
 	//Valve calls this function twice, once with size of 0 then again
 	if (!size || !appList)
 	{
-		count = count + g_config.addedAppIds.get().size();
+		count = count + addedApps->size();
 		return;
 	}
 
 	//TODO: Maybe Add check if AppId already in list before blindly appending
-	for (auto& appId : g_config.addedAppIds.get())
+	for (auto& appId : *addedApps)
 	{
 		appList[count++] = appId;
 	}
@@ -331,15 +333,15 @@ void Apps::runIPCFrame()
 
 	const auto appInfo = usr->getClientApps();
 
-	if (removedApps.size())
+	if (removedApps->size())
 	{
-		postAppLicensesChanged(removedApps);
-		g_config.removedApps = g_config.removedApps.empty();
+		postAppLicensesChanged(*removedApps);
+		g_config.removedApps = g_config.removedApps.defaultInst();
 	}
 
 	const auto added = g_config.newApps;
 
-	if (!addedApps.size())
+	if (!addedApps->size())
 	{
 		return;
 	}
@@ -351,10 +353,10 @@ void Apps::runIPCFrame()
 	AppId_t apps[MAX_APPS_PER_REQUEST] { };
 
 	unsigned int i = 0;
-	for (; i < addedApps.size(); i++)
+	for (; i < addedApps->size(); i++)
 	{
 		const unsigned int idx = i % MAX_APPS_PER_REQUEST;
-		const AppId_t appId = *std::next(addedApps.begin(), i);
+		const AppId_t appId = *std::next(addedApps->begin(), i);
 
 		apps[idx] = appId;
 
@@ -375,7 +377,7 @@ void Apps::runIPCFrame()
 		appInfo->requestAppInfoUpdate(apps, idx);
 	}
 
-	g_config.newApps = g_config.newApps.empty();
+	g_config.newApps = g_config.newApps.defaultInst();
 }
 
 
@@ -394,17 +396,17 @@ void Apps::spawnGame(const GameId_t* gameId, std::string& cmd, std::string& cmdl
 	const auto options = g_config.launchOptions.get();
 	std::string option;
 
-	if (options.contains(*gameId))
+	if (options->contains(*gameId))
 	{
-		option = options.at(*gameId);
+		option = options->at(*gameId);
 	}
-	else if (options.contains(UINT32_MAX - 1) && !g_pSteamEngine->getUser()->isSubscribed(*gameId))
+	else if (options->contains(UINT32_MAX - 1) && !g_pSteamEngine->getUser()->isSubscribed(*gameId))
 	{
-		option = options.at(UINT32_MAX - 1);
+		option = options->at(UINT32_MAX - 1);
 	}
-	else if (options.contains(UINT32_MAX))
+	else if (options->contains(UINT32_MAX))
 	{
-		option = options.at(UINT32_MAX);
+		option = options->at(UINT32_MAX);
 	}
 
 	if (option.size() < 1)
@@ -431,7 +433,7 @@ void Apps::spawnGame(const GameId_t* gameId, std::string& cmd, std::string& cmdl
 
 bool Apps::shouldDisableCloud(const AppId_t appId)
 {
-	if (!g_config.disableCloud.get())
+	if (!g_config.disableCloud.copy())
 	{
 		return false;
 	}
@@ -446,7 +448,7 @@ bool Apps::shouldDisableCDKey(const AppId_t appId)
 
 bool Apps::shouldDisableUpdates(const AppId_t appId)
 {
-	if (!g_config.disableUpdates.get())
+	if (!g_config.disableUpdates.copy())
 	{
 		return false;
 	}
@@ -466,7 +468,7 @@ void Apps::sendAndRecvLastPlayedTimes(const char* name, CPlayer_GetLastPlayedTim
 	for (int i = recv->games_size() - 1; i >= 0; i--)
 	{
 		auto game = recv->mutable_games(i);
-		if (!apps.contains(game->appid()))
+		if (!apps->contains(game->appid()))
 		{
 			continue;
 		}
@@ -502,14 +504,14 @@ void Apps::sendGamesPlayed(CNetPacket* pkt)
 			continue;
 		}
 
-		if (g_config.disableFamilyLock.get())
+		if (g_config.disableFamilyLock.copy())
 		{
 			game->set_owner_id(1);
 		}
 
-		if (titles.contains(gameId))
+		if (titles->contains(gameId))
 		{
-			game->set_game_extra_info(titles.at(gameId));
+			game->set_game_extra_info(titles->at(gameId));
 		}
 		//This probably belongs into FakeAppIds, but the GameTitles does not so it stays here
 		else if (FakeAppIds::getFakeAppId(gameId))
@@ -542,14 +544,14 @@ void Apps::sendGamesPlayed(CNetPacket* pkt)
 	if (msg.games_played_size() < 1)
 	{
 		const auto statusApp = g_config.idleStatus.get();
-		if (statusApp.appId)
+		if (statusApp->appId)
 		{
 			auto game = msg.add_games_played();
-			game->set_game_id(statusApp.appId);
-			game->set_game_extra_info(statusApp.title);
+			game->set_game_id(statusApp->appId);
+			game->set_game_extra_info(statusApp->title);
 			game->set_game_flags(0);
 
-			if (g_config.disableFamilyLock.get())
+			if (g_config.disableFamilyLock.copy())
 			{
 				game->set_owner_id(1);
 			}
@@ -568,9 +570,9 @@ void Apps::sendPICSInfoRequest(CNetPacket* pkt)
 	for (int i = 0; i < msg.apps_size(); i++)
 	{
 		auto app = msg.mutable_apps(i);
-		if (tokens.contains(app->appid()))
+		if (tokens->contains(app->appid()))
 		{
-			app->set_access_token(tokens.at(app->appid()));
+			app->set_access_token(tokens->at(app->appid()));
 			LOG_DEBUG("Used access token from config for %u\n", app->appid());
 		}
 	}

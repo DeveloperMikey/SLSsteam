@@ -392,7 +392,7 @@ bool VFTIndexes::init()
 		}
 	}
 
-	if (g_config.dumpInterfaceMaps.get())
+	if (g_config.dumpInterfaceMaps.copy())
 	{
 		for (const auto& tbl : tableMap)
 		{

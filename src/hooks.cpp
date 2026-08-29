@@ -201,7 +201,7 @@ bool LuaHook::remove()
 __attribute__((hot))
 static void hkTraceIPC(const char* iface, const char* fn)
 {
-	if (g_config.extendedLogging.get())
+	if (g_config.extendedLogging.copy())
 	{
 		LOG_DEBUG
 		(
@@ -318,7 +318,7 @@ static void hkCMInterface_RecvPkt(CCMInterface* pCMInterface, CNetPacket* pNetPa
 		}
 
 		const auto header = pNetPacket->deserializeHeader();
-		const bool disableFamilyShareLock = g_config.disableFamilyLock.get();
+		const bool disableFamilyShareLock = g_config.disableFamilyLock.copy();
 
 		if (disableFamilyShareLock && type == k_EMsgClientSharedLibraryStopPlaying)
 		{
@@ -362,7 +362,7 @@ static uint32_t hkSteamEngine_ProcessIPCFrame(CSteamEngine* pSteamEngine, HSteam
 	}
 
 	uint32_t ret;
-	const bool log = g_config.extendedLogging.get();
+	const bool log = g_config.extendedLogging.copy();
 
 	//pBufIn
 	//mem + 0 : 1 = IPCCommand
@@ -1120,9 +1120,9 @@ static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 	}
 
 	const auto overrides = g_config.steamIdOverride.get();
-	if (overrides.contains(realAppId))
+	if (overrides->contains(realAppId))
 	{
-		const uint64_t& id64 = overrides.at(realAppId);
+		const uint64_t& id64 = overrides->at(realAppId);
 		if (id64)
 		{
 			return CSteamId(id64);
@@ -1155,7 +1155,7 @@ static CSteamId hkClientUser_GetSteamId(const CSteamId& steamId)
 		return steamId;
 	}
 
-	if (g_config.smartTickets.get() & CConfig::k_ESmartTicketsDenuvo)
+	if (g_config.smartTickets.copy() & CConfig::k_ESmartTicketsDenuvo)
 	{
 		const auto& proc = g_processMap.at(utils->getCurrentSteamPipe());
 

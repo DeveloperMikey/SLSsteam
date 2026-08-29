@@ -13,13 +13,13 @@ AppId_t FakeAppIds::getFakeAppId(const AppId_t appId)
 {
 	const auto fakeAppIds = g_config.fakeAppIds.get();
 
-	if (fakeAppIds.contains(appId))
+	if (fakeAppIds->contains(appId))
 	{
-		return fakeAppIds.at(appId);
+		return fakeAppIds->at(appId);
 	}
-	else if (fakeAppIds.contains(0) && !g_pSteamEngine->getUser(0)->isSubscribed(appId))
+	else if (fakeAppIds->contains(0) && !g_pSteamEngine->getUser(0)->isSubscribed(appId))
 	{
-		return fakeAppIds.at(0);
+		return fakeAppIds->at(0);
 	}
 
 	return 0;
@@ -153,7 +153,7 @@ void FakeAppIds::runIPCFrame(const bool post, const EIPCInterface interface)
 		appId = fakeAppId;
 	}
 
-	if (g_config.extendedLogging.get())
+	if (g_config.extendedLogging.copy())
 	{
 		const auto utils = g_pSteamEngine->getUtils();
 		LOG_DEBUG("Setting AppId to %u in pipe 0x%x\n", appId, utils ? utils->getCurrentSteamPipe() : 0);

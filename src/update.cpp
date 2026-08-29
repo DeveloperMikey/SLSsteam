@@ -165,5 +165,5 @@ bool Updater::verifySafeModeHash()
 
 bool Updater::isEnabled()
 {
-	return g_config.safeMode.get() || g_config.warnHashMissmatch.get();
+	return g_config.safeMode.copy() || g_config.warnHashMissmatch.copy();
 }

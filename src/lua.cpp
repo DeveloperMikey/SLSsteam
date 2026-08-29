@@ -41,7 +41,7 @@ namespace LuaConfig
 
 	std::unordered_set<AppId_t> getAdditionalApps(CConfig* config)
 	{
-		return config->addedAppIds.get();
+		return config->addedAppIds.copy();
 	}
 
 	double getDouble(CConfig* config, const char* name, const double defaultValue)
@@ -547,7 +547,7 @@ bool Lua::runLua(const std::filesystem::path& path)
 {
 	//We disable the plugins from ever getting ran, the rest of the system
 	//stays active to allow for hot reloading
-	if (!g_config.plugins.get())
+	if (!g_config.plugins.copy())
 	{
 		return false;
 	}

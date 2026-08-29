@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <dlfcn.h>
 #include <filesystem>
 #include <link.h>
 #include <memory>
@@ -177,13 +178,13 @@ static void load()
 
 	if (!Updater::verifySafeModeHash())
 	{
-		if (g_config.safeMode.get())
+		if (g_config.safeMode.copy())
 		{
 			LOG_NOTIFYERROR("Unknown steamclient.so hash! Aborting...");
 			unload();
 			return;
 		}
-		else if (g_config.warnHashMissmatch.get())
+		else if (g_config.warnHashMissmatch.copy())
 		{
 			LOG_NOTIFYWARN("steamclient.so hash missmatch! Please update :)");
 		}
@@ -218,7 +219,7 @@ static void load()
 	//Disabled, since the Lua API can use it to find VFTables
 	//Decompiler::cleanUp();
 
-	if (g_config.notifyInit.get())
+	if (g_config.notifyInit.copy())
 	{
 		const auto now = std::chrono::time_point { std::chrono::system_clock::now() };
 		const auto ymd = std::chrono::year_month_day { std::chrono::floor<std::chrono::days>(now) };

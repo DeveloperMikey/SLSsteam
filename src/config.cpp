@@ -110,7 +110,7 @@ bool CConfig::init()
 
 void CConfig::setError(const ELoadError err, const char* keyName)
 {
-	const auto prev = __loadErrors.get();
+	const auto prev = __loadErrors.copy();
 	std::ostringstream msg;
 
 	if (!prev.size())
@@ -160,9 +160,9 @@ bool CConfig::loadSettings(const bool firstLoad, const bool silent)
 	//Parse logLevels first, otherwise settings won't get logged
 	logLevels = getSetting<LogLevelFlags_t>(rootNode, "LogLevels", 0xff, true);
 	api = getSetting<bool>(rootNode, "API", true);
-	if (api.get())
+	if (api.copy())
 	{
-		logLevels = logLevels.get() | k_ELogLevelAPI;
+		logLevels = logLevels.copy() | k_ELogLevelAPI;
 	}
 
 	//This is shitty, but to do it properly have to do something even shittier
@@ -171,7 +171,7 @@ bool CConfig::loadSettings(const bool firstLoad, const bool silent)
 		k_ELogLevelInfo | k_ELogLevelOnce,
 		"LogLevels is \"%s\"\n",
 
-		ELogLevel_ToString(logLevels.get()).c_str()
+		ELogLevel_ToString(logLevels.copy()).c_str()
 	);
 
 	disableFamilyLock = getSetting<bool>(rootNode, "DisableFamilyShareLock", true);
@@ -206,7 +206,7 @@ bool CConfig::loadSettings(const bool firstLoad, const bool silent)
 	setAdditionalApps(getList<AppId_t>(rootNode, "AdditionalApps"), firstLoad);
 
 	//Do not log the keys themself
-	for (const auto& key : cdKeys.get())
+	for (const auto& key : cdKeys.copy())
 	{
 		LOG_CUSTOM(k_ELogLevelInfo | k_ELogLevelOnce, "Added CDKey for %u\n", key.first);
 	}
@@ -238,7 +238,7 @@ bool CConfig::loadSettings(const bool firstLoad, const bool silent)
 	const auto dlcDataNode = rootNode["DlcData"];
 	if (dlcDataNode)
 	{
-		auto _dlcData = dlcData.empty();
+		auto _dlcData = dlcData.defaultInst();
 
 		for (auto& app : dlcDataNode)
 		{
@@ -271,7 +271,7 @@ bool CConfig::loadSettings(const bool firstLoad, const bool silent)
 	const auto denuvoGamesNode = rootNode["DenuvoGames"];
 	if (denuvoGamesNode)
 	{
-		auto _denuvoGames = denuvoGames.empty();
+		auto _denuvoGames = denuvoGames.defaultInst();
 
 		for (auto& steamIdNode : denuvoGamesNode)
 		{
@@ -306,7 +306,7 @@ bool CConfig::loadSettings(const bool firstLoad, const bool silent)
 
 	Lua::fireCallback(Lua::Callbacks::SLSsteam_ConfigLoaded);
 
-	const auto errors = __loadErrors.get();
+	const auto errors = __loadErrors.copy();
 	if (!silent && errors.size())
 	{
 		//We know this isn't build by user input, so disabling the warning is fine for this line
@@ -323,14 +323,14 @@ bool CConfig::loadSettings(const bool firstLoad, const bool silent)
 
 bool CConfig::isAddedAppId(const AppId_t appId)
 {
-	return addedAppIds.get().contains(appId);
+	return addedAppIds.get()->contains(appId);
 }
 
 void CConfig::setAdditionalApps(const std::unordered_set<AppId_t>& appIds, const bool firstLoad)
 {
-	auto _newApps = newApps.get();
-	auto _removedApps = removedApps.get();
-	const auto prevAppIds = addedAppIds.get();
+	auto _newApps = newApps.copy();
+	auto _removedApps = removedApps.copy();
+	const auto prevAppIds = addedAppIds.copy();
 
 	//No need to post a AppLicenseChanged_t callback
 	//when GetSubscribedApps hasn't been called yet
@@ -374,8 +374,8 @@ bool CConfig::shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditiona
 	}
 	else
 	{
-		const bool whitelist = useWhiteList.get();
-		const bool found = appIds.get().contains(appId);
+		const bool whitelist = useWhiteList.copy();
+		const bool found = appIds.get()->contains(appId);
 		exclude = (!isAddedAppId(appId) || ignoreAdditionalApps) && ((whitelist && !found) || (!whitelist && found));
 
 		if (!ignoreAdditionalApps)
@@ -413,7 +413,7 @@ bool CConfig::shouldExcludeAppId(const AppId_t appId, const bool ignoreAdditiona
 
 CSteamId CConfig::getDenuvoGameOwner(const AppId_t appId)
 {
-	for (const auto& tpl : denuvoGames.get())
+	for (const auto& tpl : denuvoGames.copy())
 	{
 		if (tpl.second.contains(appId))
 		{

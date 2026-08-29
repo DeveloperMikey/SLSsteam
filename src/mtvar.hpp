@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <mutex>
 #include <shared_mutex>
 
@@ -7,41 +8,62 @@
 template<typename T> class MTVariable
 {
 private:
-	T instance;
+	std::shared_ptr<const T> ptr;
 	std::shared_mutex mutex;
 
 public:
-	MTVariable() : instance(empty()) { }
-	MTVariable(T instance) : instance(instance) { }
-	MTVariable(const MTVariable<T>& cpy) : instance(cpy.instance) { }
-	~MTVariable() { }
+	MTVariable()
+	{
+		set(defaultInst());
+	}
 
-	//Returns default instance
-	T empty()
+	MTVariable(const T instance)
+	{
+		set(instance);
+	}
+
+	MTVariable(const T& instance)
+	{
+		set(instance);
+	}
+
+	MTVariable(const MTVariable<T>& rhs)
+	{
+		ptr = rhs.ptr;
+	}
+
+	constexpr T defaultInst() const
 	{
 		return T();
 	}
 
-	T get()
+	constexpr const T copy()
 	{
 		const auto lock = std::shared_lock(mutex);
-		//Return copy
-		return T(instance);
+		//Return *ptr instead of *get() to skip a useless shared_ptr con- & destruction
+		return *ptr;
+	}
+
+	std::shared_ptr<const T> get()
+	{
+		const auto lock = std::shared_lock(mutex);
+		return ptr;
 	}
 
 	void set(const T& value)
 	{
+		const auto newPtr = std::make_shared<const T>(value);
 		const auto lock = std::lock_guard(mutex);
-		instance = value;
+		ptr = newPtr;
 	}
 
-	void operator=(const T& val)
+	constexpr void operator=(const T& val)
 	{
 		set(val);
 	}
 
-	void operator=(const MTVariable<T>& other)
+	constexpr void operator=(const MTVariable<T>& other)
 	{
-		set(other.instance);
+		set(other.ptr);
 	}
 };

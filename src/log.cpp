@@ -64,7 +64,7 @@ std::string ELogLevel_ToString(const LogLevelFlags_t lvlFlags)
 
 bool CLog::shouldNotify(const LogLevelFlags_t flags)
 {
-	const unsigned int configLevels = g_config.logLevels.get();
+	const unsigned int configLevels = g_config.logLevels.copy();
 	if ((flags & k_ELogLevelNotifyLong) && (configLevels & k_ELogLevelNotifyLong))
 	{
 		return true;
@@ -126,7 +126,7 @@ std::string CLog::buildNotification(const LogLevelFlags_t flags, const char* msg
 
 void CLog::__log(const LogLevelFlags_t flags, const char* file, const char* function, const int line, const char* msg, const va_list& vArgs)
 {
-	if (!(g_config.logLevels.get() & flags))
+	if (!(g_config.logLevels.copy() & flags))
 	{
 		return;
 	}

@@ -20,7 +20,7 @@ std::string Achievements::getReviewUrl(const AppId_t appId)
 	std::ostringstream url;
 	url << "https://store.steampowered.com/appreviews/" << appId
 		<< "?json=1&filter=recent&language=all&purchase_type=all&num_per_page="
-		<< g_config.maxSchemaTries.get();
+		<< g_config.maxSchemaTries.copy();
 
 	return url.str();
 }
@@ -28,7 +28,7 @@ std::string Achievements::getReviewUrl(const AppId_t appId)
 std::unordered_set<uint64_t> Achievements::getReviewersForGame(const AppId_t appId)
 {
 	auto list = std::unordered_set<uint64_t>();
-	if (!g_config.maxSchemaTries.get())
+	if (!g_config.maxSchemaTries.copy())
 	{
 		return list;
 	}
