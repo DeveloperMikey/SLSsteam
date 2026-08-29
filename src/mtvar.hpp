@@ -62,8 +62,9 @@ public:
 		set(val);
 	}
 
-	constexpr void operator=(const MTVariable<T>& other)
+	constexpr void operator=(MTVariable<T>& other)
 	{
-		set(other.ptr);
+		const auto pVal = other.get();
+		set(*pVal);
 	}
 };
