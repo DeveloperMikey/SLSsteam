@@ -18,6 +18,11 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "LuaBridge/Array.h"
+#include "LuaBridge/List.h"
+#include "LuaBridge/UnorderedSet.h"
+#include "LuaBridge/Vector.h"
+
 
 extern void* place_lua_hook(const int index, const void* pTarget)
 {
@@ -194,21 +199,6 @@ namespace LuaMemHlp
 
 namespace LuaSDK
 {
-	lm_address_t alloc(int size)
-	{
-		return reinterpret_cast<lm_address_t>(Steam::Plat_Alloc(size));
-	}
-
-	lm_address_t realloc(lm_address_t address, int size)
-	{
-		return reinterpret_cast<lm_address_t>(Steam::Plat_Realloc(reinterpret_cast<void*>(address), size));
-	}
-
-	void free(lm_address_t address)
-	{
-		return Steam::Plat_Free(reinterpret_cast<void*>(address));
-	}
-	
 	CSteamEngine* getEngine()
 	{
 		return g_pSteamEngine;
@@ -521,10 +511,6 @@ void Lua::initLuaState()
 		.addProperty("config", &LuaConfig::get)
 		.addProperty("steamEngine", &LuaSDK::getEngine)
 		.addFunction("registerCallback", &Lua::registerCallback)
-
-		.addFunction("alloc", LuaSDK::alloc)
-		.addFunction("realloc", LuaSDK::realloc)
-		.addFunction("free", LuaSDK::free)
 	.endNamespace();
 
 
