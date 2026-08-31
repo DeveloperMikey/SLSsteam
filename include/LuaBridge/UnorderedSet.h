@@ -1,50 +1,80 @@
-// https://github.com/vinniefalco/LuaBridge
-// Copyright 2018, Dmitry Tarakanov
+// https://github.com/kunitoki/LuaBridge3
+// Copyright 2026, kunitoki
 // SPDX-License-Identifier: MIT
 
 #pragma once
 
-#include <LuaBridge/detail/Stack.h>
+#include "detail/Stack.h"
 
 #include <unordered_set>
 
 namespace luabridge {
 
-template<class T>
-struct Stack<std::unordered_set<T>>
+//=================================================================================================
+/**
+ * @brief Stack specialization for `std::unordered_set`.
+ */
+template <class K, class Hash, class KeyEqual, class Allocator>
+struct Stack<std::unordered_set<K, Hash, KeyEqual, Allocator>>
 {
-    static void push(lua_State* L, std::unordered_set<T> const& set)
+    using Type = std::unordered_set<K, Hash, KeyEqual, Allocator>;
+
+    [[nodiscard]] static Result push(lua_State* L, const Type& set)
     {
-        lua_createtable(L, static_cast<int>(set.size()), 0);
-        for (std::size_t i = 0; i < set.size(); ++i)
+#if LUABRIDGE_SAFE_STACK_CHECKS
+        if (! lua_checkstack(L, 3))
+            return makeErrorCode(ErrorCode::LuaStackOverflow);
+#endif
+
+        StackRestore stackRestore(L);
+
+        lua_createtable(L, 0, static_cast<int>(set.size()));
+
+        auto it = set.cbegin();
+        for (lua_Integer tableIndex = 1; it != set.cend(); ++tableIndex, ++it)
         {
-            lua_pushinteger(L, static_cast<lua_Integer>(i + 1));
-            Stack<T>::push(L, *std::next(set.begin(), i));
+            lua_pushinteger(L, tableIndex);
+
+            auto result = Stack<K>::push(L, *it);
+            if (! result)
+                return result;
+
             lua_settable(L, -3);
         }
+
+        stackRestore.reset();
+        return {};
     }
 
-    static std::unordered_set<T> get(lua_State* L, int index)
+    [[nodiscard]] static TypeResult<Type> get(lua_State* L, int index)
     {
         if (!lua_istable(L, index))
-        {
-            luaL_error(L, "#%d argument must be a table", index);
-        }
+            return makeErrorCode(ErrorCode::InvalidTypeCast);
 
-        std::unordered_set<T> set;
-        set.reserve(static_cast<std::size_t>(get_length(L, index)));
+        const StackRestore stackRestore(L);
 
-        int const absindex = lua_absindex(L, index);
+        Type set;
+
+        int absIndex = lua_absindex(L, index);
         lua_pushnil(L);
-        while (lua_next(L, absindex) != 0)
+
+        while (lua_next(L, absIndex) != 0)
         {
-            set.emplace(Stack<T>::get(L, -1));
+            auto item = Stack<K>::get(L, -1);
+            if (! item)
+                return makeErrorCode(ErrorCode::InvalidTypeCast);
+
+            set.emplace(*item);
             lua_pop(L, 1);
         }
+
         return set;
     }
 
-    static bool isInstance(lua_State* L, int index) { return lua_istable(L, index); }
+    [[nodiscard]] static bool isInstance(lua_State* L, int index)
+    {
+        return lua_istable(L, index);
+    }
 };
 
 } // namespace luabridge
