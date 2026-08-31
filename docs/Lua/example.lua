@@ -5,7 +5,7 @@ Example = Example or {
 
 	-- Hooks
 	postCallbackHook = nil, postCallbackTramp = nil,
-	
+
 	-- Functions
 	clientUserLoggedOn = nil
 }
@@ -22,6 +22,8 @@ Example.setup = true
 local ffi = require("ffi")
 
 ffi.cdef[[
+	void* place_lua_hook(const int, const void*);
+
 	typedef void(*PostCallback_t)(void*, uint32_t, void*, uint32_t, uint32_t);
 	typedef bool(*IClientUser_BLoggedOn_t)(void*);
 ]]
@@ -31,7 +33,7 @@ log.debug("Luas loading :)")
 local modSteamClient = memhlp.getModule("steamclient.so")
 local postCallbackPtr = memhlp.getJmpTarget(memhlp.patternScan("E8 ? ? ? ? 8B 75 ? 89 D8", modSteamClient))
 
-Example.hkPostCallback = function(user, type, pCallback, callbackSize, a4)
+Example.hkPostCallback = ffi.cast("PostCallback_t", function(user, type, pCallback, callbackSize, a4)
 	-- Lua is not thread safe, so we use a recursive_mutex to prevent
 	-- multiple threads using the same lua_State simultaneously
 	-- LuaMutex() locks automatically, ~LuaMutex() unlocks automatically
@@ -43,23 +45,24 @@ Example.hkPostCallback = function(user, type, pCallback, callbackSize, a4)
 	Example.postCallbackTramp(user, type, pCallback, callbackSize, a4)
 
 	mutex:unlock()
-end
+end)
 
-Example.postCallbackHook = LuaHook("PostCalback", tonumber(postCallbackPtr), tonumber(ffi.cast("intptr_t", ffi.cast("PostCallback_t", Example.hkPostCallback))))
-Example.postCallbackTramp = ffi.cast("PostCallback_t", Example.postCallbackHook:place())
+Example.postCallbackHook = LuaHook("PostCalback", postCallbackPtr)
+-- We use a c function to place the hook since you can not cast a cdata to a userdata object
+Example.postCallbackTramp = ffi.cast("PostCallback_t", ffi.C.place_lua_hook(Example.postCallbackHook.index, Example.hkPostCallback))
 log.debug("Postcallback hooked!")
 
 -- We cast to intptr_t since lua messes up the conversion to unsigned integer otherwise
-local clientUserMapLoggedOn = VFTableInfo_t("14IClientUserMap", "BLoggedOn", tonumber(ffi.cast("intptr_t", 0xffffffff)), tonumber(ffi.cast("intptr_t", 0xffffffff)))
+local clientUserMapLoggedOn = VFTableInfo_t("14IClientUserMap", "BLoggedOn")
 if not clientUserMapLoggedOn:init() then
 	log.notify("Failed to parse IClientUserMap!")
 end
 
 -- IClientUser is subclass 1 of CUser
-local clientUserLoggedOn = VFTableInfo_t("5CUser", "BLoggedOn", clientUserMapLoggedOn.index, 0)
+local clientUserLoggedOn = VFTableInfo_t("5CUser", "BLoggedOn", clientUserMapLoggedOn.index)
 clientUserLoggedOn:init()
 
-Example.clientUserLoggedOn = ffi.cast("IClientUser_BLoggedOn_t", clientUserLoggedOn.address)
+Example.clientUserLoggedOn = ffi.cast("IClientUser_BLoggedOn_t", clientUserLoggedOn.ptr)
 
 Example.initialized = function()
 	local config = SLS.config
@@ -68,15 +71,9 @@ Example.initialized = function()
 	local clientUser = user:getClientUser()
 	local apps = user:getClientApps()
 
-	-- This line is confusing, I am sure we can do better in the future
-	-- We do this because the lua object is wrapped in a UserData object from LuaBridge
-	-- So to get the actual object it's pointing at we need to convert it
-	-- Otherwise calling the resolved BLoggedOn with it will read the from the wrong memory address
-	local rawClientUser = ffi.cast("void*", memhlp.getUserDataPtr(tonumber(ffi.cast("intptr_t", clientUser))))
-
 	log.debug("IClientUser::BLoggedOn -> " .. tostring(clientUser:loggedOn())) -- SLS wrapped function call
 	-- This is just an example how to call arbitrary functions
-	log.debug("IClientUser::BLoggedOn -> " .. tostring(Example.clientUserLoggedOn(rawClientUser))) -- Raw function call
+	log.debug("IClientUser::BLoggedOn -> " .. tostring(Example.clientUserLoggedOn(clientUser))) -- Raw function call
 
 	local function addappid(appId)
 		if user:isSubscribed(appId) then
@@ -111,10 +108,10 @@ end
 
 Example.configLoaded = function()
 	local config = SLS.config
-	local someList = config:getIntList("FakeOffline")
+	local someList = config:getIntList("AppIds")
 
-	for k, v in ipairs(someList) do
-		log.debug("FakeOffline " .. k .. " -> " .. v)
+	for _, v in ipairs(someList) do
+		log.debug("AppIds " .. v)
 	end
 
 	log.info("Lua config loaded")

@@ -23,10 +23,15 @@ LogLevelFlags_t -> unsigned int \
 AppId_t -> uint32_t
 
 
+#### Useful exports
+
+If you want to manage memory malloc & free seem to work just fine. I still recommend using Plat_Alloc, Plat_Realloc & Plat_Free from libtier0_s.so instead.
+
+
 #### curl:
 
-downloadString(url: string, timeout: int) \
-downloadStringWithHeaders(url: string, headers: string[], timeout: int) -> string: Download url as string with headers & timeOut
+downloadString(url: string, timeout: int) ->: Download url as string with timeoUt \
+downloadString(url: string, headers: string[], timeout: int) -> string: Download url as string with headers & timeOut
 
 
 #### log:
@@ -59,20 +64,22 @@ end -> lm_address_t: Module end
 
 #### memhlp:
 
-getModule(name: string) -> lm_module_t: Get module by name \
-getJmpTarget(address: lm_address_t) -> lm_address_t: Get absolute address of relative jmp \
-hexdump(address: lm_address_t, size: size_t) -> string: Get formatted hexdump \
-findPrologue(address: lm_address_t, bytes: uint8_t[]) -> lm_address_t: Find prologue of function by going backwards until bytes match \
-patternScan(pattern: string, module: lm_module_t) -> lm_address_t: Find a pattern in the specified modules .text section \
-getUserDataPtr(address: lm_address_t) -> lm_address_t: Unpacks LuaBridge's UserData object to get the object it's pointing at (For example to get the actual CUser pointer from CSteamEngine when you want to call functions not available in SLSsteam's Lua API)
+getModule(name: string) -> lm_moudle_t*: Get module by name \
+getJmpTarget(ptr: void*) -> void*: Get absolute address of relative jmp \
+hexdump(ptr: void*, size: size_t) -> string: Get formatted hexdump \
+findPrologue(ptr: void*, bytes: int16_t[]) -> void*: Find prologue of function by going backwards until bytes match \
+patternScan(pattern: string, module: lm_module_t&) -> void*: Find a pattern in the specified modules .text section \
 
 
 #### VFTableInfo_t
 
-VFTableInfo_t(typename: string, functionName: string, index: unsigned int, subClassIndex: unsigned int): Create new VFTableInfo_t. Pass 0xFFFFFFFF as index to use the decompiler to find it based on the type- & method name (only use this for IClientInterfaceMaps!). Pass the same to subClassIndex when you want the Main Class \
+VFTableInfo_t(typename: string, functionName: string): Create new VFTableInfo_t \
+VFTableInfo_t(typename: string, functionName: string, index: unsigned int): Create new VFTableInfo_t \
+VFTableInfo_t(typename: string, functionName: string, index: unsigned int, subClassIndex: unsigned int): Create new VFTableInfo_t \
 typeName -> string \
 functionName -> string \
 address -> lm_address_t: The resolved address in current memory \
+ptr -> void*: Pointer to the resolved address in current memory \
 init() -> bool: Initialize, returns true on success, false otherwise. Check the logs for errors \
 getPrintName() -> string: Returns typeName::functionName
 
@@ -86,13 +93,16 @@ unlock: Unlocks the mutex
 
 #### LuaHook:
 
-LuaHook(name: string, targetFn: lm_address_t, hookFn: lm_address_t): Create new LuaHook \
+extern place_lua_hook(const int index, const void* targetFn) -> void*: Used to set a LuaHooks' target function & place it
+
+LuaHook(name: string, targetFunction: void*): Create new LuaHook \
 ~LuaHook(): Restores the original code the LuaHook overwrote \
 name -> string: Hook name, solely used for logging \
 fn -> lm_address_t: Target function address \
 hookFn -> lm_address_t: Hook function address \
 tramp -> lm_address_t: Trampoline address \
 size -> lm_address_t: Stolen bytes, taken away for creating the trampoline \
+index -> int: Index of the hook used for place_lua_hook \
 place(): Place the hook \
 remove(): Remove the hook
 
@@ -176,10 +186,6 @@ getCurrentSteamPipe() -> HSteamPipe: Return the active pipe handle
 config -> CConfig*: Gets SLSsteam config, see [CConfig](#cconfig) \
 steamEngine -> CSteamEngine*: Gets the Global CSteamEngine instance \
 registerCallback(name: string, function): Registers a callback, when it gets fired function will be invoked from SLSsteam
-
-alloc(size: int) -> lm_address_t: Allocate memory using Steam's memory allocator \
-realloc(address: lm_address_t, size: int) -> lm_address_t: Reallocate memory using Steam's memory allocator \
-free(address: lm_address_t): Free memory using Steam's memory allocator
 
 
 #### Callbacks
