@@ -179,14 +179,6 @@ public:
 	}
 };
 
-namespace LuaMemHlp
-{
-	lm_address_t getUserDataPtr(lm_address_t data)
-	{
-		return reinterpret_cast<lm_address_t>(reinterpret_cast<luabridge::detail::Userdata*>(data)->getPointer());
-	}
-}
-
 namespace LuaSDK
 {
 	CSteamEngine* getEngine()
@@ -384,10 +376,8 @@ void Lua::initLuaState()
 		.addFunction("getModule", &MemHlp::getModule)
 		.addFunction("getJmpTarget", [](const Ptr_t ptr) { return reinterpret_cast<Ptr_t>(MemHlp::getJmpTarget(reinterpret_cast<Address_t>(ptr))); })
 		.addFunction("hexdump", MemHlp::hexdump)
-		.addFunction("findPrologue", [](const Ptr_t ptr, const std::vector<int16_t>& prologue) { return reinterpret_cast<void*>(MemHlp::findPrologue(reinterpret_cast<Address_t>(ptr), prologue)); })
+		.addFunction("findPrologue", [](const Ptr_t ptr, const std::vector<int16_t>& prologue) { return reinterpret_cast<Ptr_t>(MemHlp::findPrologue(reinterpret_cast<Address_t>(ptr), prologue)); })
 		.addFunction("patternScan", [](const char* pattern, const lm_module_t& mod) { return reinterpret_cast<Ptr_t>(MemHlp::patternScan(pattern, mod)); })
-
-		.addFunction("getUserDataPtr", &LuaMemHlp::getUserDataPtr)
 	.endNamespace()
 
 	.beginClass<VFTableInfo_t>("VFTableInfo_t")
@@ -395,7 +385,7 @@ void Lua::initLuaState()
 		.addProperty("typeName", &VFTableInfo_t::typeName)
 		.addProperty("functionName", &VFTableInfo_t::functionName)
 		.addProperty("address", &VFTableInfo_t::address)
-		.addProperty("ptr", [](const VFTableInfo_t& info) { return reinterpret_cast<void*>(info.address); })
+		.addProperty("ptr", [](const VFTableInfo_t& info) { return reinterpret_cast<Ptr_t>(info.address); })
 		.addProperty("index", &VFTableInfo_t::index)
 		.addFunction("init", &VFTableInfo_t::init)
 		.addFunction("getPrintName", &VFTableInfo_t::getPrintName)
