@@ -181,16 +181,6 @@ public:
 
 namespace LuaMemHlp
 {
-	std::string hexdump(Lua::Ptr_t address, const size_t size)
-	{
-		return MemHlp::hexdump(reinterpret_cast<void*>(address), size);
-	}
-
-	void* patternScan(const char* pattern, const lm_module_t& module)
-	{
-		return reinterpret_cast<void*>(MemHlp::patternScan(pattern, module));
-	}
-
 	lm_address_t getUserDataPtr(lm_address_t data)
 	{
 		return reinterpret_cast<lm_address_t>(reinterpret_cast<luabridge::detail::Userdata*>(data)->getPointer());
@@ -362,8 +352,7 @@ void Lua::initLuaState()
 	luabridge::getGlobalNamespace(newState)
 
 	.beginNamespace("curl")
-		.addFunction("downloadString", &LuaCurl::downloadString)
-		.addFunction("downloadStringWithHeaders", &LuaCurl::downloadStringWithHeaders)
+		.addFunction("downloadString", &LuaCurl::downloadString, &LuaCurl::downloadStringWithHeaders)
 	.endNamespace()
 
 	.beginNamespace("log")
@@ -512,7 +501,6 @@ void Lua::initLuaState()
 		.addProperty("steamEngine", &LuaSDK::getEngine)
 		.addFunction("registerCallback", &Lua::registerCallback)
 	.endNamespace();
-
 
 	lua_State* old = state;
 	state = newState;
