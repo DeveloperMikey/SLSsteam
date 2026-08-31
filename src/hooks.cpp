@@ -174,39 +174,51 @@ void VFTHook<T>::remove()
 	LOG_DEBUG("Unhooked %s!\n", this->name.c_str());
 }
 
-LuaHook::LuaHook(const char* name, const lm_address_t targetFn, const lm_address_t hookFn)
+std::unordered_map<int, LuaHook*> LuaHook::hooks = std::unordered_map<int, LuaHook*>();
+
+LuaHook::LuaHook(const char* name, const Lua::Ptr_t targetFn)
 	:
 	name(name),
-	fn(targetFn),
-	hookFn(hookFn),
+	fn(reinterpret_cast<lm_address_t>(targetFn)),
 	tramp(0),
 	size(0)
 {
-	LOG_DEBUG("Created LuaHook %s from 0x%x to 0x%x\n", name, targetFn, hookFn);
+	for (int i = 0; ; i++)
+	{
+		if (!hooks.contains(i))
+		{
+			idx = i;
+			break;
+		}
+	}
+
+	hooks[idx] = this;
+	LOG_DEBUG("Created LuaHook %s (%i) from %p\n", name, idx, targetFn);
 }
 
 LuaHook::~LuaHook()
 {
 	remove();
+	hooks.erase(idx);
 }
 
-lm_address_t LuaHook::place()
+Lua::Ptr_t LuaHook::place()
 {
 	if (fn == LM_ADDRESS_BAD || hookFn == LM_ADDRESS_BAD)
 	{
 		LOG_ERROR("Failed to place LuaHook %s, targetFn is LM_ADDRESS_BAD\n", name.c_str());
-		return LM_ADDRESS_BAD;
+		return nullptr;
 	}
 
 	size = LM_HookCode(fn, hookFn, &tramp);
 	if (!size)
 	{
-		return false;
+		return nullptr;
 	}
 
 	MemHlp::fixPICThunkCall(name.c_str(), fn, tramp);
-	LOG_DEBUG("Placed LuaHook %s\n", name.c_str());
-	return tramp;
+	LOG_DEBUG("Placed LuaHook %s from 0x%x to 0x%x\n", name.c_str(), fn, hookFn);
+	return reinterpret_cast<void*>(tramp);
 }
 
 bool LuaHook::remove()

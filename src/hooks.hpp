@@ -2,11 +2,14 @@
 
 #include "sdk/sdk.hpp"
 
+#include "lua.hpp"
+
 #include "libmem/libmem.h"
 
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 
 
@@ -135,17 +138,21 @@ public:
 // Lua hooks are a little special for now
 class LuaHook
 {
+	static int hookCount;
 public:
-	std::string name;
-	lm_address_t fn;
-	lm_address_t hookFn;
-	lm_address_t tramp;
-	size_t size;
+	static std::unordered_map<int, LuaHook*> hooks;
 
-	LuaHook(const char* name, const lm_address_t targetFn, const lm_address_t hookFn);
+	std::string name = "";
+	lm_address_t fn = LM_ADDRESS_BAD;
+	lm_address_t hookFn = LM_ADDRESS_BAD;
+	lm_address_t tramp = 0;
+	size_t size = 0;
+	int idx = -1;
+
+	LuaHook(const char* name, const Lua::Ptr_t targetFn);
 	~LuaHook();
 
-	lm_address_t place();
+	Lua::Ptr_t place();
 	bool remove();
 };
 

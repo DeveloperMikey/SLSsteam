@@ -18,19 +18,19 @@
 #include <unordered_map>
 #include <unordered_set>
 
-extern "C"
+
+extern void* place_lua_hook(const int index, const void* pTarget)
 {
-#include <luajit-2.1/lua.h>
-#include <luajit-2.1/lauxlib.h>
-#include <luajit-2.1/lualib.h>
+	if (!LuaHook::hooks.contains(index))
+	{
+		return nullptr;
+	}
+
+	LuaHook* hook = LuaHook::hooks.at(index);
+	hook->hookFn = reinterpret_cast<lm_address_t>(pTarget);
+
+	return hook->place();
 }
-
-#include "LuaBridge/Array.h"
-#include "LuaBridge/List.h"
-#include "LuaBridge/Pair.h"
-#include "LuaBridge/UnorderedSet.h"
-#include "LuaBridge/Vector.h"
-
 
 namespace LuaConfig
 {
@@ -176,9 +176,14 @@ public:
 
 namespace LuaMemHlp
 {
-	std::string hexdump(const lm_address_t address, const size_t size)
+	std::string hexdump(Lua::Ptr_t address, const size_t size)
 	{
 		return MemHlp::hexdump(reinterpret_cast<void*>(address), size);
+	}
+
+	void* patternScan(const char* pattern, const lm_module_t& module)
+	{
+		return reinterpret_cast<void*>(MemHlp::patternScan(pattern, module));
 	}
 
 	lm_address_t getUserDataPtr(lm_address_t data)
@@ -398,19 +403,20 @@ void Lua::initLuaState()
 
 	.beginNamespace("memhlp")
 		.addFunction("getModule", &MemHlp::getModule)
-		.addFunction("getJmpTarget", &MemHlp::getJmpTarget)
-		.addFunction("hexdump", &LuaMemHlp::hexdump)
-		.addFunction("findPrologue", &MemHlp::findPrologue)
-		.addFunction("patternScan", &MemHlp::patternScan)
+		.addFunction("getJmpTarget", [](const Ptr_t ptr) { return reinterpret_cast<Ptr_t>(MemHlp::getJmpTarget(reinterpret_cast<Address_t>(ptr))); })
+		.addFunction("hexdump", MemHlp::hexdump)
+		.addFunction("findPrologue", [](const Ptr_t ptr, const std::vector<int16_t>& prologue) { return reinterpret_cast<void*>(MemHlp::findPrologue(reinterpret_cast<Address_t>(ptr), prologue)); })
+		.addFunction("patternScan", [](const char* pattern, const lm_module_t& mod) { return reinterpret_cast<Ptr_t>(MemHlp::patternScan(pattern, mod)); })
 
 		.addFunction("getUserDataPtr", &LuaMemHlp::getUserDataPtr)
 	.endNamespace()
 
 	.beginClass<VFTableInfo_t>("VFTableInfo_t")
-		.addConstructor<void(*)(const char*, const char*, unsigned int, unsigned int)>()
+		.addConstructor<void(*)(const char*, const char*), void(*)(const char*, const char*, unsigned int), void(*)(const char*, const char*, unsigned int, unsigned int)>()
 		.addProperty("typeName", &VFTableInfo_t::typeName)
 		.addProperty("functionName", &VFTableInfo_t::functionName)
 		.addProperty("address", &VFTableInfo_t::address)
+		.addProperty("ptr", [](const VFTableInfo_t& info) { return reinterpret_cast<void*>(info.address); })
 		.addProperty("index", &VFTableInfo_t::index)
 		.addFunction("init", &VFTableInfo_t::init)
 		.addFunction("getPrintName", &VFTableInfo_t::getPrintName)
@@ -423,12 +429,14 @@ void Lua::initLuaState()
 	.endClass()
 
 	.beginClass<LuaHook>("LuaHook")
-		.addConstructor<void(*)(const char*, const lm_address_t, const lm_address_t)>()
+		.addConstructor<void(const char*, const Ptr_t)>()
 		.addProperty("name", &LuaHook::name)
 		.addProperty("fn", &LuaHook::fn)
 		.addProperty("hookFn", &LuaHook::hookFn)
 		.addProperty("tramp", &LuaHook::tramp)
 		.addProperty("size", &LuaHook::size)
+		.addProperty("index", &LuaHook::idx)
+
 		.addFunction("place", &LuaHook::place)
 		.addFunction("remove", &LuaHook::remove)
 	.endClass()
@@ -513,6 +521,7 @@ void Lua::initLuaState()
 		.addProperty("config", &LuaConfig::get)
 		.addProperty("steamEngine", &LuaSDK::getEngine)
 		.addFunction("registerCallback", &Lua::registerCallback)
+
 		.addFunction("alloc", LuaSDK::alloc)
 		.addFunction("realloc", LuaSDK::realloc)
 		.addFunction("free", LuaSDK::free)

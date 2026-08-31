@@ -3,23 +3,24 @@
 #include "filewatcher.hpp"
 #include "log.hpp"
 
+#include "libmem/libmem.h"
+
 #include <filesystem>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
 
-extern "C"
-{
-#include <luajit-2.1/lua.h>
-#include <luajit-2.1/lauxlib.h>
-#include <luajit-2.1/lualib.h>
-}
-
+#include <luajit-2.1/lua.hpp>
 #include "LuaBridge/LuaBridge.h"
 
 
+extern "C" void* place_lua_hook(const int index, const void* pTarget);
+
 namespace Lua
 {
+	typedef uint64_t Address_t;
+	typedef void* Ptr_t;
+
 	namespace Callbacks
 	{
 		constexpr const char* SLSsteam_ConfigLoaded = "SLSsteam::configLoaded";
