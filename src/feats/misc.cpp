@@ -18,7 +18,6 @@ bool Misc::shouldFakeOffline()
 	return true;
 }
 
-
 void Misc::recvMsg(CNetPacket *pkt)
 {
 	switch(pkt->getProtoBufType())

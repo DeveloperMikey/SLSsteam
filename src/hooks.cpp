@@ -1476,13 +1476,6 @@ void Hooks::placeVFTHooks()
 		Hooks::IClientAppManager_LaunchApp = new VFTHook(vft, VFTIndexes::IClientAppManager::LaunchApp, hkClientAppManager_LaunchApp);
 		Hooks::IClientAppManager_IsAppDlcInstalled = new VFTHook(vft, VFTIndexes::IClientAppManager::IsAppDlcInstalled, hkClientAppManager_IsAppDlcInstalled);
 
-		Hooks::IClientAppManager_BCanRemotePlayTogether = new VFTHook(vft, VFTIndexes::IClientAppManager::BCanRemotePlayTogether, hkClientAppManager_BCanRemotePlayTogether);
-		Hooks::IClientAppManager_BIsDlcEnabled = new VFTHook(vft, VFTIndexes::IClientAppManager::BIsDlcEnabled, hkClientAppManager_BIsDlcEnabled);
-		Hooks::IClientAppManager_GetAppUpdateInfo = new VFTHook(vft, VFTIndexes::IClientAppManager::GetUpdateInfo, hkClientAppManager_GetUpdateInfo);
-		Hooks::IClientAppManager_GetAppStateInfo = new VFTHook(vft, VFTIndexes::IClientAppManager::GetAppStateInfo, hkClientAppManager_GetAppStateInfo);
-		Hooks::IClientAppManager_LaunchApp = new VFTHook(vft, VFTIndexes::IClientAppManager::LaunchApp, hkClientAppManager_LaunchApp);
-		Hooks::IClientAppManager_IsAppDlcInstalled = new VFTHook(vft, VFTIndexes::IClientAppManager::IsAppDlcInstalled, hkClientAppManager_IsAppDlcInstalled);
-
 		LOG_DEBUG("IClientAppManager->vft at %p\n", reinterpret_cast<void*>(vft.get()));
 	}
 
