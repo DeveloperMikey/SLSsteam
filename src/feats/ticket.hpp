@@ -3,6 +3,8 @@
 #include "../sdk/sdk.hpp"
 
 #include <filesystem>
+#include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -14,19 +16,6 @@ namespace Ticket
 		AppOwnershipTicket,
 		EncryptedAppOwnershipTicket
 	};
-
-	constexpr const char* getTicketField(const ETicketType type)
-	{
-		switch (type)
-		{
-			case ETicketType::AppOwnershipTicket:
-				return "ticket";
-			case ETicketType::EncryptedAppOwnershipTicket:
-				return "encryptedTicket";
-		}
-
-		return "unknownTicket";
-	}
 
 	class SavedTicket
 	{
@@ -41,10 +30,25 @@ public:
 	};
 
 	extern std::unordered_map<AppId_t, CSteamId> oneTimeSteamIdSpoof;
-	extern std::unordered_map<AppId_t, SavedTicket> ticketMap;
-	extern std::unordered_map<AppId_t, SavedTicket> encryptedTicketMap;
 
-	constexpr std::unordered_map<AppId_t, Ticket::SavedTicket>& getTicketMap(const ETicketType type)
+	extern std::mutex ticketMapMutex;
+	extern std::unordered_map<AppId_t, std::shared_ptr<SavedTicket>> ticketMap;
+	extern std::unordered_map<AppId_t, std::shared_ptr<SavedTicket>> encryptedTicketMap;
+
+	constexpr const char* getTicketField(const ETicketType type)
+	{
+		switch (type)
+		{
+			case ETicketType::AppOwnershipTicket:
+				return "ticket";
+			case ETicketType::EncryptedAppOwnershipTicket:
+				return "encryptedTicket";
+		}
+
+		throw std::runtime_error("Unknown ticket type!");
+	}
+
+	constexpr std::unordered_map<AppId_t, std::shared_ptr<Ticket::SavedTicket>>& getTicketMap(const ETicketType type)
 	{
 		switch (type)
 		{
@@ -54,13 +58,15 @@ public:
 			case ETicketType::EncryptedAppOwnershipTicket:
 				return encryptedTicketMap;
 		}
+
+		throw std::runtime_error("Unknown ticket type!");
 	}
 
 	std::filesystem::path getTicketDir();
 
 	//TODO: Fill with error checks
 	std::filesystem::path getTicketPath(const AppId_t appId, const ETicketType type);
-	SavedTicket* getCachedTicket(const AppId_t appId, const ETicketType type);
+	std::shared_ptr<SavedTicket> getCachedTicket(const AppId_t appId, const ETicketType type);
 	bool saveTicketToCache(const AppId_t appId, const std::string& bytes, const CSteamId& owner, const ETicketType type);
 
 	//Hooks

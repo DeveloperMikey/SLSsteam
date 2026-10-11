@@ -17,8 +17,9 @@
 
 
 std::unordered_map<AppId_t, CSteamId> Ticket::oneTimeSteamIdSpoof = std::unordered_map<AppId_t, CSteamId>();
-std::unordered_map<AppId_t, Ticket::SavedTicket> Ticket::ticketMap = std::unordered_map<AppId_t, SavedTicket>();
-std::unordered_map<AppId_t, Ticket::SavedTicket> Ticket::encryptedTicketMap = std::unordered_map<AppId_t, SavedTicket>();
+std::mutex Ticket::ticketMapMutex;
+std::unordered_map<AppId_t, std::shared_ptr<Ticket::SavedTicket>> Ticket::ticketMap = std::unordered_map<AppId_t, std::shared_ptr<Ticket::SavedTicket>>();
+std::unordered_map<AppId_t, std::shared_ptr<Ticket::SavedTicket>> Ticket::encryptedTicketMap = std::unordered_map<AppId_t, std::shared_ptr<Ticket::SavedTicket>>();
 
 std::filesystem::path Ticket::getTicketDir()
 {
@@ -46,15 +47,18 @@ std::filesystem::path Ticket::getTicketPath(const AppId_t appId, const ETicketTy
 	return dir;
 }
 
-Ticket::SavedTicket* Ticket::getCachedTicket(const AppId_t appId, const ETicketType type)
+std::shared_ptr<Ticket::SavedTicket> Ticket::getCachedTicket(const AppId_t appId, const ETicketType type)
 {
 	//Defaults
 	auto& cached = getTicketMap(type);
 	const char* ticketField = getTicketField(type);
 
+	//TODO: Use shared_mutex, lock shared for read, lock unique for write
+	const auto guard = std::lock_guard(ticketMapMutex);
+
 	if (cached.contains(appId))
 	{
-		return &cached.at(appId);
+		return cached.at(appId);
 	}
 
 	const auto path = getTicketPath(appId, type);
@@ -67,16 +71,18 @@ Ticket::SavedTicket* Ticket::getCachedTicket(const AppId_t appId, const ETicketT
 
 	LOG_DEBUG("Reading %s for %u\n", ticketField, appId);
 
-	SavedTicket& ticket = cached[appId];
-
 	auto node = YAML::LoadFile(path);
-	ticket.steamId = CSteamId(node["steamId"].as<uint64_t>());
-	ticket.ticket = std::string
+
+	auto ticket = std::make_shared<SavedTicket>();
+	ticket->steamId = CSteamId(node["steamId"].as<uint64_t>());
+	ticket->ticket = std::string
 	(
 		base64::from_base64(node[ticketField].as<std::string>())
 	);
 
-	return &ticket;
+	cached[appId] = ticket;
+
+	return ticket;
 }
 
 bool Ticket::saveTicketToCache(const AppId_t appId, const std::string& bytes, const CSteamId& owner, const ETicketType type)
@@ -101,9 +107,12 @@ bool Ticket::saveTicketToCache(const AppId_t appId, const std::string& bytes, co
 
 	LOG_ONCE("Saved %s for %u\n", ticketField, appId);
 
-	SavedTicket& ticket = cached[appId];
-	ticket.steamId = g_currentSteamId;
-	ticket.ticket = bytes;
+	auto ticket = std::make_shared<SavedTicket>();
+	ticket->steamId = g_currentSteamId;
+	ticket->ticket = bytes;
+
+	const auto guard = std::lock_guard(ticketMapMutex);
+	cached[appId] = ticket;
 	
 	return true;
 }
@@ -117,7 +126,7 @@ void Ticket::connectPipe(const HSteamPipe pipe)
 		return;
 	}
 
-	const SavedTicket* ticket = getCachedTicket(proc.appId, ETicketType::AppOwnershipTicket);
+	const auto ticket = getCachedTicket(proc.appId, ETicketType::AppOwnershipTicket);
 	if (!ticket)
 	{
 		return;
@@ -133,7 +142,7 @@ void Ticket::getEncryptedAppTicket(const AppId_t appId)
 		return;
 	}
 
-	const SavedTicket* cached = Ticket::getCachedTicket(appId, ETicketType::EncryptedAppOwnershipTicket);
+	const auto cached = Ticket::getCachedTicket(appId, ETicketType::EncryptedAppOwnershipTicket);
 	if (!cached)
 	{
 		return;
@@ -157,7 +166,7 @@ void Ticket::getTicketOwnershipExtendedData(const AppId_t appId)
 		}
 	}
 
-	const SavedTicket* cached = Ticket::getCachedTicket(appId, ETicketType::AppOwnershipTicket);
+	const auto cached = Ticket::getCachedTicket(appId, ETicketType::AppOwnershipTicket);
 	if (!cached)
 	{
 		return;
@@ -201,7 +210,7 @@ void Ticket::recvEncryptedAppTicket(CNetPacket* pkt)
 		return;
 	}
 
-	const SavedTicket* ticket = getCachedTicket(msg.app_id(), ETicketType::EncryptedAppOwnershipTicket);
+	const auto ticket = getCachedTicket(msg.app_id(), ETicketType::EncryptedAppOwnershipTicket);
 	if (!ticket)
 	{
 		return;
