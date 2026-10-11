@@ -98,7 +98,6 @@ std::filesystem::path Ticket::getTicketPath(const AppId_t appId, const ETicketTy
 
 std::shared_ptr<Ticket::SavedTicket> Ticket::getCachedTicket(const AppId_t appId, const ETicketType type)
 {
-	//Defaults
 	auto& cached = getTicketMap(type);
 	const char* ticketField = getTicketField(type);
 
