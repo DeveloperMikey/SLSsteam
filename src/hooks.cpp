@@ -999,7 +999,7 @@ static bool hkClientUser_BLoggedOn(IClientUser* pClientUser)
 
 static uint32_t hkClientUser_BUpdateAppOwnershipTicket(IClientUser* pClientUser, AppId_t appId, bool staleOnly)
 {
-	const auto cached = Ticket::getCachedTicket(appId);
+	const auto cached = Ticket::getCachedTicket(appId, Ticket::ETicketType::AppOwnershipTicket);
 	if (g_pSteamEngine->getUser(0)->isSubscribed(appId) && !cached)
 	{
 		staleOnly = false;
@@ -1120,7 +1120,7 @@ static CSteamId hkClientUser_GetSteamId(IClientUser* pClientUser)
 			return CSteamId(id64);
 		}
 
-		const auto cached = Ticket::getCachedTicket(realAppId);
+		const auto cached = Ticket::getCachedTicket(realAppId, Ticket::ETicketType::AppOwnershipTicket);
 		if (cached)
 		{
 			return cached->steamId;
@@ -1141,7 +1141,7 @@ static CSteamId hkClientUser_GetSteamId(IClientUser* pClientUser)
 		return newId;
 	}
 
-	const auto ticket = Ticket::getCachedEncryptedTicket(realAppId);
+	const auto ticket = Ticket::getCachedTicket(realAppId, Ticket::ETicketType::EncryptedAppOwnershipTicket);
 	if (!ticket)
 	{
 		return steamId;

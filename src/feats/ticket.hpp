@@ -9,6 +9,25 @@
 
 namespace Ticket
 {
+	enum class ETicketType
+	{
+		AppOwnershipTicket,
+		EncryptedAppOwnershipTicket
+	};
+
+	constexpr const char* getTicketField(const ETicketType type)
+	{
+		switch (type)
+		{
+			case ETicketType::AppOwnershipTicket:
+				return "ticket";
+			case ETicketType::EncryptedAppOwnershipTicket:
+				return "encryptedTicket";
+		}
+
+		return "unknownTicket";
+	}
+
 	class SavedTicket
 	{
 public:
@@ -25,16 +44,24 @@ public:
 	extern std::unordered_map<AppId_t, SavedTicket> ticketMap;
 	extern std::unordered_map<AppId_t, SavedTicket> encryptedTicketMap;
 
+	constexpr std::unordered_map<AppId_t, Ticket::SavedTicket>& getTicketMap(const ETicketType type)
+	{
+		switch (type)
+		{
+			case ETicketType::AppOwnershipTicket:
+				return ticketMap;
+
+			case ETicketType::EncryptedAppOwnershipTicket:
+				return encryptedTicketMap;
+		}
+	}
+
 	std::filesystem::path getTicketDir();
 
 	//TODO: Fill with error checks
-	std::filesystem::path getTicketPath(const AppId_t appId);
-	SavedTicket* getCachedTicket(const AppId_t appId);
-	bool saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse& resp);
-
-	std::filesystem::path getEncryptedTicketPath(const AppId_t appId);
-	SavedTicket* getCachedEncryptedTicket(const AppId_t appId);
-	bool saveEncryptedTicketToCache(const CMsgClientRequestEncryptedAppTicketResponse& resp);
+	std::filesystem::path getTicketPath(const AppId_t appId, const ETicketType type);
+	SavedTicket* getCachedTicket(const AppId_t appId, const ETicketType type);
+	bool saveTicketToCache(const AppId_t appId, const std::string& bytes, const CSteamId& owner, const ETicketType type);
 
 	//Hooks
 	void closePipe(const HSteamPipe pipe);
@@ -44,7 +71,8 @@ public:
 	void getTicketOwnershipExtendedData(const AppId_t appId);
 
 	//Netpacket stuff
-	void recvEncryptedAppTicket(CNetPacket* pkt);
 	void recvAppTicket(const CNetPacket* pkt);
+	void recvEncryptedAppTicket(CNetPacket* pkt);
+
 	void recvMsg(CNetPacket* pkt);
 }
