@@ -32,16 +32,18 @@ public:
 	SavedTicket* getCachedTicket(const AppId_t appId);
 	bool saveTicketToCache(const CMsgClientGetAppOwnershipTicketResponse& resp);
 
+	std::filesystem::path getEncryptedTicketPath(const AppId_t appId);
+	SavedTicket* getCachedEncryptedTicket(const AppId_t appId);
+	bool saveEncryptedTicketToCache(const CMsgClientRequestEncryptedAppTicketResponse& resp);
+
+	//Hooks
 	void closePipe(const HSteamPipe pipe);
 	void connectPipe(const HSteamPipe pipe);
 	void launchApp(const AppId_t appId);
 	void getEncryptedAppTicket(const AppId_t appId);
 	void getTicketOwnershipExtendedData(const AppId_t appId);
 
-	std::filesystem::path getEncryptedTicketPath(const AppId_t appId);
-	SavedTicket* getCachedEncryptedTicket(const AppId_t appId);
-	bool saveEncryptedTicketToCache(const CMsgClientRequestEncryptedAppTicketResponse& resp);
-
+	//Netpacket stuff
 	void recvEncryptedAppTicket(CNetPacket* pkt);
 	void recvAppTicket(const CNetPacket* pkt);
 	void recvMsg(CNetPacket* pkt);
