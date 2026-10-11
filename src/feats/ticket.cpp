@@ -13,10 +13,45 @@
 #include <filesystem>
 #include <fstream>
 #include <ios>
+#include <memory>
+#include <regex>
 #include <sstream>
 
 
+std::unique_ptr<CFileWatcher> Ticket::fileWatcher = nullptr;
+
+void Ticket::onFileChange(const std::filesystem::path& path, int eventMask)
+{
+	const auto pathStr = path.string();
+	const auto re = std::regex("[0-9]+");
+	std::smatch smatch;
+
+	if (!std::regex_search(pathStr, smatch, re))
+	{
+		LOG_ERROR("File %s reloaded, yet no matching appId was found!\n", path.c_str());
+		return;
+	}
+
+	const AppId_t appId = std::stoull(smatch.str());
+	const auto guard = std::lock_guard(ticketMapMutex);
+
+	LOG_DEBUG("%s reloaded, appId %u\n", path.c_str(), appId);
+
+	if (ticketMap.contains(appId))
+	{
+		ticketMap.erase(appId);
+		LOG_DEBUG("Erased %u from ticketMap!\n", appId);
+	}
+
+	if (encryptedTicketMap.contains(appId))
+	{
+		encryptedTicketMap.erase(appId);
+		LOG_DEBUG("Erased %u from encryptedTicketMap!\n", appId);
+	}
+}
+
 std::unordered_map<AppId_t, CSteamId> Ticket::oneTimeSteamIdSpoof = std::unordered_map<AppId_t, CSteamId>();
+
 std::mutex Ticket::ticketMapMutex;
 std::unordered_map<AppId_t, std::shared_ptr<Ticket::SavedTicket>> Ticket::ticketMap = std::unordered_map<AppId_t, std::shared_ptr<Ticket::SavedTicket>>();
 std::unordered_map<AppId_t, std::shared_ptr<Ticket::SavedTicket>> Ticket::encryptedTicketMap = std::unordered_map<AppId_t, std::shared_ptr<Ticket::SavedTicket>>();
@@ -29,6 +64,20 @@ std::filesystem::path Ticket::getTicketDir()
 	if (!std::filesystem::exists(dir.c_str()))
 	{
 		std::filesystem::create_directory(dir.c_str());
+	}
+
+	if (!fileWatcher)
+	{
+		fileWatcher = std::make_unique<CFileWatcher>(onFileChange, WATCH_MASK);
+		
+		if (fileWatcher->addFile(dir) == -1)
+		{
+			LOG_NOTIFYERROR("Failed to watch ticket directory! Hot reloading will be disabled\n");
+		}
+		else
+		{
+			fileWatcher->start();
+		}
 	}
 
 	return dir;
@@ -89,7 +138,6 @@ bool Ticket::saveTicketToCache(const AppId_t appId, const std::string& bytes, co
 {
 	LOG_DEBUG("Saving ticket for %u...\n", appId);
 
-	auto& cached = getTicketMap(type);
 	const char* ticketField = getTicketField(type);
 
 	YAML::Emitter node;
@@ -100,19 +148,18 @@ bool Ticket::saveTicketToCache(const AppId_t appId, const std::string& bytes, co
 	node << YAML::Value << base64::to_base64(bytes);
 	node << YAML::EndMap;
 
+	const auto guard = std::lock_guard(ticketMapMutex);
+
 	const auto path = Ticket::getTicketPath(appId, type);
 	std::ofstream ofs(path.c_str(), std::ios::out);
 
 	ofs.write(node.c_str(), node.size());
 
-	LOG_ONCE("Saved %s for %u\n", ticketField, appId);
+	LOG_DEBUG("Saved %s for %u\n", ticketField, appId);
 
-	auto ticket = std::make_shared<SavedTicket>();
-	ticket->steamId = g_currentSteamId;
-	ticket->ticket = bytes;
-
-	const auto guard = std::lock_guard(ticketMapMutex);
-	cached[appId] = ticket;
+	//Do not load ticket into ticketMap
+	//Because the filewatcher is slower than we
+	//it'll just get deleted right away
 	
 	return true;
 }

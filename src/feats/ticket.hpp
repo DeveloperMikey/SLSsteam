@@ -2,6 +2,8 @@
 
 #include "../sdk/sdk.hpp"
 
+#include "../filewatcher.hpp"
+
 #include <filesystem>
 #include <memory>
 #include <mutex>
@@ -11,6 +13,10 @@
 
 namespace Ticket
 {
+	constexpr int WATCH_MASK = IN_MODIFY | IN_MOVED_TO | IN_MOVED_FROM | IN_DELETE | IN_CREATE;
+	extern std::unique_ptr<CFileWatcher> fileWatcher;
+	void onFileChange(const std::filesystem::path& path, int eventMask);
+
 	enum class ETicketType
 	{
 		AppOwnershipTicket,
