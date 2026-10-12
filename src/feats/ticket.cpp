@@ -20,13 +20,19 @@
 
 std::unique_ptr<CFileWatcher> Ticket::fileWatcher = nullptr;
 
-void Ticket::onFileChange(const std::filesystem::path& path, int eventMask)
+void Ticket::onFileChange(const std::filesystem::path& path, __attribute__((unused)) int eventMask)
 {
-	const auto pathStr = path.string();
+	const auto fileName = path.filename().string();
+
+	if (!fileName.starts_with(getTicketField(ETicketType::AppOwnershipTicket)) && !fileName.starts_with(getTicketField(ETicketType::EncryptedAppOwnershipTicket)))
+	{
+		return;
+	}
+
 	const auto re = std::regex("[0-9]+");
 	std::smatch smatch;
 
-	if (!std::regex_search(pathStr, smatch, re))
+	if (!std::regex_search(fileName, smatch, re))
 	{
 		LOG_ERROR("File %s reloaded, yet no matching appId was found!\n", path.c_str());
 		return;
@@ -135,9 +141,9 @@ std::shared_ptr<Ticket::SavedTicket> Ticket::getCachedTicket(const AppId_t appId
 
 bool Ticket::saveTicketToCache(const AppId_t appId, const std::string& bytes, const CSteamId& owner, const ETicketType type)
 {
-	LOG_DEBUG("Saving ticket for %u...\n", appId);
-
 	const char* ticketField = getTicketField(type);
+
+	LOG_DEBUG("Saving %s for %u...\n", ticketField, appId);
 
 	YAML::Emitter node;
 	node << YAML::BeginMap;
@@ -231,7 +237,7 @@ void Ticket::launchApp(const AppId_t appId)
 
 	//Replacing this call with an injected GetAppOwnershipTicketResponse is possible, but breaks in offline mode so we don't do that
 	g_pSteamEngine->getUser(0)->updateAppOwnershipTicket(appId, reinterpret_cast<void*>(ticket->ticket.data()), ticket->ticket.size());
-	LOG_ONCE("Force loaded AppOwnershipTicket for %i\n", appId);
+	LOG_DEBUG("Force loaded AppOwnershipTicket for %i\n", appId);
 }
 
 void Ticket::recvAppTicket(const CNetPacket* pkt)
