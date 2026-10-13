@@ -154,7 +154,7 @@ namespace Patterns
 			"CUser::SpawnGameId",
 			"89 D7 0F 11 42",
 			SigFollowMode::PrologueUpwards,
-			std::vector<int16_t> { 0x53, 0x56, 0x57, 0xE5, 0x89, 0x55, -1, -1, -1, -1, 0x5, -1, -1, -1, -1, 0xE8}
+			std::vector<int16_t> { 0x53, 0x56, 0x57, 0xE5, 0x89, 0x55, -1, -1, -1, -1, 0x5, -1, -1, -1, -1, 0xE8 }
 		};
 		Pattern_t UpdateAppOwnershipTicket
 		{
@@ -187,4 +187,3 @@ namespace Patterns
 
 	std::vector<Pattern_t*> patterns;
 }
-
