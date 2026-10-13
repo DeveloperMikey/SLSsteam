@@ -47,17 +47,19 @@ bool Stealth::sendMsg(CNetPacket* pkt)
 			auto msg = pkt->deserializeBody<CMsgClientGamesPlayed>();
 			for (int i = msg.games_played_size() - 1; i >= 0; i--)
 			{
-				const auto game = msg.games_played(i);
-				if (game.game_id() & GAME_TYPE_SHORTCUT)
+				const auto game = msg.mutable_games_played(i);
+				if (game->game_id() & GAME_TYPE_SHORTCUT)
 				{
 					continue;
 				}
 
-				if (!g_pSteamEngine->getUser()->isSubscribed(game.game_id()))
+				if (g_pSteamEngine->getUser()->isSubscribed(game->game_id()))
 				{
-					msg.mutable_games_played()->DeleteSubrange(i, 1);
-					LOG_DEBUG("Cleared %llu from CMsgClientGamesPlayed!\n", game.game_id());
+					continue;
 				}
+
+				LOG_DEBUG("Cleared %llu from CMsgClientGamesPlayed!\n", game->game_id());
+				msg.mutable_games_played()->DeleteSubrange(i, 1);
 			}
 
 			const bool isPlaying = msg.games_played_size();
@@ -88,13 +90,6 @@ bool Stealth::sendMsg(CNetPacket* pkt)
 
 			break;
 		}
-
-		//case k_EMsgClientStoreUserStats2:
-		//{
-		//	const auto msg = pkt->deserializeBody<CMsgClientStoreUserStats2>();
-		//	choke = !g_pSteamEngine->getUser()->isSubscribed(msg.game_id());
-		//	break;
-		//}
 
 		default:
 			break;
