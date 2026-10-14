@@ -133,8 +133,9 @@ namespace Patterns
 		Pattern_t GetSubscribedApps
 		{
 			"CUser::GetSubscribedApps",
-			"E8 ? ? ? ? 89 C6 83 C4 ? 85 C0 0F 84 ? ? ? ? 8B 9D ? ? ? ? 39 D8",
-			SigFollowMode::Relative
+			"89 75 ? 0F 29 45",
+			SigFollowMode::PrologueUpwards,
+			std::vector<int16_t> { 0x56, 0x57, 0xE5, 0x89, 0x55 }
 		};
 		Pattern_t PostCallback
 		{
@@ -152,7 +153,7 @@ namespace Patterns
 		Pattern_t SpawnGameId
 		{
 			"CUser::SpawnGameId",
-			"89 D7 0F 11 42",
+			"84 C9 0F 45 45",
 			SigFollowMode::PrologueUpwards,
 			std::vector<int16_t> { 0x53, 0x56, 0x57, 0xE5, 0x89, 0x55, -1, -1, -1, -1, 0x5, -1, -1, -1, -1, 0xE8 }
 		};
