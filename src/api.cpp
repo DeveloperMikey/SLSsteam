@@ -65,19 +65,7 @@ void SLSAPI::parseCmd(const std::string& cmd)
 	const std::lock_guard guard(cmdMutex);
 
 	//Compatibility Manager
-	if (split[0] == "dumpcompat" && split.size() > 1)
-	{
-		AppId_t appId;
-		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
-		{
-			LOG_ERROR("Failed to dump compat for %s (not a number)!\n", split[1].c_str());
-			return;
-		}
-
-		compatOps.emplace_back(CompatOp_t { CompatOp_t::OpType::Dump, appId, "" } );
-	}
-
-	else if (split[0] == "getcompat" && split.size() > 1)
+	if (split[0] == "getcompat" && split.size() > 1)
 	{
 		AppId_t appId;
 		if (!Utils::tryConvertToNumber(split[1].c_str(), appId))
@@ -140,7 +128,7 @@ void SLSAPI::parseCmd(const std::string& cmd)
 	}
 
 	// Lua
-	if (split[0] == "reloadlua")
+	else if (split[0] == "reloadlua")
 	{
 		Lua::init();
 		LOG_API("Ran reloadlua!\n");
@@ -190,33 +178,6 @@ void SLSAPI::runCompatOps()
 
 		switch(op->type)
 		{
-			case CompatOp_t::OpType::Dump:
-			{
-				//We do not allocate anything, it'll just mess up
-				//Luckily the function allocates for us
-				CUtlVector<CUtlString> tools { };
-				compat->getCompatToolsForApp(op->appId, &tools);
-
-				std::ostringstream toolsSS;
-				for (size_t i = 0; i < tools.size; i++)
-				{
-					const char* name = tools.at(i)->get();
-					const char* displayName = compat->getDisplayName(name);
-
-					if (toolsSS.str().size() > 0)
-					{
-						toolsSS << ", ";
-					}
-
-					toolsSS << "\"" << displayName << "\" (" << name << ")";
-				}
-
-				const auto str = toolsSS.str();
-				LOG_API("Dump compatibility tools for %u: %s\n", op->appId, str.c_str());
-
-				break;
-			}
-
 			case CompatOp_t::OpType::Get:
 			{
 				if (!compat->isCompatToolEnabled(op->appId))
