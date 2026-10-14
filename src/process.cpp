@@ -707,7 +707,7 @@ bool Process_t::init(const pid_t pid, const HSteamPipe pipeHandle)
 		}
 
 		appId = getAppIdFromEnv();
-		LOG_DEBUG("AppId for %s is %u\n", exe.c_str(), appId);
+		LOG_DEBUG("AppId for %s is %u\n", exe.filename().c_str(), appId);
 
 		if (!appId) //Will fail on steam process
 		{
