@@ -26,12 +26,12 @@ public:
 SDK_Class CNetPacket
 {
 public:
-	uint8_t __pad0x0[0x4];			//0x0
-	CNetPacketBody* body;			//0x4
-	uint32_t size;					//0x8
-	int32_t refs;					//0xC
-	CNetPacketBody* originalBody;	//0x10 - Ref counted pointer
-	uint8_t __pad0x10[0xC];			//0x14
+	uint8_t __pad0x0[0xC];			//0x0
+	CNetPacketBody* body;			//0xC
+	uint32_t size;					//0x10
+	int32_t refs;					//0x14
+	CNetPacketBody* originalBody;	//0x18 - Ref counted pointer
+	uint8_t __pad0x10[0x19];		//0x1C
 	
 	constexpr bool isValid() const
 	{
@@ -141,4 +141,4 @@ public:
 	}
 
 	void free();
-}; //0x20
+}; //0x35
